@@ -3,12 +3,30 @@ The main repository for the New Mexico Tech Lunabotics 2025 competition Team
 
 # INSTALLATION
 
-Clone this repository
+Install docker  
+<https://docs.docker.com/engine/install/ubuntu/>  
 
+To use docker without sudo, run the following commands  
+```
+sudo groupadd docker
+sudo usermod -aG docker $USER
+newgrp docker
+```
 
-Install docker
-<https://docs.docker.com/engine/install/ubuntu/>
+Ensure you have an SSH key set up with Github  
+<https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account>  
 
-Build the docker image
+Clone this repository with SSH and cd into it  
+```
+git clone git@github.com:NMT-Wildlife-Monitoring-Project/WALL-E.git
+cd WALL-E
+```
 
-`docker build -t ros .`
+Build the docker image  
+`docker compose build`  
+
+# USAGE
+
+Run the docker image  
+`docker run -it ros `
+
