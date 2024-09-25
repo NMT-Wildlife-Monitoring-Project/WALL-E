@@ -1,7 +1,10 @@
-# NMTLunabotics2025
-The main repository for the New Mexico Tech Lunabotics 2025 competition Team
+# WALL-E
+Wildlife Activity Life Explorer
+The main repository for the New Mexico Tech Wildlife Monitoring Project
 
 # INSTALLATION
+
+This system is designed to run in Docker on linux.  
 
 Install docker  
 <https://docs.docker.com/engine/install/ubuntu/>  
