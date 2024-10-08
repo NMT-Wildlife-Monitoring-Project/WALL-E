@@ -1,0 +1,42 @@
+[3.861s] Invoking command in '/home/walle/WALL-E/ros2_ws/src/motor_control': PYTHONPATH=/home/walle/WALL-E/ros2_ws/build/motor_control/prefix_override:/home/walle/.local/lib/python3.10/site-packages/colcon_core/task/python/colcon_distutils_commands:/home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/motor_control build --build-base /home/walle/WALL-E/ros2_ws/build/motor_control/build install --record /home/walle/WALL-E/ros2_ws/build/motor_control/install.log --install-scripts $base/lib/motor_control --single-version-externally-managed install_data
+[5.425s] /usr/lib/python3/dist-packages/setuptools/dist.py:723: UserWarning: Usage of dash-separated 'script-dir' will not be supported in future versions. Please use the underscore name 'script_dir' instead
+[5.426s]   warnings.warn(
+[5.477s] running egg_info
+[5.479s] creating ../../build/motor_control/motor_control.egg-info
+[5.481s] writing ../../build/motor_control/motor_control.egg-info/PKG-INFO
+[5.482s] writing dependency_links to ../../build/motor_control/motor_control.egg-info/dependency_links.txt
+[5.483s] writing entry points to ../../build/motor_control/motor_control.egg-info/entry_points.txt
+[5.484s] writing requirements to ../../build/motor_control/motor_control.egg-info/requires.txt
+[5.485s] writing top-level names to ../../build/motor_control/motor_control.egg-info/top_level.txt
+[5.486s] writing manifest file '../../build/motor_control/motor_control.egg-info/SOURCES.txt'
+[5.497s] reading manifest file '../../build/motor_control/motor_control.egg-info/SOURCES.txt'
+[5.502s] writing manifest file '../../build/motor_control/motor_control.egg-info/SOURCES.txt'
+[5.503s] running build
+[5.504s] running build_py
+[5.505s] creating /home/walle/WALL-E/ros2_ws/build/motor_control/build
+[5.506s] creating /home/walle/WALL-E/ros2_ws/build/motor_control/build/lib
+[5.506s] creating /home/walle/WALL-E/ros2_ws/build/motor_control/build/lib/motor_control
+[5.507s] copying motor_control/motor_test.py -> /home/walle/WALL-E/ros2_ws/build/motor_control/build/lib/motor_control
+[5.508s] copying motor_control/motor_control_node.py -> /home/walle/WALL-E/ros2_ws/build/motor_control/build/lib/motor_control
+[5.508s] copying motor_control/__init__.py -> /home/walle/WALL-E/ros2_ws/build/motor_control/build/lib/motor_control
+[5.509s] running install
+[5.511s] running install_lib
+[5.515s] creating /home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages/motor_control
+[5.516s] copying /home/walle/WALL-E/ros2_ws/build/motor_control/build/lib/motor_control/motor_test.py -> /home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages/motor_control
+[5.516s] copying /home/walle/WALL-E/ros2_ws/build/motor_control/build/lib/motor_control/motor_control_node.py -> /home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages/motor_control
+[5.518s] copying /home/walle/WALL-E/ros2_ws/build/motor_control/build/lib/motor_control/__init__.py -> /home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages/motor_control
+[5.521s] byte-compiling /home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages/motor_control/motor_test.py to motor_test.cpython-310.pyc
+[5.524s] byte-compiling /home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages/motor_control/motor_control_node.py to motor_control_node.cpython-310.pyc
+[5.529s] byte-compiling /home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages/motor_control/__init__.py to __init__.cpython-310.pyc
+[5.531s] running install_data
+[5.534s] creating /home/walle/WALL-E/ros2_ws/install/motor_control/share/ament_index
+[5.535s] creating /home/walle/WALL-E/ros2_ws/install/motor_control/share/ament_index/resource_index
+[5.536s] creating /home/walle/WALL-E/ros2_ws/install/motor_control/share/ament_index/resource_index/packages
+[5.538s] copying resource/motor_control -> /home/walle/WALL-E/ros2_ws/install/motor_control/share/ament_index/resource_index/packages
+[5.540s] copying package.xml -> /home/walle/WALL-E/ros2_ws/install/motor_control/share/motor_control
+[5.541s] running install_egg_info
+[5.552s] Copying ../../build/motor_control/motor_control.egg-info to /home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages/motor_control-0.0.0-py3.10.egg-info
+[5.559s] running install_scripts
+[5.675s] Installing motor_control_node script to /home/walle/WALL-E/ros2_ws/install/motor_control/lib/motor_control
+[5.676s] writing list of installed files to '/home/walle/WALL-E/ros2_ws/build/motor_control/install.log'
+[5.831s] Invoked command in '/home/walle/WALL-E/ros2_ws/src/motor_control' returned '0': PYTHONPATH=/home/walle/WALL-E/ros2_ws/build/motor_control/prefix_override:/home/walle/.local/lib/python3.10/site-packages/colcon_core/task/python/colcon_distutils_commands:/home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/motor_control build --build-base /home/walle/WALL-E/ros2_ws/build/motor_control/build install --record /home/walle/WALL-E/ros2_ws/build/motor_control/install.log --install-scripts $base/lib/motor_control --single-version-externally-managed install_data

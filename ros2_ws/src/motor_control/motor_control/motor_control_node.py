@@ -1,69 +1,85 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
-import RPi.GPIO as GPIO
+import serial
 
-# GPIO Pin Definitions
-S1_PIN = 22  # Linear velocity (x)
-S2_PIN = 23  # Angular velocity (yaw)
 
 class MotorControlNode(Node):
     def __init__(self):
         super().__init__('motor_control_node')
-
-        # Set up GPIO
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(S1_PIN, GPIO.OUT)
-        GPIO.setup(S2_PIN, GPIO.OUT)
-
-        # Initialize PWM on both pins with 100 Hz frequency
-        self.pwm_s1 = GPIO.PWM(S1_PIN, 100)
-        self.pwm_s2 = GPIO.PWM(S2_PIN, 100)
-        self.pwm_s1.start(0)
-        self.pwm_s2.start(0)
-
-        # Subscribe to the /cmd_vel topic
-        self.subscription = self.create_subscription(
-            Twist,
-            '/cmd_vel',
-            self.cmd_vel_callback,
-            10)
-
-        self.get_logger().info("Motor control node initialized.")
+        
+        # Declare parameters
+        self.declare_parameter('cmd_vel_topic', 'cmd_vel')
+        self.declare_parameter('wheel_base', 0.5)  # Default in meters
+        self.declare_parameter('wheel_diameter', 0.1)  # Default in meters
+        self.declare_parameter('max_rpm', 100)  # Maximum RPM value for motor control
+        self.declare_parameter('min_rpm', 10)  # Minimum RPM value for motor control
+        self.declare_parameter('motor_serial_device', '/dev/serial0')  # Default serial device
+        
+        self.cmd_vel_topic = self.get_parameter('cmd_vel_topic').get_parameter_value().string_value
+        self.wheel_base = self.get_parameter('wheel_base').get_parameter_value().double_value
+        self.wheel_diameter = self.get_parameter('wheel_diameter').get_parameter_value().double_value
+        self.max_rpm = self.get_parameter('max_rpm').get_parameter_value().integer_value
+        self.min_rpm = self.get_parameter('min_rpm').get_parameter_value().integer_value
+        self.motor_serial_device = self.get_parameter('motor_serial_device').get_parameter_value().string_value
+        
+        self.wheel_radius = self.wheel_diameter / 2.0
+        
+        # Initialize serial connection
+        self.serial = serial.Serial(self.motor_serial_device, baudrate=9600, timeout=1)
+        
+        # Subscriber
+        self.create_subscription(Twist, self.cmd_vel_topic, self.cmd_vel_callback, 10)
 
     def cmd_vel_callback(self, msg):
-        # Extract linear x and angular z
-        linear_x = msg.linear.x
-        angular_z = msg.angular.z
+        v = msg.linear.x  # Linear velocity in m/s
+        omega = msg.angular.z  # Angular velocity in rad/s
+        
+        # Calculate left and right wheel velocities (m/s)
+        v_left = v - (omega * self.wheel_base / 2.0)
+        v_right = v + (omega * self.wheel_base / 2.0)
 
-        # Map the linear x (range: -1 to 1) to PWM (0 to 100)
-        pwm_s1_value = max(0, min(100, (linear_x + 1) * 50))
-        pwm_s2_value = max(0, min(100, (angular_z + 1) * 50))
+        # Convert to RPM
+        rpm_left = (v_left / self.wheel_radius) * 60 / (2 * 3.14159)  # m/s to RPM
+        rpm_right = (v_right / self.wheel_radius) * 60 / (2 * 3.14159)
 
-        # Set PWM duty cycle
-        self.pwm_s1.ChangeDutyCycle(pwm_s1_value)
-        self.pwm_s2.ChangeDutyCycle(pwm_s2_value)
+        # Apply limits to RPM
+        if abs(rpm_left) < self.min_rpm:
+            rpm_left = 0
+        if abs(rpm_right) < self.min_rpm:
+            rpm_right = 0
 
-        self.get_logger().info(f"Set PWM: S1 (linear x) = {pwm_s1_value}, S2 (angular z) = {pwm_s2_value}")
+        # Cap RPM values
+        if rpm_left > self.max_rpm:
+            rpm_left = self.max_rpm
+        elif rpm_left < -self.max_rpm:
+            rpm_left = -self.max_rpm
 
-    def destroy_node(self):
-        # Cleanup GPIO on exit
-        self.pwm_s1.stop()
-        self.pwm_s2.stop()
-        GPIO.cleanup()
-        super().destroy_node()
+        if rpm_right > self.max_rpm:
+            rpm_right = self.max_rpm
+        elif rpm_right < -self.max_rpm:
+            rpm_right = -self.max_rpm
+
+        # Prepare command bytes
+        if rpm_left == 0 and rpm_right == 0:
+            command = bytes([0])  # Shutdown both motors
+        else:
+            motor1_command = 1 + int(126*((rpm_left / (2 * self.max_rpm)) + 0.5))
+            motor2_command = 128 + int(127*((rpm_right / (2 * self.max_rpm)) + 0.5))
+            
+            command = bytes([motor1_command, motor2_command])
+
+        # Send command to motors
+        self.serial.write(command)
+        # self.get_logger().info(f'Sent command: Motor 1: {command[0]}, Motor 2: {command[1]}')
 
 def main(args=None):
     rclpy.init(args=args)
-    motor_control_node = MotorControlNode()
-
-    try:
-        rclpy.spin(motor_control_node)
-    except KeyboardInterrupt:
-        motor_control_node.get_logger().info('Shutting down motor control node.')
-
-    motor_control_node.destroy_node()
+    node = MotorControlNode()
+    rclpy.spin(node)
+    node.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()

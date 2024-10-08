@@ -1,0 +1,248 @@
+[0.000000] (-) TimerEvent: {}
+[0.001951] (motor_control) JobQueued: {'identifier': 'motor_control', 'dependencies': OrderedDict()}
+[0.002606] (teleop) JobQueued: {'identifier': 'teleop', 'dependencies': OrderedDict()}
+[0.002828] (motor_control) JobStarted: {'identifier': 'motor_control'}
+[0.099103] (-) TimerEvent: {}
+[0.100716] (teleop) JobStarted: {'identifier': 'teleop'}
+[0.199162] (-) TimerEvent: {}
+[0.299971] (-) TimerEvent: {}
+[0.400706] (-) TimerEvent: {}
+[0.501414] (-) TimerEvent: {}
+[0.602143] (-) TimerEvent: {}
+[0.702856] (-) TimerEvent: {}
+[0.803557] (-) TimerEvent: {}
+[0.904614] (-) TimerEvent: {}
+[1.005366] (-) TimerEvent: {}
+[1.106064] (-) TimerEvent: {}
+[1.206763] (-) TimerEvent: {}
+[1.307479] (-) TimerEvent: {}
+[1.408460] (-) TimerEvent: {}
+[1.509333] (-) TimerEvent: {}
+[1.549175] (teleop) JobProgress: {'identifier': 'teleop', 'progress': 'cmake'}
+[1.550175] (teleop) Command: {'cmd': ['/usr/bin/cmake', '/home/walle/WALL-E/ros2_ws/src/teleop', '-DCMAKE_INSTALL_PREFIX=/home/walle/WALL-E/ros2_ws/install/teleop'], 'cwd': '/home/walle/WALL-E/ros2_ws/build/teleop', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'walle'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/aarch64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/walle'), ('OLDPWD', '/home/walle/WALL-E'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '1589'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'walle'), ('_', '/home/walle/.local/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'walle'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/home/walle/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/pi:@/tmp/.ICE-unix/1201,unix/pi:/tmp/.ICE-unix/1201'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/b0940e88_d1e5_4ae0_a41a_bedc295f48ff'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.JWT9U2'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.93'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/opt/ros/humble'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/walle/WALL-E/ros2_ws/build/teleop'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/opt/ros/humble')]), 'shell': False}
+[1.609493] (-) TimerEvent: {}
+[1.710242] (-) TimerEvent: {}
+[1.810952] (-) TimerEvent: {}
+[1.911670] (-) TimerEvent: {}
+[2.012576] (-) TimerEvent: {}
+[2.113368] (-) TimerEvent: {}
+[2.214440] (-) TimerEvent: {}
+[2.315208] (-) TimerEvent: {}
+[2.416263] (-) TimerEvent: {}
+[2.517287] (-) TimerEvent: {}
+[2.618041] (-) TimerEvent: {}
+[2.719092] (-) TimerEvent: {}
+[2.799446] (teleop) StdoutLine: {'line': b'-- The C compiler identification is GNU 11.4.0\n'}
+[2.819250] (-) TimerEvent: {}
+[2.920452] (-) TimerEvent: {}
+[3.021789] (-) TimerEvent: {}
+[3.122559] (-) TimerEvent: {}
+[3.223708] (-) TimerEvent: {}
+[3.325085] (-) TimerEvent: {}
+[3.426198] (-) TimerEvent: {}
+[3.527387] (-) TimerEvent: {}
+[3.620172] (teleop) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 11.4.0\n'}
+[3.627593] (-) TimerEvent: {}
+[3.682598] (teleop) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[3.727942] (-) TimerEvent: {}
+[3.829349] (-) TimerEvent: {}
+[3.857592] (motor_control) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', 'setup.py', 'egg_info', '--egg-base', '../../build/motor_control', 'build', '--build-base', '/home/walle/WALL-E/ros2_ws/build/motor_control/build', 'install', '--record', '/home/walle/WALL-E/ros2_ws/build/motor_control/install.log', '--install-scripts', '$base/lib/motor_control', '--single-version-externally-managed', 'install_data'], 'cwd': '/home/walle/WALL-E/ros2_ws/src/motor_control', 'env': {'LESSOPEN': '| /usr/bin/lesspipe %s', 'USER': 'walle', 'XDG_SESSION_TYPE': 'wayland', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/aarch64-linux-gnu:/opt/ros/humble/lib', 'HOME': '/home/walle', 'OLDPWD': '/home/walle/WALL-E', 'DESKTOP_SESSION': 'ubuntu', 'ROS_PYTHON_VERSION': '3', 'GNOME_SHELL_SESSION_MODE': 'ubuntu', 'GTK_MODULES': 'gail:atk-bridge', 'SYSTEMD_EXEC_PID': '1589', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': 'truecolor', 'IM_CONFIG_PHASE': '1', 'WAYLAND_DISPLAY': 'wayland-0', 'ROS_DISTRO': 'humble', 'LOGNAME': 'walle', '_': '/home/walle/.local/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'USERNAME': 'walle', 'TERM': 'xterm-256color', 'GNOME_DESKTOP_SESSION_ID': 'this-is-deprecated', 'ROS_LOCALHOST_ONLY': '0', 'PATH': '/opt/ros/humble/bin:/home/walle/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin', 'SESSION_MANAGER': 'local/pi:@/tmp/.ICE-unix/1201,unix/pi:/tmp/.ICE-unix/1201', 'XDG_MENU_PREFIX': 'gnome-', 'GNOME_TERMINAL_SCREEN': '/org/gnome/Terminal/screen/b0940e88_d1e5_4ae0_a41a_bedc295f48ff', 'GNOME_SETUP_DISPLAY': ':1', 'XDG_RUNTIME_DIR': '/run/user/1000', 'DISPLAY': ':0', 'LANG': 'en_US.UTF-8', 'XDG_CURRENT_DESKTOP': 'ubuntu:GNOME', 'XMODIFIERS': '@im=ibus', 'XDG_SESSION_DESKTOP': 'ubuntu', 'XAUTHORITY': '/run/user/1000/.mutter-Xwaylandauth.JWT9U2', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'GNOME_TERMINAL_SERVICE': ':1.93', 'SSH_AGENT_LAUNCHER': 'gnome-keyring', 'SSH_AUTH_SOCK': '/run/user/1000/keyring/ssh', 'AMENT_PREFIX_PATH': '/opt/ros/humble', 'SHELL': '/bin/bash', 'QT_ACCESSIBILITY': '1', 'GDMSESSION': 'ubuntu', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'QT_IM_MODULE': 'ibus', 'PWD': '/home/walle/WALL-E/ros2_ws/build/motor_control', 'XDG_CONFIG_DIRS': '/etc/xdg/xdg-ubuntu:/etc/xdg', 'XDG_DATA_DIRS': '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/walle/WALL-E/ros2_ws/build/motor_control/prefix_override:/home/walle/.local/lib/python3.10/site-packages/colcon_core/task/python/colcon_distutils_commands:/home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages', 'COLCON': '1', 'VTE_VERSION': '6800'}, 'shell': False}
+[3.929533] (-) TimerEvent: {}
+[4.030341] (-) TimerEvent: {}
+[4.131344] (-) TimerEvent: {}
+[4.149783] (teleop) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[4.181673] (teleop) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc - skipped\n'}
+[4.183799] (teleop) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[4.187699] (teleop) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[4.206596] (teleop) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[4.231545] (-) TimerEvent: {}
+[4.332732] (-) TimerEvent: {}
+[4.433616] (-) TimerEvent: {}
+[4.534977] (-) TimerEvent: {}
+[4.635933] (-) TimerEvent: {}
+[4.646345] (teleop) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[4.677495] (teleop) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ - skipped\n'}
+[4.678696] (teleop) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[4.680877] (teleop) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[4.736114] (-) TimerEvent: {}
+[4.743456] (teleop) StdoutLine: {'line': b'-- Found ament_cmake: 1.3.10 (/opt/ros/humble/share/ament_cmake/cmake)\n'}
+[4.836270] (-) TimerEvent: {}
+[4.936960] (-) TimerEvent: {}
+[5.038294] (-) TimerEvent: {}
+[5.139536] (-) TimerEvent: {}
+[5.240458] (-) TimerEvent: {}
+[5.341218] (-) TimerEvent: {}
+[5.427575] (motor_control) StderrLine: {'line': b"/usr/lib/python3/dist-packages/setuptools/dist.py:723: UserWarning: Usage of dash-separated 'script-dir' will not be supported in future versions. Please use the underscore name 'script_dir' instead\n"}
+[5.428649] (motor_control) StderrLine: {'line': b'  warnings.warn(\n'}
+[5.441438] (-) TimerEvent: {}
+[5.479010] (motor_control) StdoutLine: {'line': b'running egg_info\n'}
+[5.481894] (motor_control) StdoutLine: {'line': b'creating ../../build/motor_control/motor_control.egg-info\n'}
+[5.483000] (motor_control) StdoutLine: {'line': b'writing ../../build/motor_control/motor_control.egg-info/PKG-INFO\n'}
+[5.484908] (motor_control) StdoutLine: {'line': b'writing dependency_links to ../../build/motor_control/motor_control.egg-info/dependency_links.txt\n'}
+[5.485733] (motor_control) StdoutLine: {'line': b'writing entry points to ../../build/motor_control/motor_control.egg-info/entry_points.txt\n'}
+[5.486462] (motor_control) StdoutLine: {'line': b'writing requirements to ../../build/motor_control/motor_control.egg-info/requires.txt\n'}
+[5.487444] (motor_control) StdoutLine: {'line': b'writing top-level names to ../../build/motor_control/motor_control.egg-info/top_level.txt\n'}
+[5.488576] (motor_control) StdoutLine: {'line': b"writing manifest file '../../build/motor_control/motor_control.egg-info/SOURCES.txt'\n"}
+[5.499547] (motor_control) StdoutLine: {'line': b"reading manifest file '../../build/motor_control/motor_control.egg-info/SOURCES.txt'\n"}
+[5.504730] (motor_control) StdoutLine: {'line': b"writing manifest file '../../build/motor_control/motor_control.egg-info/SOURCES.txt'\n"}
+[5.505870] (motor_control) StdoutLine: {'line': b'running build\n'}
+[5.506552] (motor_control) StdoutLine: {'line': b'running build_py\n'}
+[5.507498] (motor_control) StdoutLine: {'line': b'creating /home/walle/WALL-E/ros2_ws/build/motor_control/build\n'}
+[5.508290] (motor_control) StdoutLine: {'line': b'creating /home/walle/WALL-E/ros2_ws/build/motor_control/build/lib\n'}
+[5.508805] (motor_control) StdoutLine: {'line': b'creating /home/walle/WALL-E/ros2_ws/build/motor_control/build/lib/motor_control\n'}
+[5.509497] (motor_control) StdoutLine: {'line': b'copying motor_control/motor_test.py -> /home/walle/WALL-E/ros2_ws/build/motor_control/build/lib/motor_control\n'}
+[5.510052] (motor_control) StdoutLine: {'line': b'copying motor_control/motor_control_node.py -> /home/walle/WALL-E/ros2_ws/build/motor_control/build/lib/motor_control\n'}
+[5.510741] (motor_control) StdoutLine: {'line': b'copying motor_control/__init__.py -> /home/walle/WALL-E/ros2_ws/build/motor_control/build/lib/motor_control\n'}
+[5.511633] (motor_control) StdoutLine: {'line': b'running install\n'}
+[5.513229] (motor_control) StdoutLine: {'line': b'running install_lib\n'}
+[5.517480] (motor_control) StdoutLine: {'line': b'creating /home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages/motor_control\n'}
+[5.518183] (motor_control) StdoutLine: {'line': b'copying /home/walle/WALL-E/ros2_ws/build/motor_control/build/lib/motor_control/motor_test.py -> /home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages/motor_control\n'}
+[5.519059] (motor_control) StdoutLine: {'line': b'copying /home/walle/WALL-E/ros2_ws/build/motor_control/build/lib/motor_control/motor_control_node.py -> /home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages/motor_control\n'}
+[5.520110] (motor_control) StdoutLine: {'line': b'copying /home/walle/WALL-E/ros2_ws/build/motor_control/build/lib/motor_control/__init__.py -> /home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages/motor_control\n'}
+[5.523372] (motor_control) StdoutLine: {'line': b'byte-compiling /home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages/motor_control/motor_test.py to motor_test.cpython-310.pyc\n'}
+[5.526133] (motor_control) StdoutLine: {'line': b'byte-compiling /home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages/motor_control/motor_control_node.py to motor_control_node.cpython-310.pyc\n'}
+[5.531385] (motor_control) StdoutLine: {'line': b'byte-compiling /home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages/motor_control/__init__.py to __init__.cpython-310.pyc\n'}
+[5.533647] (motor_control) StdoutLine: {'line': b'running install_data\n'}
+[5.534879] (motor_control) StdoutLine: {'line': b'creating /home/walle/WALL-E/ros2_ws/install/motor_control/share/ament_index\n'}
+[5.536983] (motor_control) StdoutLine: {'line': b'creating /home/walle/WALL-E/ros2_ws/install/motor_control/share/ament_index/resource_index\n'}
+[5.538295] (motor_control) StdoutLine: {'line': b'creating /home/walle/WALL-E/ros2_ws/install/motor_control/share/ament_index/resource_index/packages\n'}
+[5.540634] (motor_control) StdoutLine: {'line': b'copying resource/motor_control -> /home/walle/WALL-E/ros2_ws/install/motor_control/share/ament_index/resource_index/packages\n'}
+[5.541659] (-) TimerEvent: {}
+[5.542276] (motor_control) StdoutLine: {'line': b'copying package.xml -> /home/walle/WALL-E/ros2_ws/install/motor_control/share/motor_control\n'}
+[5.543083] (motor_control) StdoutLine: {'line': b'running install_egg_info\n'}
+[5.554275] (motor_control) StdoutLine: {'line': b'Copying ../../build/motor_control/motor_control.egg-info to /home/walle/WALL-E/ros2_ws/install/motor_control/lib/python3.10/site-packages/motor_control-0.0.0-py3.10.egg-info\n'}
+[5.561859] (motor_control) StdoutLine: {'line': b'running install_scripts\n'}
+[5.641877] (-) TimerEvent: {}
+[5.671813] (motor_control) StdoutLine: {'line': b'Installing motor_control_node script to /home/walle/WALL-E/ros2_ws/install/motor_control/lib/motor_control\n'}
+[5.678272] (motor_control) StdoutLine: {'line': b"writing list of installed files to '/home/walle/WALL-E/ros2_ws/build/motor_control/install.log'\n"}
+[5.738214] (teleop) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter \n'}
+[5.742209] (-) TimerEvent: {}
+[5.832900] (motor_control) CommandEnded: {'returncode': 0}
+[5.842369] (-) TimerEvent: {}
+[5.899087] (motor_control) JobEnded: {'identifier': 'motor_control', 'rc': 0}
+[5.942585] (-) TimerEvent: {}
+[6.043328] (-) TimerEvent: {}
+[6.144495] (-) TimerEvent: {}
+[6.245308] (-) TimerEvent: {}
+[6.346068] (-) TimerEvent: {}
+[6.446875] (-) TimerEvent: {}
+[6.547622] (-) TimerEvent: {}
+[6.584352] (teleop) StdoutLine: {'line': b'-- Found rclcpp: 16.0.10 (/opt/ros/humble/share/rclcpp/cmake)\n'}
+[6.647809] (-) TimerEvent: {}
+[6.748595] (-) TimerEvent: {}
+[6.849502] (-) TimerEvent: {}
+[6.950196] (-) TimerEvent: {}
+[7.050904] (-) TimerEvent: {}
+[7.138280] (teleop) StdoutLine: {'line': b'-- Found rosidl_generator_c: 3.1.5 (/opt/ros/humble/share/rosidl_generator_c/cmake)\n'}
+[7.151089] (-) TimerEvent: {}
+[7.209251] (teleop) StdoutLine: {'line': b'-- Found rosidl_adapter: 3.1.5 (/opt/ros/humble/share/rosidl_adapter/cmake)\n'}
+[7.251282] (-) TimerEvent: {}
+[7.304614] (teleop) StdoutLine: {'line': b'-- Found rosidl_generator_cpp: 3.1.5 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)\n'}
+[7.351459] (-) TimerEvent: {}
+[7.436119] (teleop) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[7.451638] (-) TimerEvent: {}
+[7.552407] (-) TimerEvent: {}
+[7.601692] (teleop) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[7.652601] (-) TimerEvent: {}
+[7.753360] (-) TimerEvent: {}
+[7.854206] (-) TimerEvent: {}
+[7.955068] (-) TimerEvent: {}
+[8.055798] (-) TimerEvent: {}
+[8.073435] (teleop) StdoutLine: {'line': b'-- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)\n'}
+[8.111542] (teleop) StdoutLine: {'line': b'-- Found rmw_fastrtps_cpp: 6.2.7 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)\n'}
+[8.156010] (-) TimerEvent: {}
+[8.256753] (-) TimerEvent: {}
+[8.357524] (-) TimerEvent: {}
+[8.458310] (-) TimerEvent: {}
+[8.559054] (-) TimerEvent: {}
+[8.659990] (-) TimerEvent: {}
+[8.760806] (-) TimerEvent: {}
+[8.861683] (-) TimerEvent: {}
+[8.899299] (teleop) StdoutLine: {'line': b'-- Found OpenSSL: /usr/lib/aarch64-linux-gnu/libcrypto.so (found version "3.0.2")  \n'}
+[8.961860] (-) TimerEvent: {}
+[9.062575] (-) TimerEvent: {}
+[9.163316] (-) TimerEvent: {}
+[9.229455] (teleop) StdoutLine: {'line': b'-- Found FastRTPS: /opt/ros/humble/include  \n'}
+[9.263500] (-) TimerEvent: {}
+[9.364240] (-) TimerEvent: {}
+[9.465098] (-) TimerEvent: {}
+[9.565895] (-) TimerEvent: {}
+[9.666602] (-) TimerEvent: {}
+[9.747488] (teleop) StdoutLine: {'line': b"-- Using RMW implementation 'rmw_fastrtps_cpp' as default\n"}
+[9.766876] (-) TimerEvent: {}
+[9.867567] (teleop) StdoutLine: {'line': b'-- Looking for pthread.h\n'}
+[9.868434] (-) TimerEvent: {}
+[9.969224] (-) TimerEvent: {}
+[10.070186] (-) TimerEvent: {}
+[10.171148] (-) TimerEvent: {}
+[10.272928] (-) TimerEvent: {}
+[10.373749] (-) TimerEvent: {}
+[10.382378] (teleop) StdoutLine: {'line': b'-- Looking for pthread.h - found\n'}
+[10.385428] (teleop) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n'}
+[10.473933] (-) TimerEvent: {}
+[10.574704] (-) TimerEvent: {}
+[10.675479] (-) TimerEvent: {}
+[10.776488] (-) TimerEvent: {}
+[10.784571] (teleop) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n'}
+[10.789558] (teleop) StdoutLine: {'line': b'-- Found Threads: TRUE  \n'}
+[10.876678] (-) TimerEvent: {}
+[10.977384] (-) TimerEvent: {}
+[11.078172] (-) TimerEvent: {}
+[11.178954] (-) TimerEvent: {}
+[11.228742] (teleop) StdoutLine: {'line': b'-- Found sensor_msgs: 4.2.4 (/opt/ros/humble/share/sensor_msgs/cmake)\n'}
+[11.279155] (-) TimerEvent: {}
+[11.379992] (-) TimerEvent: {}
+[11.480750] (-) TimerEvent: {}
+[11.481554] (teleop) StdoutLine: {'line': b'-- Found teleop_twist_joy: 2.4.6 (/opt/ros/humble/share/teleop_twist_joy/cmake)\n'}
+[11.523530] (teleop) StdoutLine: {'line': b'-- Found joy: 3.3.0 (/opt/ros/humble/share/joy/cmake)\n'}
+[11.580906] (-) TimerEvent: {}
+[11.633601] (teleop) StdoutLine: {'line': b'-- Found ament_lint_auto: 0.12.11 (/opt/ros/humble/share/ament_lint_auto/cmake)\n'}
+[11.681092] (-) TimerEvent: {}
+[11.781970] (-) TimerEvent: {}
+[11.882682] (-) TimerEvent: {}
+[11.983417] (-) TimerEvent: {}
+[12.084144] (-) TimerEvent: {}
+[12.184821] (-) TimerEvent: {}
+[12.271141] (teleop) StdoutLine: {'line': b"-- Added test 'copyright' to check source files copyright and LICENSE\n"}
+[12.285013] (-) TimerEvent: {}
+[12.285894] (teleop) StdoutLine: {'line': b"-- Added test 'flake8' to check Python code syntax and style conventions\n"}
+[12.289822] (teleop) StdoutLine: {'line': b"-- Added test 'lint_cmake' to check CMake code style\n"}
+[12.292997] (teleop) StdoutLine: {'line': b"-- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257\n"}
+[12.301022] (teleop) StdoutLine: {'line': b"-- Added test 'xmllint' to check XML markup files\n"}
+[12.315894] (teleop) StdoutLine: {'line': b'-- Configuring done\n'}
+[12.363269] (teleop) StdoutLine: {'line': b'-- Generating done\n'}
+[12.370808] (teleop) StdoutLine: {'line': b'-- Build files have been written to: /home/walle/WALL-E/ros2_ws/build/teleop\n'}
+[12.385250] (-) TimerEvent: {}
+[12.412280] (teleop) CommandEnded: {'returncode': 0}
+[12.414793] (teleop) JobProgress: {'identifier': 'teleop', 'progress': 'build'}
+[12.421361] (teleop) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/walle/WALL-E/ros2_ws/build/teleop', '--', '-j4', '-l4'], 'cwd': '/home/walle/WALL-E/ros2_ws/build/teleop', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'walle'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/aarch64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/walle'), ('OLDPWD', '/home/walle/WALL-E'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '1589'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'walle'), ('_', '/home/walle/.local/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'walle'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/home/walle/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/pi:@/tmp/.ICE-unix/1201,unix/pi:/tmp/.ICE-unix/1201'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/b0940e88_d1e5_4ae0_a41a_bedc295f48ff'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.JWT9U2'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.93'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/opt/ros/humble'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/walle/WALL-E/ros2_ws/build/teleop'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/opt/ros/humble')]), 'shell': False}
+[12.485501] (-) TimerEvent: {}
+[12.586376] (-) TimerEvent: {}
+[12.613210] (teleop) CommandEnded: {'returncode': 0}
+[12.686590] (-) TimerEvent: {}
+[12.746825] (teleop) JobProgress: {'identifier': 'teleop', 'progress': 'install'}
+[12.785736] (teleop) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/walle/WALL-E/ros2_ws/build/teleop'], 'cwd': '/home/walle/WALL-E/ros2_ws/build/teleop', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'walle'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/aarch64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/walle'), ('OLDPWD', '/home/walle/WALL-E'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '1589'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'walle'), ('_', '/home/walle/.local/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'walle'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/home/walle/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/pi:@/tmp/.ICE-unix/1201,unix/pi:/tmp/.ICE-unix/1201'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/b0940e88_d1e5_4ae0_a41a_bedc295f48ff'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.JWT9U2'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.93'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/opt/ros/humble'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/walle/WALL-E/ros2_ws/build/teleop'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/opt/ros/humble')]), 'shell': False}
+[12.794963] (-) TimerEvent: {}
+[12.824947] (teleop) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[12.825696] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop//launch\n'}
+[12.826334] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop//launch/teleop_launch.py\n'}
+[12.829068] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/ament_index/resource_index/package_run_dependencies/teleop\n'}
+[12.830930] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/ament_index/resource_index/parent_prefix_path/teleop\n'}
+[12.832832] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/environment/ament_prefix_path.sh\n'}
+[12.834137] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/environment/ament_prefix_path.dsv\n'}
+[12.835424] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/environment/path.sh\n'}
+[12.836854] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/environment/path.dsv\n'}
+[12.838273] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/local_setup.bash\n'}
+[12.839552] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/local_setup.sh\n'}
+[12.841848] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/local_setup.zsh\n'}
+[12.842992] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/local_setup.dsv\n'}
+[12.844267] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/package.dsv\n'}
+[12.845844] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/ament_index/resource_index/packages/teleop\n'}
+[12.847584] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/cmake/teleopConfig.cmake\n'}
+[12.848701] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/cmake/teleopConfig-version.cmake\n'}
+[12.850018] (teleop) StdoutLine: {'line': b'-- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/package.xml\n'}
+[12.856931] (teleop) CommandEnded: {'returncode': 0}
+[12.895236] (-) TimerEvent: {}
+[12.996135] (-) TimerEvent: {}
+[13.052485] (teleop) JobEnded: {'identifier': 'teleop', 'rc': 0}
+[13.057155] (-) EventReactorShutdown: {}

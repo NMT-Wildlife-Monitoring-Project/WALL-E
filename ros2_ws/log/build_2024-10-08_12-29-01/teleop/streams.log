@@ -1,0 +1,22 @@
+[1.512s] Invoking command in '/home/walle/WALL-E/ros2_ws/build/teleop': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/walle/WALL-E/ros2_ws/install/motor_control:/opt/ros/humble /usr/bin/cmake --build /home/walle/WALL-E/ros2_ws/build/teleop -- -j4 -l4
+[1.725s] Invoked command in '/home/walle/WALL-E/ros2_ws/build/teleop' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/walle/WALL-E/ros2_ws/install/motor_control:/opt/ros/humble /usr/bin/cmake --build /home/walle/WALL-E/ros2_ws/build/teleop -- -j4 -l4
+[1.913s] Invoking command in '/home/walle/WALL-E/ros2_ws/build/teleop': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/walle/WALL-E/ros2_ws/install/motor_control:/opt/ros/humble /usr/bin/cmake --install /home/walle/WALL-E/ros2_ws/build/teleop
+[1.947s] -- Install configuration: ""
+[1.948s] -- Up-to-date: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop//launch
+[1.948s] -- Up-to-date: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop//launch/teleop_launch.py
+[1.949s] -- Up-to-date: /home/walle/WALL-E/ros2_ws/install/teleop/share/ament_index/resource_index/package_run_dependencies/teleop
+[1.950s] -- Up-to-date: /home/walle/WALL-E/ros2_ws/install/teleop/share/ament_index/resource_index/parent_prefix_path/teleop
+[1.950s] -- Up-to-date: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/environment/ament_prefix_path.sh
+[1.951s] -- Up-to-date: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/environment/ament_prefix_path.dsv
+[1.952s] -- Up-to-date: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/environment/path.sh
+[1.954s] -- Up-to-date: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/environment/path.dsv
+[1.955s] -- Up-to-date: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/local_setup.bash
+[1.955s] -- Up-to-date: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/local_setup.sh
+[1.956s] -- Up-to-date: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/local_setup.zsh
+[1.957s] -- Up-to-date: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/local_setup.dsv
+[1.957s] -- Installing: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/package.dsv
+[1.958s] -- Up-to-date: /home/walle/WALL-E/ros2_ws/install/teleop/share/ament_index/resource_index/packages/teleop
+[1.959s] -- Up-to-date: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/cmake/teleopConfig.cmake
+[1.960s] -- Up-to-date: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/cmake/teleopConfig-version.cmake
+[1.963s] -- Up-to-date: /home/walle/WALL-E/ros2_ws/install/teleop/share/teleop/package.xml
+[1.966s] Invoked command in '/home/walle/WALL-E/ros2_ws/build/teleop' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/walle/WALL-E/ros2_ws/install/motor_control:/opt/ros/humble /usr/bin/cmake --install /home/walle/WALL-E/ros2_ws/build/teleop
