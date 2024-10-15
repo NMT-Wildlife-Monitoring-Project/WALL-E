@@ -23,12 +23,17 @@ RUN apt-get update && apt-get install -y \
     ros-noetic-joy \
     && rm -rf /var/lib/apt/lists/*
 
+COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws
+
+# Copy the entrypoint script into the container
+COPY entrypoint.sh /entrypoint.sh
+
+# Make the entrypoint script executable
+RUN chmod +x /entrypoint.sh
+
+# Set entrypoint to use the external script
+ENTRYPOINT ["/entrypoint.sh"]
+
 # Switch back to non-root user 'walle'
 USER $USER
 WORKDIR /home/$USER
-
-# Copy any local files needed (optional)
-# COPY . .
-
-# Set up entrypoint
-ENTRYPOINT ["bash"]

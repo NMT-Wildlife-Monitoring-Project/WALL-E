@@ -1,4 +1,0 @@
-Invoking command in '/home/walle/WALL-E/ros2_ws/build/teleop': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/walle/WALL-E/ros2_ws/install/motor_control:/opt/ros/humble /usr/bin/cmake --build /home/walle/WALL-E/ros2_ws/build/teleop -- -j4 -l4
-Invoked command in '/home/walle/WALL-E/ros2_ws/build/teleop' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/walle/WALL-E/ros2_ws/install/motor_control:/opt/ros/humble /usr/bin/cmake --build /home/walle/WALL-E/ros2_ws/build/teleop -- -j4 -l4
-Invoking command in '/home/walle/WALL-E/ros2_ws/build/teleop': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/walle/WALL-E/ros2_ws/install/motor_control:/opt/ros/humble /usr/bin/cmake --install /home/walle/WALL-E/ros2_ws/build/teleop
-Invoked command in '/home/walle/WALL-E/ros2_ws/build/teleop' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/walle/WALL-E/ros2_ws/install/motor_control:/opt/ros/humble /usr/bin/cmake --install /home/walle/WALL-E/ros2_ws/build/teleop
