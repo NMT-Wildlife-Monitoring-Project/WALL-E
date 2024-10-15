@@ -1,44 +1,34 @@
-FROM ros:humble
-#VOLUME /dev /dev
-#VOLUME /home/pi5-walle/WALL-E /WALL-E/
-#VOLUME /tmp/.X11-unix
-#ENV DISPLAY=0
+# Base image with ROS Noetic on Ubuntu 20.04
+FROM ros:noetic-ros-base
 
+# Set environment variables for ROS
+ENV ROS_DISTRO=noetic
 
-RUN apt-get update && apt-get install -y sudo
+# Create a non-root user named 'walle'
+ARG USER=walle
+RUN useradd -m $USER && \
+    echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Create a non-root user and group (walle)
-RUN groupadd -g 1001 walle && \
-   useradd -u 1001 -g walle -m -s /bin/bash walle
+# Set the user 'walle' as the default
+USER $USER
+WORKDIR /home/$USER
 
-# Grant sudo permissions to the user
-RUN echo "walle ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+# Install necessary packages
+USER root
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-serial \
+    ros-noetic-teleop-twist-joy \
+    ros-noetic-joy \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set the permissions for files or directories if needed
-# For example, set permissions to a directory (e.g., /app)
-RUN mkdir /app && chown -R walle:walle /app
+# Switch back to non-root user 'walle'
+USER $USER
+WORKDIR /home/$USER
 
-# Switch to the non-root user
-USER walle
+# Copy any local files needed (optional)
+# COPY . .
 
-# Set the working directory (optional)
-#WORKDIR /app
-RUN sudo apt-get install -y python3
-RUN sudo apt-get install -y python3-pip
-
-# Run commands as the new user (install pySerial)
-RUN pip3 install pyserial
-RUN sudo apt-get -y install ros-humble-teleop-twist-joy
-RUN sudo apt-get -y install ros-humble-joy
-RUN sudo apt-get install -y python3
-
-CMD ["/bin/bash"]
-
-
-#RUN cd /WALL-E/ros2_ws/src/motor_control/
-#RUN colcon build --symlink-install   
-
-
-
-
-#sudo docker run --rm -it --env DISPLAY=$DISPLAY --volume /dev:/dev  -v /home/pi5-walle/WALL-E/:/WALL-E/    --volume /tmp/.X11-unix:/tmp/.X11-unix walle"
+# Set up entrypoint
+ENTRYPOINT ["bash"]
