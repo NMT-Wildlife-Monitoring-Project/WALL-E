@@ -1,0 +1,8 @@
+<launch>
+    <!-- Load parameters from the YAML config file -->
+    <rosparam file="$(find motor_control)/config/motor_control_params.yaml" command="load"/>
+
+    <!-- Start the motor control node -->
+    <node name="motor_control_node" pkg="motor_control" type="motor_control_node.py" output="screen">
+    </node>
+</launch>
