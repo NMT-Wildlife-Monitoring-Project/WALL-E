@@ -13,19 +13,29 @@ RUN useradd -m $USER && \
 USER $USER
 WORKDIR /home/$USER
 
-# Install necessary packages
+# Install necessary packages including catkin tools
 USER root
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     python3-serial \
+    python3-catkin-tools \
     ros-noetic-teleop-twist-joy \
     ros-noetic-joy \
+    ros-noetic-navigation \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy the ros2_ws folder into the container
 COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws
 
+# Build the workspace
+USER $USER
+WORKDIR /home/$USER/catkin_ws
+RUN /bin/bash -c '. /opt/ros/noetic/setup.sh; cd /home/$USER/catkin_ws; catkin build'
+
 # Copy the entrypoint script into the container
+USER root
+WORKDIR /home/$USER
 COPY entrypoint.sh /entrypoint.sh
 
 # Make the entrypoint script executable

@@ -11,24 +11,23 @@ find_package(catkin REQUIRED COMPONENTS
   move_base_msgs
   tf
   geometry_msgs
-  actions
 )
 
 catkin_package(
-  CATKIN_DEPENDS roscpp sensor_msgs actionlib move_base_msgs tf geometry_msgs actions
+  CATKIN_DEPENDS roscpp sensor_msgs actionlib move_base_msgs tf geometry_msgs
 )
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(dump_node src/dump_node.cpp)
+# add_executable(dump_node src/dump_node.cpp)
 
-target_link_libraries(dump_node
-  ${catkin_LIBRARIES}
-)
+# target_link_libraries(dump_node
+#   ${catkin_LIBRARIES}
+# )
 
-add_dependencies(dump_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(dump_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 install(DIRECTORY launch config
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
