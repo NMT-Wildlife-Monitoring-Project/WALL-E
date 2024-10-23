@@ -20,9 +20,11 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     python3-serial \
     python3-catkin-tools \
+    iputils-ping \
     ros-noetic-teleop-twist-joy \
     ros-noetic-joy \
     ros-noetic-navigation \
+    ros-noetic-rviz \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the ros2_ws folder into the container
