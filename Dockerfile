@@ -24,7 +24,8 @@ RUN pip3 install pyserial
 # Install ros packages
 RUN apt-get -y install ros-humble-teleop-twist-joy
 RUN apt-get -y install ros-humble-joy
-RUN apt-get -y install ros-humble-navigation
+RUN apt-get -y install ros-humble-navigation2
+RUN apt-get -y install ros-humble-nav2-bringup
 
 # Copy in the ros workspace
 COPY --chown=$USER:$USER ros2_ws /home/$USER/ros2_ws
