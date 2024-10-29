@@ -30,8 +30,8 @@ Build the docker image
 # USAGE
 
 Run the docker image  
-`docker run -it --name ros_walle ros_walle`
-To open another terminal in the same container run
-`docker exec -it ros_walle bash`
+`docker run -it --name ros_walle ros_walle`  
+To open another terminal in the same container run  
+`docker exec -it ros_walle bash`  
 
 
