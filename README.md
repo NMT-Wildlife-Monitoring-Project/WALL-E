@@ -31,7 +31,27 @@ Build the docker image
 
 Run the docker image  
 `docker run -it --name ros_walle ros_walle`  
+
 To open another terminal in the same container run  
 `docker exec -it ros_walle bash`  
+
+Change parameters in the launch file
+
+Run the motor control node
+`ros2 launch motor_control motor_launch.py'
+Parameters:
+- cmd_vel_topic: cmd_vel
+- wheel_base: 0.5
+- wheel_diameter: 0.1
+- max_rpm: 100
+- min_rpm: 10
+- motor_serial_device: /dev/serial0
+
+Run the teleop node
+'ros2 launch teleop teleop_launch.py'
+See <https://wiki.ros.org/joy> and <https://wiki.ros.org/teleop_twist_joy>. The documentation is for ros 1 but the parameters are the same for the most part. Use
+`ros2 param list' when running the node to see available parameters.
+  
+
 
 
