@@ -21,7 +21,7 @@ Ensure you have an SSH key set up with Github (optional)
 
 Clone this repository and cd into it. To commit to the repository, clone with the ssh address. Don't push to main unless you helped write this README (make your own branch).
 ```
-git clone [git@github.com:NMT-Wildlife-Monitoring-Project/WALL-E.git](https://github.com/NMT-Wildlife-Monitoring-Project/WALL-E.git)
+git clone https://github.com/NMT-Wildlife-Monitoring-Project/WALL-E.git
 ```
 
 Build the docker image  
