@@ -16,20 +16,22 @@ sudo usermod -aG docker $USER
 newgrp docker
 ```
 
-Ensure you have an SSH key set up with Github  
+Ensure you have an SSH key set up with Github (optional)
 <https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account>  
 
-Clone this repository with SSH and cd into it  
+Clone this repository and cd into it. To commit to the repository, clone with the ssh address. Don't push to main unless you helped write this README (make your own branch).
 ```
-git clone git@github.com:NMT-Wildlife-Monitoring-Project/WALL-E.git
-cd WALL-E
+git clone [git@github.com:NMT-Wildlife-Monitoring-Project/WALL-E.git](https://github.com/NMT-Wildlife-Monitoring-Project/WALL-E.git)
 ```
 
 Build the docker image  
-`docker compose build`  
+`docker build -t ros_walle WALL-E`  
 
 # USAGE
 
 Run the docker image  
-`docker run -it ros `
+`docker run -it --name ros_walle ros_walle`
+To open another terminal in the same container run
+`docker exec -it ros_walle bash`
+
 
