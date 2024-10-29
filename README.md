@@ -19,7 +19,7 @@ newgrp docker
 Ensure you have an SSH key set up with Github (optional)
 <https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account>  
 
-Clone this repository and cd into it. To commit to the repository, clone with the ssh address. Don't push to main unless you helped write this README (make your own branch).
+Clone this repository. To commit to the repository, clone with the ssh address. Don't push to main unless you helped write this README (make your own branch).
 ```
 git clone https://github.com/NMT-Wildlife-Monitoring-Project/WALL-E.git
 ```
