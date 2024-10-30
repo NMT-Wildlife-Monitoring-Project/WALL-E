@@ -1,6 +1,4 @@
 FROM ros:humble
-VOLUME /dev /dev
-VOLUME /tmp/.X11-unix
 ENV DISPLAY=0
 
 RUN apt-get update && apt-get install -y sudo
@@ -26,9 +24,13 @@ RUN apt-get -y install ros-humble-teleop-twist-joy
 RUN apt-get -y install ros-humble-joy
 RUN apt-get -y install ros-humble-navigation2
 RUN apt-get -y install ros-humble-nav2-bringup
+RUN apt-get -y install ros-humble-realsense2-*
+RUN apt-get -y install ros-humble-rviz2
+RUN apt-get -y install ros-humble-rtabmap-ros
 
 # Copy in the ros workspace
 COPY --chown=$USER:$USER ros2_ws /home/$USER/ros2_ws
+COPY --chown=$USER:$USER rviz2 /home/$USER/.rviz2
 
 # Compile the ros workspace
 USER $USER
@@ -49,5 +51,3 @@ ENTRYPOINT ["/entrypoint.sh"]
 # Switch back to non-root user 'walle'
 USER $USER
 WORKDIR /home/$USER
-
-#sudo docker run --rm -it --env DISPLAY=$DISPLAY --volume /dev:/dev  -v /home/pi5-walle/WALL-E/:/WALL-E/    --volume /tmp/.X11-unix:/tmp/.X11-unix walle"
