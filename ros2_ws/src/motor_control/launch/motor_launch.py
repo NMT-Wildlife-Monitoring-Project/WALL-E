@@ -13,7 +13,7 @@ def generate_launch_description():
             parameters=[{
                 'cmd_vel_topic': '/cmd_vel',
                 'wheel_base': 0.2,
-                'wheel_diameter': 0.1,
+                'wheel_diameter': 0.045,
                 'max_rpm': 100,
                 'min_rpm': 10,
                 'motor_serial_device': '/dev/serial0',

@@ -22,11 +22,16 @@ RUN pip3 install pyserial
 # Install ros packages
 RUN apt-get -y install ros-humble-teleop-twist-joy
 RUN apt-get -y install ros-humble-joy
-RUN apt-get -y install ros-humble-navigation2
-RUN apt-get -y install ros-humble-nav2-bringup
-RUN apt-get -y install ros-humble-realsense2-*
 RUN apt-get -y install ros-humble-rviz2
-RUN apt-get -y install ros-humble-rtabmap-ros
+RUN apt-get -y install ros-humble-rplidar-ros
+
+# Set up USB devices for RPLIDAR
+RUN usermod -a -G dialout $USER
+
+# Grant access to video devices for graphical acceleration
+RUN apt-get update && apt-get install -y \
+    mesa-utils \
+    x11-xserver-utils
 
 # Copy in the ros workspace
 COPY --chown=$USER:$USER ros2_ws /home/$USER/ros2_ws

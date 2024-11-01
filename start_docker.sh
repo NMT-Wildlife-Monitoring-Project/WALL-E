@@ -1,5 +1,6 @@
 #!/bin/bash
 
+xhost +
 docker build -t ros2_luna .
 docker run -it --rm \
   -v /dev:/dev \
@@ -7,9 +8,6 @@ docker run -it --rm \
   -e DISPLAY=$DISPLAY \
   --network=host \
   --privileged \
-  --device-cgroup-rule='c 13:* rmw' \
-  --device-cgroup-rule "c 81:* rmw" \
-  --device-cgroup-rule "c 189:* rmw" \
   --name \
   luna \
   ros2_luna \
