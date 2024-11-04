@@ -49,7 +49,13 @@ class MotorControlNode(Node):
         # Calculate left and right wheel velocities (m/s)
         v_left = v - (omega * self.wheel_base / 2.0)
         v_right = v + (omega * self.wheel_base / 2.0)
-its to RPM
+
+        # Convert to RPM
+        rpm_left = (v_left / self.wheel_radius) * \
+            60 / (2 * 3.14159)  # m/s to RPM
+        rpm_right = (v_right / self.wheel_radius) * 60 / (2 * 3.14159)
+
+        # Apply limits to RPM
         if abs(rpm_left) < self.min_rpm:
             rpm_left = 0
         if abs(rpm_right) < self.min_rpm:
