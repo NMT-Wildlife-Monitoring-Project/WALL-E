@@ -25,15 +25,25 @@ git clone https://github.com/NMT-Wildlife-Monitoring-Project/WALL-E.git
 ```
 
 Build the docker image  
-`docker build -t ros_walle WALL-E`  
+`./start_docker.sh`  
 
 # USAGE
 
-Run the docker image  
-`docker run -it --name ros_walle ros_walle`  
+Run rtabmap and rvis
+```
+./rtabmap.sh
+```
+open a new terminal window and run
+`./rvis.sh` 
+
+To run teleop
+`./teleop.sh`
 
 To open another terminal in the same container run  
-`docker exec -it ros_walle bash`  
+`docker exec -it --privileged luna bash`  
+then:
+`source /opt/ros/humble/setup.bash && source ~/ros2_ws/install/setup.bash`
+
 
 Change parameters in the launch file
 
@@ -50,8 +60,4 @@ Parameters:
 Run the teleop node
 'ros2 launch teleop teleop_launch.py'
 See <https://wiki.ros.org/joy> and <https://wiki.ros.org/teleop_twist_joy>. The documentation is for ros 1 but the parameters are the same for the most part. Use
-`ros2 param list' when running the node to see available parameters.
-  
-
-
-
+`ros2 param list` when running the node to see available parameters.
