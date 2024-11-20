@@ -1,59 +1,58 @@
 #!/bin/bash
 
-# Default values
-X11_FORWARD=false
-COMMAND=""
+# Define variables
+CONTAINER_NAME="ros_noetic_container"
+IMAGE_NAME="ros_noetic_image"
+
+# Function to show usage
+usage() {
+    echo "Usage: $0 [-r | -t | -c <command>] [-h]"
+    echo "  -r          Run robot_start.launch from package control"
+    echo "  -t          Run teleop.launch from package control"
+    echo "  -c <command> Pass a command to be run in the container"
+    echo "  -h          Show this help message"
+    echo "If no options are given, an interactive bash terminal will be opened in the container."
+    exit 1
+}
 
 # Parse options
-while getopts ":xc:" opt; do
-  case $opt in
-    x)
-      X11_FORWARD=true
-      ;;
-    c)
-      COMMAND=$OPTARG
-      ;;
-    \?)
-      echo "Invalid option: -$OPTARG" >&2
-      exit 1
-      ;;
-    :)
-      echo "Option -$OPTARG requires an argument." >&2
-      exit 1
-      ;;
-  esac
+while getopts "rtc:h" opt; do
+    case "$opt" in
+        r) RUN_ROBOT_LAUNCH=true ;;
+        t) RUN_TELEOP_LAUNCH=true ;;
+        c) COMMAND_TO_RUN="$OPTARG" ;;
+        h) usage ;;
+        *) usage ;;
+    esac
 done
 
-# Run the Docker container with roscore
-if [ "$X11_FORWARD" = true ]; then
-  # Enable X11 forwarding
-  xhost +local:docker
-  DOCKER_X11_OPTS="-e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix"
+# Build the container image
+echo "Building Docker image..."
+docker build -t $IMAGE_NAME .
+
+# Start the container if not already running
+if [ ! "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
+    if [ "$(docker ps -aq -f status=exited -f name=$CONTAINER_NAME)" ]; then
+        # Remove the stopped container
+        docker rm $CONTAINER_NAME
+    fi
+    echo "Starting Docker container with roscore..."
+    docker run -dit --name $CONTAINER_NAME --privileged --entrypoint bash $IMAGE_NAME -c "source /opt/ros/noetic/setup.bash && source ~/catkin_ws/devel/setup.bash && roscore"
 else
-  DOCKER_X11_OPTS=""
+    echo "Container is already running."
 fi
 
-# Check if the container is already running
-if [ "$(docker ps -q -f name=ros1-walle)" ]; then
-  echo "Container ros1-walle is already running."
+# Execute the specified option
+if [ "$RUN_ROBOT_LAUNCH" = true ]; then
+    echo "Running robot_start.launch..."
+    docker exec -it $CONTAINER_NAME bash -c "source /opt/ros/noetic/setup.bash && source ~/catkin_ws/devel/setup.bash && roslaunch control robot_start.launch"
+elif [ "$RUN_TELEOP_LAUNCH" = true ]; then
+    echo "Running teleop.launch..."
+    docker exec -it $CONTAINER_NAME bash -c "source /opt/ros/noetic/setup.bash && source ~/catkin_ws/devel/setup.bash && roslaunch control teleop.launch"
+elif [ -n "$COMMAND_TO_RUN" ]; then
+    echo "Running custom command: $COMMAND_TO_RUN"
+    docker exec -it $CONTAINER_NAME bash -c "source /opt/ros/noetic/setup.bash && source ~/catkin_ws/devel/setup.bash && $COMMAND_TO_RUN"
 else
-  echo "Starting container ros1-walle with roscore..."
-  docker run -d --name ros1-walle $DOCKER_X11_OPTS ros1-walle roscore
-fi
-
-# Wait for a moment to ensure roscore starts
-sleep 3
-
-# Execute command or interactive shell inside the running container
-if [ -n "$COMMAND" ]; then
-  # Execute the provided command in the container
-  docker exec -it ros1-walle bash -c "$COMMAND"
-else
-  # Start an interactive shell
-  docker exec -it ros1-walle bash
-fi
-
-# Clean up X11 permissions if X forwarding was enabled
-if [ "$X11_FORWARD" = true ]; then
-  xhost -local:docker
+    echo "No options specified. Opening interactive bash terminal in the container..."
+    docker exec -it $CONTAINER_NAME bash -c "source /opt/ros/noetic/setup.bash && source ~/catkin_ws/devel/setup.bash && bash"
 fi
