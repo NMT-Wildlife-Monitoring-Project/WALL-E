@@ -5,6 +5,7 @@ set -e
 source /opt/ros/humble/setup.bash
 source /home/walle/ros2_ws/install/setup.bash
 
+
 # Set up the RealSense device permissions
 # sudo udevadm control --reload-rules && sudo udevadm trigger
 
