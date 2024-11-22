@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y \
     ros-noetic-joy \
     ros-noetic-navigation \
     ros-noetic-rviz \
+    ros-noetic-usb-cam \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the ros2_ws folder into the container
