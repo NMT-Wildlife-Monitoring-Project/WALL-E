@@ -1,10 +1,12 @@
 #!/bin/bash
 
 # Default values
-CONTAINER_NAME="ros_noetic_container"
-IMAGE_NAME="ros_noetic_image"
-SLAVE_IP="129.138.167.168"
-HOST_IP="129.138.175.118"
+CONTAINER_NAME="walle_ros1"
+IMAGE_NAME="walle/ros1:noetic"
+# SLAVE_IP="129.138.167.168"
+# HOST_IP="129.138.175.118"
+SLAVE_IP="192.168.1.81"
+HOST_IP="192.168.1.231"
 ROS_MASTER_PORT=11311
 MODE=""
 DISPLAY_ENABLED=false

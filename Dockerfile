@@ -1,3 +1,4 @@
+
 # Base image with ROS Noetic on Ubuntu 20.04
 FROM ros:noetic-ros-base
 
@@ -13,20 +14,28 @@ RUN useradd -m $USER && \
 USER $USER
 WORKDIR /home/$USER
 
-# Install necessary packages including catkin tools
+# Switch back to root
 USER root
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    python3-serial \
-    python3-catkin-tools \
-    iputils-ping \
-    ros-noetic-teleop-twist-joy \
-    ros-noetic-joy \
-    ros-noetic-navigation \
-    ros-noetic-rviz \
-    ros-noetic-usb-cam \
-    && rm -rf /var/lib/apt/lists/*
+
+# Install stuff
+# Docker will cache the layers, so if you change something in the Dockerfile,
+# it will only rebuild the layers that have changed AND the layers that come after it.
+# Avoid installing new stuff before large packages to avoid large rebuilds.
+# Unless you have fast internet (pay to win smh)
+
+RUN apt-get update && apt-get install -y python3
+RUN apt-get install -y python3-serial
+RUN apt-get install -y python3-catkin-tools
+RUN apt-get install -y iputils-ping
+RUN apt-get install -y ros-noetic-teleop-twist-joy
+RUN apt-get install -y ros-noetic-joy
+RUN apt-get install -y ros-noetic-navigation
+RUN apt-get install -y ros-noetic-rviz
+RUN apt-get install -y ros-noetic-usb-cam
+RUN apt-get install -y python3-pip
+
+# Clean up
+RUN rm -rf /var/lib/apt/lists/*
 
 # Copy the ros2_ws folder into the container
 COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws
