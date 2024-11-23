@@ -37,6 +37,7 @@ RUN apt-get install -y ros-$ROS_DISTRO-rviz
 RUN apt-get install -y ros-$ROS_DISTRO-usb-cam
 RUN apt-get install -y ros-$ROS_DISTRO-image-transport-plugins
 RUN apt-get install -y ros-$ROS_DISTRO-image-view
+RUN apt-get install -y avahi-daemon libnss-mdns
 
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
