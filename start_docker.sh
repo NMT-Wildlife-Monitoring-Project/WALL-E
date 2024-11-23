@@ -10,18 +10,20 @@ DOCKER_RUN_FLAGS=()
 COMMAND_TO_RUN=""
 ENV_FILE="env_file.txt"
 RUN_ROSCORE=false
+BUILD_CONTAINER=false
 
 # Function to show usage
 usage() {
-    echo "Usage: $0 [--start | --teleop | --usb-cam | --command <command> | --roscore] [--port <port>] [--ip <host_ip>] [--display] [--help]"
-    echo "  --start                     Run robot_start.launch from package control"
-    echo "  --teleop                    Run teleop.launch from package control"
-    echo "  --usb-cam                   Run rosrun usb_cam usb_cam_node"
+    echo "Usage: $0 [--start (-s) | --teleop (-t) | --usb-cam (-u) | --command (-c) <command> | --roscore (-r) | --build (-b)] [--port (-p) <port>] [--ip (-i) <host_ip>] [--display (-d)] [--help (-h)]"
+    echo "  --start (-s)                Run robot_start.launch from package control"
+    echo "  --teleop (-t)               Run teleop.launch from package control"
+    echo "  --usb-cam (-u)              Run rosrun usb_cam usb_cam_node"
     echo "  --command (-c) <command>    Pass a command to be run in the container"
-    echo "  --roscore                   Run roscore"
-    echo "  --port <port>               Specify custom ROS master port (default is 11311)"
-    echo "  --ip <host_ip>              Specify host IP"
-    echo "  --display                   Enable display support (forward X11 display)"
+    echo "  --roscore (-r)              Run roscore"
+    echo "  --port (-p) <port>          Specify custom ROS master port (default is 11311)"
+    echo "  --ip (-i) <host_ip>         Specify host IP"
+    echo "  --display (-d)              Enable display support (forward X11 display)"
+    echo "  --build (-b)                Build the Docker container"
     echo "  --help (-h)                 Show this help message"
     exit 1
 }
@@ -29,17 +31,16 @@ usage() {
 # Parse options
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
-        --ip) IP="$2"; shift 2 ;;
-        --start) RUN_ROBOT_LAUNCH=true; shift ;;
-        --teleop) RUN_TELEOP_LAUNCH=true; shift ;;
-        --usb-cam) RUN_USB_CAM_NODE=true; shift ;;
-        --command) COMMAND_TO_RUN="$2"; shift 2 ;;
-        --roscore) RUN_ROSCORE=true; shift ;;
-        --port) ROS_MASTER_PORT="$2"; shift 2 ;;
-        --display) DISPLAY_ENABLED=true; shift ;;
-        --help) usage; shift ;;
-        -c) COMMAND_TO_RUN="$2"; shift 2 ;;
-        -h) usage; shift ;;
+        --ip|-i) IP="$2"; shift 2 ;;
+        --start|-s) RUN_ROBOT_LAUNCH=true; shift ;;
+        --teleop|-t) RUN_TELEOP_LAUNCH=true; shift ;;
+        --usb-cam|-u) RUN_USB_CAM_NODE=true; shift ;;
+        --command|-c) COMMAND_TO_RUN="$2"; shift 2 ;;
+        --roscore|-r) RUN_ROSCORE=true; shift ;;
+        --port|-p) ROS_MASTER_PORT="$2"; shift 2 ;;
+        --display|-d) DISPLAY_ENABLED=true; shift ;;
+        --build|-b) BUILD_CONTAINER=true; shift ;;
+        --help|-h) usage; shift ;;
         *) usage; shift ;;
     esac
 done
@@ -75,8 +76,11 @@ if [[ "$DISPLAY_ENABLED" == true ]]; then
     xhost +local:docker
 fi
 
-# Build the container
-docker build -t $IMAGE_NAME .
+# Build the container if requested
+if [[ "$BUILD_CONTAINER" == true ]]; then
+    echo "Building the Docker container..."
+    docker build -t $IMAGE_NAME .
+fi
 
 # Check if the container is already running
 if docker ps -q -f ancestor=$IMAGE_NAME | grep -q .; then
@@ -88,7 +92,6 @@ else
         echo "Running roscore..."
         docker exec --env-file $ENV_FILE -it $(docker ps -q -f ancestor=$IMAGE_NAME) /entrypoint.sh roscore
     fi
-
 fi
 
 # Execute the specified option
