@@ -6,6 +6,7 @@ add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  roslaunch
   sensor_msgs
   actionlib
   move_base_msgs
@@ -14,20 +15,12 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 catkin_package(
-  CATKIN_DEPENDS roscpp sensor_msgs actionlib move_base_msgs tf geometry_msgs
+  CATKIN_DEPENDS roscpp roslaunch sensor_msgs actionlib move_base_msgs tf geometry_msgs
 )
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
-
-# add_executable(dump_node src/dump_node.cpp)
-
-# target_link_libraries(dump_node
-#   ${catkin_LIBRARIES}
-# )
-
-# add_dependencies(dump_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 install(DIRECTORY launch config
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}

@@ -1,12 +1,15 @@
+# Argument for ROS version
+ARG ROS_DISTRO=noetic
 
-# Base image with ROS Noetic on Ubuntu 20.04
-FROM ros:noetic-ros-base
+# Base image with ROS on Ubuntu 20.04
+FROM ros:$ROS_DISTRO-ros-base
 
 # Set environment variables for ROS
-ENV ROS_DISTRO=noetic
+ENV ROS_DISTRO=$ROS_DISTRO
 
 # Create a non-root user named 'walle'
 ARG USER=walle
+ENV USER=$USER
 RUN useradd -m $USER && \
     echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
@@ -22,17 +25,17 @@ USER root
 # it will only rebuild the layers that have changed AND the layers that come after it.
 # Avoid installing new stuff before large packages to avoid large rebuilds.
 # Unless you have fast internet (pay to win smh)
-
 RUN apt-get update && apt-get install -y python3
+RUN apt-get install -y python3-pip
 RUN apt-get install -y python3-serial
 RUN apt-get install -y python3-catkin-tools
 RUN apt-get install -y iputils-ping
-RUN apt-get install -y ros-noetic-teleop-twist-joy
-RUN apt-get install -y ros-noetic-joy
-RUN apt-get install -y ros-noetic-navigation
-RUN apt-get install -y ros-noetic-rviz
-RUN apt-get install -y ros-noetic-usb-cam
-RUN apt-get install -y python3-pip
+RUN apt-get install -y ros-$ROS_DISTRO-navigation
+RUN apt-get install -y ros-$ROS_DISTRO-teleop-twist-joy
+RUN apt-get install -y ros-$ROS_DISTRO-joy
+RUN apt-get install -y ros-$ROS_DISTRO-rviz
+RUN apt-get install -y ros-$ROS_DISTRO-usb-cam
+RUN apt-get install -y ros-$ROS_DISTRO-image-transport
 
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
@@ -40,10 +43,12 @@ RUN rm -rf /var/lib/apt/lists/*
 # Copy the ros2_ws folder into the container
 COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws
 
-# Build the workspace
 USER $USER
 WORKDIR /home/$USER/catkin_ws
-RUN /bin/bash -c '. /opt/ros/noetic/setup.sh; cd /home/$USER/catkin_ws; catkin build'
+
+# Build the workspace
+USER $USER
+RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; cd /home/$USER/catkin_ws; catkin build'
 
 # Copy the entrypoint script into the container
 USER root
