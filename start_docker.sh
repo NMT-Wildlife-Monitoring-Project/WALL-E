@@ -11,30 +11,34 @@ ENV_FILE="env_file.txt"
 
 # Function to show usage
 usage() {
-    echo "Usage: $0 [-r | -t | -u | -c <command>] [-p <port>] [-i <host_ip>] [-d] [-h]"
-    echo "  -r          Run robot_start.launch from package control"
-    echo "  -t          Run teleop.launch from package control"
-    echo "  -u          Run rosrun usb_cam usb_cam_node"
-    echo "  -c <command> Pass a command to be run in the container"
-    echo "  -p <port>   Specify custom ROS master port (default is 11311)"
-    echo "  -i <host_ip> Specify host IP"
-    echo "  -d          Enable display support (forward X11 display)"
-    echo "  -h          Show this help message"
+    echo "Usage: $0 [--start | --teleop | --usb-cam | --command <command> | --roscore] [--port <port>] [--ip <host_ip>] [--display] [--help]"
+    echo "  --start                     Run robot_start.launch from package control"
+    echo "  --teleop                    Run teleop.launch from package control"
+    echo "  --usb-cam                   Run rosrun usb_cam usb_cam_node"
+    echo "  --command (-c) <command>    Pass a command to be run in the container"
+    echo "  --roscore                   Run roscore"
+    echo "  --port <port>               Specify custom ROS master port (default is 11311)"
+    echo "  --ip <host_ip>              Specify host IP"
+    echo "  --display                   Enable display support (forward X11 display)"
+    echo "  --help (-h)                 Show this help message"
     exit 1
 }
 
 # Parse options
-while getopts "i:rtuc:p:dh" opt; do
-    case "$opt" in
-        i) IP="$OPTARG" ;;
-        r) RUN_ROBOT_LAUNCH=true ;;
-        t) RUN_TELEOP_LAUNCH=true ;;
-        u) RUN_USB_CAM_NODE=true ;;
-        c) COMMAND_TO_RUN="$OPTARG" ;;
-        p) ROS_MASTER_PORT="$OPTARG" ;;
-        d) DISPLAY_ENABLED=true ;;
-        h) usage ;;
-        *) usage ;;
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        --ip) IP="$2"; shift 2 ;;
+        --start) RUN_ROBOT_LAUNCH=true; shift ;;
+        --teleop) RUN_TELEOP_LAUNCH=true; shift ;;
+        --usb-cam) RUN_USB_CAM_NODE=true; shift ;;
+        --command) COMMAND_TO_RUN="$2"; shift 2 ;;
+        --roscore) RUN_ROSCORE=true; shift ;;
+        --port) ROS_MASTER_PORT="$2"; shift 2 ;;
+        --display) DISPLAY_ENABLED=true; shift ;;
+        --help) usage; shift ;;
+        -c) COMMAND_TO_RUN="$2"; shift 2 ;;
+        -h) usage; shift ;;
+        *) usage; shift ;;
     esac
 done
 
@@ -77,7 +81,11 @@ if docker ps -q -f ancestor=$IMAGE_NAME | grep -q .; then
     echo "A container from image $IMAGE_NAME is already running."
 else
     echo "Starting a new Docker container..."
-    docker run -dit --env-file $ENV_FILE "${DOCKER_RUN_FLAGS[@]}" $IMAGE_NAME /entrypoint.sh roscore
+    docker run -dit --env-file $ENV_FILE "${DOCKER_RUN_FLAGS[@]}" $IMAGE_NAME
+    if [ "$RUN_ROSCORE" = true ]; then
+        echo "Running roscore..."
+        docker exec --env-file $ENV_FILE -it $(docker ps -q -f ancestor=$IMAGE_NAME) /entrypoint.sh roscore
+    fi
 fi
 
 # Execute the specified option
