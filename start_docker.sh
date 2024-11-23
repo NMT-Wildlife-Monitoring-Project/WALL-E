@@ -1,20 +1,20 @@
 #!/bin/bash
 
 # Default values
-CONTAINER_NAME="walle_ros1"
 IMAGE_NAME="walle/ros1:noetic"
 IP=""
 ROS_MASTER_PORT=11311
 DISPLAY_ENABLED=false
 DOCKER_RUN_FLAGS=()
 COMMAND_TO_RUN=""
-ENV_FILE="/tmp/docker_env_file"
+ENV_FILE="env_file.txt"
 
 # Function to show usage
 usage() {
-    echo "Usage: $0 [-r | -t | -c <command>] [-p <port>] [-i <host_ip>] [-d] [-h]"
+    echo "Usage: $0 [-r | -t | -u | -c <command>] [-p <port>] [-i <host_ip>] [-d] [-h]"
     echo "  -r          Run robot_start.launch from package control"
     echo "  -t          Run teleop.launch from package control"
+    echo "  -u          Run rosrun usb_cam usb_cam_node"
     echo "  -c <command> Pass a command to be run in the container"
     echo "  -p <port>   Specify custom ROS master port (default is 11311)"
     echo "  -i <host_ip> Specify host IP"
@@ -24,11 +24,12 @@ usage() {
 }
 
 # Parse options
-while getopts "i:rtc:p:dh" opt; do
+while getopts "i:rtuc:p:dh" opt; do
     case "$opt" in
         i) IP="$OPTARG" ;;
         r) RUN_ROBOT_LAUNCH=true ;;
         t) RUN_TELEOP_LAUNCH=true ;;
+        u) RUN_USB_CAM_NODE=true ;;
         c) COMMAND_TO_RUN="$OPTARG" ;;
         p) ROS_MASTER_PORT="$OPTARG" ;;
         d) DISPLAY_ENABLED=true ;;
@@ -48,7 +49,7 @@ fi
 
 # Set ROS_IP and ROS_MASTER_URI
 ROS_IP="$IP"
-ROS_MASTER_URI="http://raspberrypi.local:$ROS_MASTER_PORT"
+ROS_MASTER_URI="http://raspberrypi:$ROS_MASTER_PORT"
 
 # Write environment variables to file
 echo "ROS_IP=$ROS_IP" > $ENV_FILE
@@ -72,30 +73,27 @@ fi
 docker build -t $IMAGE_NAME .
 
 # Check if the container is already running
-if docker ps -q -f name=$CONTAINER_NAME | grep -q .; then
-    echo "Container $CONTAINER_NAME is already running."
+if docker ps -q -f ancestor=$IMAGE_NAME | grep -q .; then
+    echo "A container from image $IMAGE_NAME is already running."
 else
-    # Check if the container exists but is not running
-    if docker ps -aq -f name=$CONTAINER_NAME | grep -q .; then
-        echo "Container $CONTAINER_NAME exists but is not running. Starting it..."
-        docker start $CONTAINER_NAME
-    else
-        echo "Starting a new Docker container..."
-        docker run -dit --name $CONTAINER_NAME --env-file $ENV_FILE "${DOCKER_RUN_FLAGS[@]}" $IMAGE_NAME /entrypoint.sh roscore
-    fi
+    echo "Starting a new Docker container..."
+    docker run -dit --env-file $ENV_FILE "${DOCKER_RUN_FLAGS[@]}" $IMAGE_NAME /entrypoint.sh roscore
 fi
 
 # Execute the specified option
 if [ "$RUN_ROBOT_LAUNCH" = true ]; then
     echo "Running robot_start.launch..."
-    docker exec --env-file $ENV_FILE -it $CONTAINER_NAME /entrypoint.sh roslaunch control robot_start.launch
+    docker exec --env-file $ENV_FILE -it $(docker ps -q -f ancestor=$IMAGE_NAME) /entrypoint.sh roslaunch control robot_start.launch
 elif [ "$RUN_TELEOP_LAUNCH" = true ]; then
     echo "Running teleop.launch..."
-    docker exec --env-file $ENV_FILE -it $CONTAINER_NAME /entrypoint.sh roslaunch control teleop.launch
+    docker exec --env-file $ENV_FILE -it $(docker ps -q -f ancestor=$IMAGE_NAME) /entrypoint.sh roslaunch control teleop.launch
+elif [ "$RUN_USB_CAM_NODE" = true ]; then
+    echo "Running rosrun usb_cam usb_cam_node..."
+    docker exec --env-file $ENV_FILE -it $(docker ps -q -f ancestor=$IMAGE_NAME) /entrypoint.sh rosrun usb_cam usb_cam_node
 elif [ -n "$COMMAND_TO_RUN" ]; then
     echo "Running custom command: $COMMAND_TO_RUN"
-    docker exec --env-file $ENV_FILE -it $CONTAINER_NAME /entrypoint.sh $COMMAND_TO_RUN
+    docker exec --env-file $ENV_FILE -it $(docker ps -q -f ancestor=$IMAGE_NAME) /entrypoint.sh $COMMAND_TO_RUN
 else
     echo "No options specified. Opening interactive bash terminal in the container..."
-    docker exec --env-file $ENV_FILE -it $CONTAINER_NAME /entrypoint.sh bash
+    docker exec --env-file $ENV_FILE -it $(docker ps -q -f ancestor=$IMAGE_NAME) /entrypoint.sh bash
 fi
