@@ -37,10 +37,18 @@ RUN apt-get install -y ros-$ROS_DISTRO-rviz
 RUN apt-get install -y ros-$ROS_DISTRO-usb-cam
 RUN apt-get install -y ros-$ROS_DISTRO-image-transport-plugins
 RUN apt-get install -y ros-$ROS_DISTRO-image-view
-RUN apt-get install -y avahi-daemon libnss-mdns
+RUN apt-get install -y avahi-daemon libnss-mdns avahi-utils
+RUN apt-get install -y dbus
 
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
+
+# Ensure the /var/run/dbus directory exists
+RUN mkdir -p /var/run/dbus && chmod 755 /var/run/dbus
+
+# Start dbus-daemon and avahi-daemon
+RUN dbus-daemon --system --fork && avahi-daemon --daemonize
+
 
 # Copy the ros2_ws folder into the container
 COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws
