@@ -100,7 +100,7 @@ if [ "$RUN_ROBOT_LAUNCH" = true ]; then
     docker exec --env-file $ENV_FILE -it $(docker ps -q -f ancestor=$IMAGE_NAME) /entrypoint.sh roslaunch control robot_start.launch
 elif [ "$RUN_TELEOP_LAUNCH" = true ]; then
     echo "Running teleop.launch..."
-    docker exec --env-file $ENV_FILE -dit $(docker ps -q -f ancestor=$IMAGE_NAME) /entrypoint.sh roslaunch control teleop.launch
+    docker exec --env-file $ENV_FILE -it $(docker ps -q -f ancestor=$IMAGE_NAME) /entrypoint.sh roslaunch control teleop.launch
 elif [ "$RUN_USB_CAM_NODE" = true ]; then
     echo "Running rosrun usb_cam usb_cam_node..."
     docker exec --env-file $ENV_FILE -it $(docker ps -q -f ancestor=$IMAGE_NAME) /entrypoint.sh rosrun usb_cam usb_cam_node
