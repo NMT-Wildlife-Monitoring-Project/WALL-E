@@ -36,6 +36,7 @@ RUN apt-get install -y ros-$ROS_DISTRO-joy
 RUN apt-get install -y ros-$ROS_DISTRO-rviz
 RUN apt-get install -y ros-$ROS_DISTRO-usb-cam
 RUN apt-get install -y ros-$ROS_DISTRO-image-transport
+RUN apt-get install -y ros-$ROS_DISTRO-image-view
 
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
