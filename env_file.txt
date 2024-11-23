@@ -1,2 +1,0 @@
-ROS_IP=192.168.1.231
-ROS_MASTER_URI=http://raspberrypi:11311
