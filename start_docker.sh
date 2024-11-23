@@ -56,7 +56,7 @@ fi
 
 # Set ROS_IP and ROS_MASTER_URI
 ROS_IP="$IP"
-ROS_MASTER_URI="http://raspberrypi:$ROS_MASTER_PORT"
+ROS_MASTER_URI="http://raspberrypi.local:$ROS_MASTER_PORT"
 
 # Write environment variables to file
 echo "ROS_IP=$ROS_IP" > $ENV_FILE
