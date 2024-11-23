@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Default values
 IMAGE_NAME="walle/ros1:noetic"
@@ -8,6 +9,7 @@ DISPLAY_ENABLED=false
 DOCKER_RUN_FLAGS=()
 COMMAND_TO_RUN=""
 ENV_FILE="env_file.txt"
+RUN_ROSCORE=false
 
 # Function to show usage
 usage() {
@@ -69,7 +71,7 @@ DOCKER_RUN_FLAGS+=("--volume=/dev:/dev:rw")
 # Enable display if requested
 if [[ "$DISPLAY_ENABLED" == true ]]; then
     echo "DISPLAY=$DISPLAY" >> $ENV_FILE
-    DOCKER_RUN_FLAGS+=("-v /tmp/.X11-unix:/tmp/.X11-unix:rw")
+    DOCKER_RUN_FLAGS+=("--volume=/tmp/.X11-unix:/tmp/.X11-unix:rw")
     xhost +local:docker
 fi
 
@@ -81,11 +83,12 @@ if docker ps -q -f ancestor=$IMAGE_NAME | grep -q .; then
     echo "A container from image $IMAGE_NAME is already running."
 else
     echo "Starting a new Docker container..."
-    docker run -dit --env-file $ENV_FILE "${DOCKER_RUN_FLAGS[@]}" $IMAGE_NAME
+    docker run -dit --env-file $ENV_FILE "${DOCKER_RUN_FLAGS[@]}" $IMAGE_NAME bash
     if [ "$RUN_ROSCORE" = true ]; then
         echo "Running roscore..."
         docker exec --env-file $ENV_FILE -it $(docker ps -q -f ancestor=$IMAGE_NAME) /entrypoint.sh roscore
     fi
+
 fi
 
 # Execute the specified option
