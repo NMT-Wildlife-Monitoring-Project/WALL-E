@@ -3,6 +3,7 @@ set -e
 
 # Default values
 IMAGE_NAME="walle/ros1:noetic"
+MASTER_HOSTNAME="raspberrypi.local"
 IP=""
 MASTER_IP=""
 ROS_MASTER_PORT=11311
@@ -104,6 +105,22 @@ if [[ "$STOP_CONTAINER" = true || "$RESTART_CONTAINER" = true  || "$BUILD_CONTAI
     fi
 fi
 
+# Function to validate IP address
+validate_ip() {
+    local ip=$1
+    local stat=1
+
+    if [[ $ip =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+        OIFS=$IFS
+        IFS='.'
+        ip=($ip)
+        IFS=$OIFS
+        [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+        stat=$?
+    fi
+    return $stat
+}
+
 # Get the active IP address if not provided
 if [[ -z "$IP" ]]; then
     IP=$(hostname -I | awk '{print $1}')
@@ -113,13 +130,30 @@ if [[ -z "$IP" ]]; then
     fi
 fi
 
+# Validate the IP address
+if ! validate_ip "$IP"; then
+    echo "Error: Invalid IP address format: $IP"
+    exit 1
+fi
+
 # Determine the master IP if not provided
 if [[ -z "$MASTER_IP" ]]; then
-    MASTER_IP=$(ping -c 1 raspberrypi.local | head -1 | grep -oP '(?<=\().*(?=\))')
+    if [[ "$(hostname)" == "$MASTER_HOSTNAME" ]]; then
+        MASTER_IP=$(hostname -I | awk '{print $1}')
+    else
+        MASTER_IP=$(ping -c 1 $MASTER_HOSTNAME | grep 'PING' | awk -F'[()]' '{print $2}')
+    fi
+
     if [[ -z "$MASTER_IP" ]]; then
-        echo "Error: Unable to determine the IP address of raspberrypi.local."
+        echo "Error: Unable to determine the master IP address."
         exit 1
     fi
+fi
+
+# Validate the master IP address
+if ! validate_ip "$MASTER_IP"; then
+    echo "Error: Invalid master IP address format: $MASTER_IP"
+    exit 1
 fi
 
 # Set ROS_IP and ROS_MASTER_URI
