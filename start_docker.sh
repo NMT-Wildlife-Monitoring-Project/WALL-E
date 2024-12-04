@@ -20,9 +20,13 @@ QUIET_MODE=false
 
 # Function to show usage
 usage() {
-    echo "Usage: $0 [--start (-s) | --teleop (-t) | --usb-cam (-u) | --video-stream (-v) | --command (-c) <command> | --roscore (-r) | --build (-b) | --stop (-x) | --restart (-R)] [--port (-p) <port>] [--ip (-i) <host_ip>] [--master-ip (-m) <master_ip>] [--display (-d)] [--quiet (-q)] [--help (-h)]"
-    echo "This script is used to start and manage a Docker container for WALL-E the wildife monitoring robot."
-    echo "If nothing is specified to run the script will open an interactive bash terminal in the container."
+    echo "Usage: $0 [--start (-s) | --teleop (-t) | --usb-cam (-u) | --video-stream (-v) |"
+    echo "           --command (-c) <command> | --roscore (-r) | --build (-b) | --stop (-x) |"
+    echo "           --restart (-R)] [--port (-p) <port>] [--ip (-i) <host_ip>] [--master-ip (-m) <master_ip>]"
+    echo "           [--master-hostname (-n) <master_hostname>] [--display (-d)] [--quiet (-q)] [--help (-h)]"
+    echo "This script is used to start and manage a Docker container for WALL-E the wildlife monitoring robot."
+    echo "If no IP addresses are specified, the script will attempt to determine them from the hostname. If this fails, try setting the hostname or IP."
+    echo "If no action is specified, the script will open an interactive bash terminal in the container."
     echo "Actions (pick ONE):"
     echo "  --start (-s)                Start all processes on the robot"
     echo "  --teleop (-t)               Run joystick control using teleop.launch"
@@ -32,8 +36,9 @@ usage() {
     echo "Options:"
     echo "  --roscore (-r)              Run roscore"
     echo "  --port (-p) <port>          Specify custom ROS master port (default is 11311)"
-    echo "  --ip (-i) <host_ip>         Specify host IP (if not specified, will be determined from hostname -I)"
-    echo "  --master-ip (-m) <master_ip> Specify master IP (default is raspberrypi.local)"
+    echo "  --ip (-i) <host_ip>         Specify host IP"
+    echo "  --master-ip (-m) <master_ip> Specify master IP"
+    echo "  --master-hostname (-n) <master_hostname> Specify master hostname (default is raspberrypi.local)"
     echo "  --display (-d)              Enable display support (forward X11 display)"
     echo "  --build (-b)                Build the Docker container (will stop the running container if any)"
     echo "  --stop (-x)                 Stop the running Docker container"
