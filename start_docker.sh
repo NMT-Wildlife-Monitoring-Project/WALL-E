@@ -4,6 +4,7 @@ set -e
 # Default values
 IMAGE_NAME="walle/ros1:noetic"
 IP=""
+MASTER_IP="raspberrypi.local"
 ROS_MASTER_PORT=11311
 DISPLAY_ENABLED=false
 DOCKER_RUN_FLAGS=()
@@ -12,20 +13,31 @@ ENV_FILE="env_file.txt"
 RUN_ROSCORE=false
 BUILD_CONTAINER=false
 STOP_CONTAINER=false
+RESTART_CONTAINER=false
+RUN_VIEW_CAMERA_LAUNCH=false
+QUIET_MODE=false
 
 # Function to show usage
 usage() {
-    echo "Usage: $0 [--start (-s) | --teleop (-t) | --usb-cam (-u) | --command (-c) <command> | --roscore (-r) | --build (-b) | --stop (-x)] [--port (-p) <port>] [--ip (-i) <host_ip>] [--display (-d)] [--help (-h)]"
-    echo "  --start (-s)                Run robot_start.launch from package control"
-    echo "  --teleop (-t)               Run teleop.launch from package control"
-    echo "  --usb-cam (-u)              Run rosrun usb_cam usb_cam_node"
+    echo "Usage: $0 [--start (-s) | --teleop (-t) | --usb-cam (-u) | --video-stream (-v) | --command (-c) <command> | --roscore (-r) | --build (-b) | --stop (-x) | --restart (-R)] [--port (-p) <port>] [--ip (-i) <host_ip>] [--master-ip (-m) <master_ip>] [--display (-d)] [--quiet (-q)] [--help (-h)]"
+    echo "This script is used to start and manage a Docker container for WALL-E the wildife monitoring robot."
+    echo "If nothing is specified to run the script will open an interactive bash terminal in the container."
+    echo "Actions (pick ONE):"
+    echo "  --start (-s)                Start all processes on the robot"
+    echo "  --teleop (-t)               Run joystick control using teleop.launch"
+    echo "  --usb-cam (-u)              Run usb camera node using usb_cam.launch"
+    echo "  --video-stream (-v)          View the video stream using view_camera.launch"
     echo "  --command (-c) <command>    Pass a command to be run in the container"
+    echo "Options:"
     echo "  --roscore (-r)              Run roscore"
     echo "  --port (-p) <port>          Specify custom ROS master port (default is 11311)"
-    echo "  --ip (-i) <host_ip>         Specify host IP"
+    echo "  --ip (-i) <host_ip>         Specify host IP (if not specified, will be determined from hostname -I)"
+    echo "  --master-ip (-m) <master_ip> Specify master IP (default is raspberrypi.local)"
     echo "  --display (-d)              Enable display support (forward X11 display)"
     echo "  --build (-b)                Build the Docker container"
-    echo "  --stop (-x)                 Stop the Docker container if it is running"
+    echo "  --stop (-x)                 Stop the running Docker container"
+    echo "  --restart (-R)              Restart the Docker container if it is running"
+    echo "  --quiet (-q)                Suppress output"
     echo "  --help (-h)                 Show this help message"
     exit 1
 }
@@ -34,19 +46,63 @@ usage() {
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
         --ip|-i) IP="$2"; shift 2 ;;
+        --master-ip|-m) MASTER_IP="$2"; shift 2 ;;
         --start|-s) RUN_ROBOT_LAUNCH=true; shift ;;
         --teleop|-t) RUN_TELEOP_LAUNCH=true; shift ;;
         --usb-cam|-u) RUN_USB_CAM_NODE=true; shift ;;
+        --video-stream|-v) RUN_VIEW_CAMERA_LAUNCH=true; DISPLAY_ENABLED=true; shift ;;
         --command|-c) COMMAND_TO_RUN="$2"; shift 2 ;;
         --roscore|-r) RUN_ROSCORE=true; shift ;;
         --port|-p) ROS_MASTER_PORT="$2"; shift 2 ;;
         --display|-d) DISPLAY_ENABLED=true; shift ;;
         --build|-b) BUILD_CONTAINER=true; shift ;;
         --stop|-x) STOP_CONTAINER=true; shift ;;
+        --restart|-R) RESTART_CONTAINER=true; shift ;;
+        --quiet|-q) QUIET_MODE=true; shift ;;
         --help|-h) usage; shift ;;
         *) usage; shift ;;
     esac
 done
+
+# Check if multiple actions are specified
+ACTION_COUNT=0
+if [ "$RUN_ROBOT_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
+if [ "$RUN_TELEOP_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
+if [ "$RUN_USB_CAM_NODE" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
+if [ "$RUN_VIEW_CAMERA_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
+if [ -n "$COMMAND_TO_RUN" ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
+if [ "$RUN_ROSCORE" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
+
+if [ "$ACTION_COUNT" -gt 1 ]; then
+    echo "Error: You greedy pig. Multiple actions specified. You get ONE."
+    usage
+    exit 1
+fi
+
+# Check if the container is already running
+RUNNING=false
+if docker ps -q -f ancestor=$IMAGE_NAME | grep -q .; then
+    echo "Docker container is running."
+    RUNNING=true
+else
+    echo "Docker container is not running."
+fi
+
+# Stop or restart the container if requested
+if [[ "$STOP_CONTAINER" = true || "$RESTART_CONTAINER" = true ]]; then
+    if [[ "$RUNNING" = true ]]; then
+        echo "Stopping the running Docker container..."
+        docker stop $(docker ps -q -f ancestor=$IMAGE_NAME)
+        RUNNING=false
+    else
+        echo "Nothing to stop."
+    fi
+
+    if [[ "$STOP_CONTAINER" = true ]]; then
+        echo "Exiting..."
+        exit 0
+    fi
+fi
 
 # Get the active IP address if not provided
 if [[ -z "$IP" ]]; then
@@ -59,7 +115,7 @@ fi
 
 # Set ROS_IP and ROS_MASTER_URI
 ROS_IP="$IP"
-ROS_MASTER_URI="http://raspberrypi.local:$ROS_MASTER_PORT"
+ROS_MASTER_URI="http://$MASTER_IP:$ROS_MASTER_PORT"
 
 # Write environment variables to file
 echo "ROS_IP=$ROS_IP" > $ENV_FILE
@@ -94,50 +150,54 @@ if [[ "$BUILD_CONTAINER" = true ]]; then
     docker build -t $IMAGE_NAME .
 fi
 
-# Check if the container is already running
-RUNNING=false
-if docker ps -q -f ancestor=$IMAGE_NAME | grep -q .; then
-    echo "Docker container is already running."
-    RUNNING=true
-else
-    echo "Docker container is not running."
-fi
-
-# Stop the container if requested
-if [[ "$STOP_CONTAINER" = true && "$RUNNING" = true ]]; then
-    echo "Stopping the running Docker container..."
-    docker stop $(docker ps -q -f ancestor=$IMAGE_NAME)
-    RUNNING=false
-fi
-
 # Start the container if it is not already running
 if [[ "$RUNNING" = false ]]; then
     echo "Starting the Docker container..."
     docker run -dit --env-file $ENV_FILE "${DOCKER_RUN_FLAGS[@]}" $IMAGE_NAME bash
 fi
 
-CONTAINER_ID=$(docker ps -q -f ancestor=$IMAGE_NAME)
+CONTAINER_ID=$(docker ps -q -f ancestor=$IMAGE_NAME) # Get container ID
+CONTAINER_ID=$(echo "$CONTAINER_ID" | xargs) # Trim whitespace
 echo "Container ID: $CONTAINER_ID"
+
+# Check if the container ID is empty
+if [[ -z "$CONTAINER_ID" ]]; then
+    echo "Error: Failed to start the Docker container."
+    exit 1
+fi
+
+# Run docker commands in detached mode if quiet mode is enabled
+if [ "$QUIET_MODE" = true ]; then
+    echo "Quiet mode enabled. Suppressing output..."
+    exec 1>/dev/null
+    DOCKER_EXEC_FLAGS="-dt"
+else
+    DOCKER_EXEC_FLAGS="-it"
+fi
 
 if [ "$RUN_ROSCORE" = true ]; then
     echo "Running roscore..."
-    docker exec --env-file $ENV_FILE -it $CONTAINER_ID /entrypoint.sh roscore
+    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roscore
 fi
 
 # Execute the specified option
+
 if [ "$RUN_ROBOT_LAUNCH" = true ]; then
-    echo "Running robot_start.launch..."
-    docker exec --env-file $ENV_FILE -it $CONTAINER_ID /entrypoint.sh roslaunch control robot_start.launch
+    echo "Determining tolerable amounts of sentience..."
+    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch control robot_start.launch
 elif [ "$RUN_TELEOP_LAUNCH" = true ]; then
-    echo "Running teleop.launch..."
-    docker exec --env-file $ENV_FILE -it $CONTAINER_ID /entrypoint.sh roslaunch control teleop.launch
+    echo "Running joystick control..."
+    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch control teleop.launch
 elif [ "$RUN_USB_CAM_NODE" = true ]; then
-    echo "Running rosrun usb_cam usb_cam_node with /dev/video0..."
-    docker exec --env-file $ENV_FILE -it $CONTAINER_ID /entrypoint.sh roslaunch control usb_cam.launch
+    echo "Running usb camera..."
+    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch control usb_cam.launch
+elif [ "$RUN_VIEW_CAMERA_LAUNCH" = true ]; then
+    echo "Viewing ROS Camera feed..."
+    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch control view_camera.launch
 elif [ -n "$COMMAND_TO_RUN" ]; then
     echo "Running custom command: $COMMAND_TO_RUN"
-    docker exec --env-file $ENV_FILE -it $CONTAINER_ID /entrypoint.sh $COMMAND_TO_RUN
+    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh $COMMAND_TO_RUN
 else
     echo "No options specified. Opening interactive bash terminal in the container..."
-    docker exec --env-file $ENV_FILE -it $CONTAINER_ID /entrypoint.sh bash
+    docker exec -it --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh bash
 fi
