@@ -4,7 +4,7 @@ set -e
 # Default values
 IMAGE_NAME="walle/ros1:noetic"
 IP=""
-MASTER_IP="raspberrypi.local"
+MASTER_IP=""
 ROS_MASTER_PORT=11311
 DISPLAY_ENABLED=false
 DOCKER_RUN_FLAGS=()
@@ -34,7 +34,7 @@ usage() {
     echo "  --ip (-i) <host_ip>         Specify host IP (if not specified, will be determined from hostname -I)"
     echo "  --master-ip (-m) <master_ip> Specify master IP (default is raspberrypi.local)"
     echo "  --display (-d)              Enable display support (forward X11 display)"
-    echo "  --build (-b)                Build the Docker container"
+    echo "  --build (-b)                Build the Docker container (will stop the running container if any)"
     echo "  --stop (-x)                 Stop the running Docker container"
     echo "  --restart (-R)              Restart the Docker container if it is running"
     echo "  --quiet (-q)                Suppress output"
@@ -89,7 +89,7 @@ else
 fi
 
 # Stop or restart the container if requested
-if [[ "$STOP_CONTAINER" = true || "$RESTART_CONTAINER" = true ]]; then
+if [[ "$STOP_CONTAINER" = true || "$RESTART_CONTAINER" = true  || "$BUILD_CONTAINER" = true ]]; then
     if [[ "$RUNNING" = true ]]; then
         echo "Stopping the running Docker container..."
         docker stop $(docker ps -q -f ancestor=$IMAGE_NAME)
@@ -109,6 +109,15 @@ if [[ -z "$IP" ]]; then
     IP=$(hostname -I | awk '{print $1}')
     if [[ -z "$IP" ]]; then
         echo "Error: Unable to determine the host IP address."
+        exit 1
+    fi
+fi
+
+# Determine the master IP if not provided
+if [[ -z "$MASTER_IP" ]]; then
+    MASTER_IP=$(ping -c 1 raspberrypi.local | head -1 | grep -oP '(?<=\().*(?=\))')
+    if [[ -z "$MASTER_IP" ]]; then
+        echo "Error: Unable to determine the IP address of raspberrypi.local."
         exit 1
     fi
 fi
