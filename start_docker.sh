@@ -53,6 +53,7 @@ while [[ "$#" -gt 0 ]]; do
     case "$1" in
         --ip|-i) IP="$2"; shift 2 ;;
         --master-ip|-m) MASTER_IP="$2"; shift 2 ;;
+        --master-hostname|-n) MASTER_HOSTNAME="$2"; shift 2 ;;
         --start|-s) RUN_ROBOT_LAUNCH=true; shift ;;
         --teleop|-t) RUN_TELEOP_LAUNCH=true; shift ;;
         --usb-cam|-u) RUN_USB_CAM_NODE=true; shift ;;
