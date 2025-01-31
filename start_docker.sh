@@ -3,9 +3,9 @@ set -e
 
 # Default values
 IMAGE_NAME="walle/ros1:noetic"
-MASTER_HOSTNAME="raspberrypi.local"
+MASTER_HOSTNAME=""
 IP=""
-MASTER_IP=""
+MASTER_IP="129.138.167.128"
 ROS_MASTER_PORT=11311
 DISPLAY_ENABLED=false
 DOCKER_RUN_FLAGS=()
