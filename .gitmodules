@@ -1,0 +1,3 @@
+[submodule "dual-g2-high-power-motor-driver-rpi"]
+	path = dual-g2-high-power-motor-driver-rpi
+	url = https://github.com/pololu/dual-g2-high-power-motor-driver-rpi
