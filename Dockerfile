@@ -39,7 +39,7 @@ RUN apt-get install -y ros-$ROS_DISTRO-image-transport-plugins
 RUN apt-get install -y ros-$ROS_DISTRO-image-view
 RUN apt-get install -y avahi-daemon libnss-mdns avahi-utils
 RUN apt-get install -y dbus
-RUN apg-get install python3-pigpio
+RUN apt-get install python3-pigpio
 
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
