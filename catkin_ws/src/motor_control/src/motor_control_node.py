@@ -33,50 +33,41 @@ class MotorControlNode:
         self.cmd_vel_subscriber = rospy.Subscriber(
             self.cmd_vel_topic, Twist, self.cmd_vel_callback)
 
-    def cmd_vel_callback(self, msg):
-        v = msg.linear.x  # Linear velocity in m/s
-        omega = msg.angular.z  # Angular velocity in rad/s
 
-        # Calculate left and right wheel velocities (m/s)
+    def cmd_vel_callback(self, msg):
+        # Extract linear and angular velocities
+        v = msg.linear.x      # forward velocity (m/s)
+        omega = msg.angular.z # angular velocity (rad/s)
+
+        # Calculate wheel velocities (m/s)
         v_left = v - (omega * self.wheel_base / 2.0)
         v_right = v + (omega * self.wheel_base / 2.0)
 
-        # Convert to RPM
-        rpm_left = (v_left / self.wheel_radius) * \
-            60 / (2 * 3.14159)  # m/s to RPM
-        rpm_right = (v_right / self.wheel_radius) * 60 / (2 * 3.14159)
+        # Convert linear velocities to RPM:
+        # RPM = (linear speed / wheel circumference) * 60,
+        # where circumference = 2 * pi * wheel_radius.
+        rpm_left = (v_left / (2 * 3.14159 * self.wheel_radius)) * 60
+        rpm_right = (v_right / (2 * 3.14159 * self.wheel_radius)) * 60
 
-        # Apply limits to RPM
+        # Apply a deadband for small speeds.
         if abs(rpm_left) < self.min_rpm:
             rpm_left = 0
         if abs(rpm_right) < self.min_rpm:
             rpm_right = 0
 
-        # Cap RPM values
-        if rpm_left > self.max_rpm:
-            rpm_left = self.max_rpm
-        elif rpm_left < -self.max_rpm:
-            rpm_left = -self.max_rpm
+        # Cap the RPM values to the maximum allowed.
+        rpm_left = max(min(rpm_left, self.max_rpm), -self.max_rpm)
+        rpm_right = max(min(rpm_right, self.max_rpm), -self.max_rpm)
 
-        if rpm_right > self.max_rpm:
-            rpm_right = self.max_rpm
-        elif rpm_right < -self.max_rpm:
-            rpm_right = -self.max_rpm
+        # Scale the computed RPM values to the command range expected by the driver.
+        # This converts the RPM (in range [-max_rpm, max_rpm]) to a speed value in [-MAX_SPEED, MAX_SPEED].
+        speed_left = int((rpm_left / self.max_rpm) * MAX_SPEED)
+        speed_right = int((rpm_right / self.max_rpm) * MAX_SPEED)
 
-        # Prepare command bytes
-        if rpm_left == 0 and rpm_right == 0:
-            command = bytes([0])  # Shutdown both motors
-        else:
-            motor1_command = 1 + \
-                int(126 * ((rpm_left / (2 * self.max_rpm)) + 0.5))
-            motor2_command = 128 + \
-                int(127 * ((rpm_right / (2 * self.max_rpm)) + 0.5))
+        # Send the speed commands via the dual_g2_hpmd_rpi API.
+        motors.setSpeeds(speed_left, speed_right)
 
-            command = bytes([motor1_command, motor2_command])
-
-        # Send command to motors
-        self.serial.write(command)
-        # rospy.loginfo(f'Sent command: Motor 1: {command[0]}, Motor 2: {command[1]}')
+        rospy.loginfo("Set speeds: motor1: %d, motor2: %d", speed_left, speed_right)
 
 
 def main():
