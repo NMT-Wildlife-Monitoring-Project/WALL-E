@@ -3,9 +3,11 @@ set -e
 
 # Default values
 IMAGE_NAME="walle/ros1:noetic"
-MASTER_HOSTNAME=""
+MASTER_HOSTNAME="raspberrypi.local"
+# MASTER_HOSTNAME="pi"
 IP=""
-MASTER_IP="129.138.167.128"
+# MASTER_IP="129.138.167.128"
+MASTER_IP=""
 ROS_MASTER_PORT=11311
 DISPLAY_ENABLED=false
 DOCKER_RUN_FLAGS=()
@@ -131,7 +133,7 @@ validate_ip() {
 if [[ -z "$IP" ]]; then
     IP=$(hostname -I | awk '{print $1}')
     if [[ -z "$IP" ]]; then
-        echo "Error: Unable to determine the host IP address."
+        echo "Error: Unable to determine IP address"
         exit 1
     fi
 fi
@@ -143,18 +145,32 @@ if ! validate_ip "$IP"; then
 fi
 
 # Determine the master IP if not provided
-if [[ -z "$MASTER_IP" ]]; then
+if [[ -z "$MASTER_IP" || -n "$MASTER_HOSTNAME"]]; then
+    if [[ -n "$MASTER_IP"]]; then
+        OLD_MASTER_IP=$MASTER_IP
+    fi
+
     if [[ "$(hostname)" == "$MASTER_HOSTNAME" ]]; then
         MASTER_IP=$(hostname -I | awk '{print $1}')
     else
         MASTER_IP=$(ping -c 1 $MASTER_HOSTNAME | grep 'PING' | awk -F'[()]' '{print $2}')
     fi
 
+    if [[ -n "$MASTER_IP" && "$MASTER_IP" != "$OLD_MASTER_IP"]]; then
+        echo "Warning: IP address discrepancy. Using master IP address: $MASTER_IP"
+    fi
+
     if [[ -z "$MASTER_IP" ]]; then
-        echo "Error: Unable to determine the master IP address."
-        exit 1
+        echo "Warning: Unable to determine the master IP address from hostname."
+        if [[ -n "$OLD_MASTER_IP" ]]; then
+            echo "Using master IP address: $OLD_MASTER_IP"
+            MASTER_IP=$OLD_MASTER_IP
+        else
+            echo "Error: No master IP address."
+            exit 1
     fi
 fi
+
 
 # Validate the master IP address
 if ! validate_ip "$MASTER_IP"; then
