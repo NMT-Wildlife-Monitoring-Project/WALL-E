@@ -40,7 +40,15 @@ RUN apt-get install -y ros-$ROS_DISTRO-image-view
 RUN apt-get install -y avahi-daemon libnss-mdns avahi-utils
 RUN apt-get install -y dbus
 RUN apt-get install python3-pigpio
-
+RUN apt-get install -y wget unzip build-essential
+WORKDIR /tmp
+RUN wget https://github.com/joan2937/pigpio/archive/master.zip && \
+    unzip master.zip && \
+    cd pigpio-master && \
+    make && \
+    make install && \
+    rm -rf /tmp/pigpio-master /tmp/master.zip
+WORKDIR /root
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
