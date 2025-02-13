@@ -159,7 +159,7 @@ if [[ -z "$MASTER_IP" || -n "$MASTER_HOSTNAME" ]]; then
     fi
 
     if [[ "$(hostname)" == "$MASTER_HOSTNAME" ]]; then
-        MASTER_IP=$(hostname -I | awk '{print $1}')
+        MASTER_IP=$IP
     else
         MASTER_IP=$(ping -c 1 $MASTER_HOSTNAME | grep 'PING' | awk -F'[()]' '{print $2}')
     fi
