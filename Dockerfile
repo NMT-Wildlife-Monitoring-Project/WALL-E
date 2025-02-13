@@ -37,6 +37,7 @@ RUN apt-get update && apt-get install -y \
     avahi-utils \
     dbus \
     zip \
+    libboost-all-dev \
     ros-$ROS_DISTRO-navigation \
     ros-$ROS_DISTRO-teleop-twist-joy \
     ros-$ROS_DISTRO-joy \
@@ -45,12 +46,16 @@ RUN apt-get update && apt-get install -y \
     ros-$ROS_DISTRO-image-transport-plugins \
     ros-$ROS_DISTRO-image-view
 
-# Create catkin workspace
-RUN mkdir -p /home/$USER/catkin_ws/src
-RUN chown -R $USER:$USER /home/$USER/catkin_ws
+# Clean up
+RUN rm -rf /var/lib/apt/lists/*
+
+# Copy the ros2_ws folder into the container
+COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws
 
 # Download and extract the correct Slamtec SDK based on the architecture
+USER $USER
 WORKDIR /tmp
+
 RUN ARCH=$(uname -m) && \
     if [ "$ARCH" = "aarch64" ]; then \
         wget -O sdk.tar.gz https://download-en.slamtec.com/api/download/slamware-ros-sdk_aarch64_gcc7/5.1.1-rtm?lang=netural && \
@@ -66,6 +71,9 @@ RUN ARCH=$(uname -m) && \
         echo "Unsupported architecture: $ARCH" && exit 1; \
     fi
 
+USER root
+WORKDIR /tmp
+
 # Install pigpio library
 RUN wget https://github.com/joan2937/pigpio/archive/master.zip && \
     unzip master.zip && \
@@ -74,26 +82,22 @@ RUN wget https://github.com/joan2937/pigpio/archive/master.zip && \
     make install && \
     rm -rf /tmp/pigpio-master /tmp/master.zip
 
-WORKDIR /root
+USER $USER
+WORKDIR /home/$USER/catkin_ws
 
-# Clean up
-RUN rm -rf /var/lib/apt/lists/*
+RUN echo "set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -Wno-placement-new\")" >> /home/$USER/catkin_ws/src/CMakeLists.txt
+
+# Build the workspace
+RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make'
+
+USER root
+WORKDIR /root
 
 # Ensure the /var/run/dbus directory exists
 RUN mkdir -p /var/run/dbus && chmod 755 /var/run/dbus
 
 # Start dbus-daemon and avahi-daemon
 RUN dbus-daemon --system --fork && avahi-daemon --daemonize
-
-# Copy the ros2_ws folder into the container
-COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws
-
-USER $USER
-WORKDIR /home/$USER/catkin_ws
-
-# Build the workspace
-USER $USER
-RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; cd /home/$USER/catkin_ws; catkin build'
 
 # Copy the entrypoint script into the container
 USER root
