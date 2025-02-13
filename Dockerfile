@@ -1,8 +1,8 @@
 # Argument for ROS version
-ARG ROS_DISTRO=noetic
+ARG ROS_DISTRO=kinetic
 
 # Base image with ROS on Ubuntu 20.04
-FROM ros:$ROS_DISTRO-ros-base
+FROM ros:$ROS_DISTRO-robot
 
 # Set environment variables for ROS
 ENV ROS_DISTRO=$ROS_DISTRO
@@ -29,64 +29,65 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     python3-serial \
-    python3-catkin-tools \
     iputils-ping \
     avahi-daemon \
     libnss-mdns \
     avahi-utils \
     dbus \
     zip \
-    libboost-all-dev \
+    software-properties-common \
     ros-$ROS_DISTRO-navigation \
     ros-$ROS_DISTRO-teleop-twist-joy \
     ros-$ROS_DISTRO-joy \
     ros-$ROS_DISTRO-rviz \
     ros-$ROS_DISTRO-usb-cam \
     ros-$ROS_DISTRO-image-transport-plugins \
-    ros-$ROS_DISTRO-image-view \
-    ros-$ROS_DISTRO-tf2
+    ros-$ROS_DISTRO-image-view
+
+# Install GCC 7
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
+    apt-get update && \
+    apt-get install -y gcc-7 g++-7
+
+# Update alternatives to use GCC 7
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 50 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 50
 
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
+USER $USER
+
 # Create catkin workspace
-RUN mkdir -p /home/$USER/catkin_ws/src
-RUN chown -R $USER:$USER /home/$USER/catkin_ws
+COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws
 
 # Download and extract the correct Slamtec SDK based on the architecture
 WORKDIR /tmp
 RUN ARCH=$(uname -m) && \
     if [ "$ARCH" = "aarch64" ]; then \
-        wget -O sdk.tar.gz https://download-en.slamtec.com/api/download/slamware-ros-sdk_aarch64_gcc5.4/5.1.1-rtm?lang=netural && \
+        wget -O sdk.tar.gz https://download-en.slamtec.com/api/download/slamware-ros-sdk_aarch64_gcc7/5.1.1-rtm?lang=netural && \
         tar -xzf sdk.tar.gz && \
-        cp -r slamware_ros_sdk_linux-aarch64-gcc5.4/src/* /home/$USER/catkin_ws/src/ && \
-        rm -rf /tmp/slamware_ros_sdk_linux-aarch64-gcc5.4 /tmp/sdk.tar.gz; \
+        cp -r slamware_ros_sdk_linux-aarch64-gcc7/src/* /home/$USER/catkin_ws/src/ && \
+        rm -rf /tmp/slamware_ros_sdk_linux-aarch64-gcc7 /tmp/sdk.tar.gz; \
     elif [ "$ARCH" = "x86_64" ]; then \
-        wget -O sdk.tar.gz https://download-en.slamtec.com/api/download/slamware-ros-sdk_x86_64_gcc5.4/5.1.1-rtm?lang=netural && \
+        wget -O sdk.tar.gz https://download-en.slamtec.com/api/download/slamware-ros-sdk_x86_64_gcc7/5.1.1-rtm?lang=netural && \
         tar -xzf sdk.tar.gz && \
-        cp -r slamware_ros_sdk_linux-x86_64-gcc5.4/src/* /home/$USER/catkin_ws/src/ && \
-        rm -rf /tmp/slamware_ros_sdk_linux-x86_64-gcc5.4 /tmp/sdk.tar.gz; \
+        cp -r slamware_ros_sdk_linux-x86_64-gcc7/src/* /home/$USER/catkin_ws/src/ && \
+        rm -rf /tmp/slamware_ros_sdk_linux-x86_64-gcc7 /tmp/sdk.tar.gz; \
     else \
         echo "Unsupported architecture: $ARCH" && exit 1; \
     fi
 
-# Change ownership of the catkin workspace to the non-root user
-RUN chown -R $USER:$USER /home/$USER/catkin_ws
-
-# Switch to the non-root user and initialize the workspace
-USER $USER
+# Initialize the workspace
 WORKDIR /home/$USER/catkin_ws/src
 RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_init_workspace'
 
-# Add compiler flags to suppress warnings
-USER root
-WORKDIR /home/$USER/catkin_ws
-
-RUN echo "set(CMAKE_CXX_FLAGS \"\${CMAKE_CXX_FLAGS} -Wno-placement-new\")" >> /home/$USER/catkin_ws/src/CMakeLists.txt
-
 # Build the workspace
-RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make'
+WORKDIR /home/$USER/catkin_ws
+RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make -DCMAKE_C_COMPILER=/usr/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/bin/g++-7 -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"'
 
+# Switch back to root to continue with the rest of the Dockerfile
+USER root
 WORKDIR /tmp
 
 # Install pigpio library

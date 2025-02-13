@@ -4,7 +4,7 @@ cd $PWD
 export HOME="$HOME"
 export USER="$USER"
 
-. /opt/ros/noetic/setup.bash
+. /opt/ros/$ROS_DISTRO/setup.bash
 . $HOME/catkin_ws/devel/setup.bash
 
 # sudo dbus-daemon --system --fork
