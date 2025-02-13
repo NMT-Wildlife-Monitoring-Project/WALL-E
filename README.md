@@ -53,3 +53,6 @@ To view the stream from the pi
 <http://raspberrypi.local:8080/?action=stream>
 
 To view the stream from another computer, replace raspberrypi.local with the pi's ip address.
+
+## Slamtec Ros SDK Documentation
+<https://developer.slamtec.com/docs/slamware/ros-sdk-en/2.8.2_rtm/slamware_ros_sdk_server_node/>
