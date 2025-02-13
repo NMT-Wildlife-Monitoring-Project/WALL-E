@@ -166,6 +166,7 @@ if [[ -z "$MASTER_IP" || -n "$MASTER_HOSTNAME" ]]; then
 
     if [[ -n "$OLD_MASTER_IP" && "$MASTER_IP" != "$OLD_MASTER_IP" ]]; then
         echo "Warning: IP address discrepancy. Given IP: ($OLD_MASTER_IP), Detected IP: ($MASTER_IP)"
+        MASTER_IP=$OLD_MASTER_IP
     fi
 
     if [[ -z "$MASTER_IP" ]]; then
