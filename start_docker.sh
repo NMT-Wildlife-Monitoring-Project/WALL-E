@@ -198,6 +198,9 @@ echo "ROS_MASTER_URI=$ROS_MASTER_URI" >> $ENV_FILE
 # No longer part of the Bourgeois 
 DOCKER_RUN_FLAGS+=("--privileged")
 DOCKER_RUN_FLAGS+=("--net=host")
+DOCKER_RUN_FLAGS+=("--cap-add=NET_ADMIN")
+DOCKER_RUN_FLAGS+=("--device=/dev/net/tun")
+
 
 # Add Docker flag to mount /dev with correct permissions
 DOCKER_RUN_FLAGS+=("--volume=/dev:/dev:rw")
