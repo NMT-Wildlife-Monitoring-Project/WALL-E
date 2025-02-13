@@ -132,6 +132,11 @@ validate_ip() {
 # Get the active IP address if not provided
 if [[ -z "$IP" ]]; then
     IP=$(hostname -I | awk '{print $1}')
+    if ! ping -c 1 google.com &> /dev/null; then
+        IP=$(hostname -I | awk '{print $1}')
+    else
+        IP=$(ip route get 8.8.8.8 | awk '{print $7; exit}')
+    fi
     if [[ -z "$IP" ]]; then
         echo "Error: Unable to determine IP address"
         exit 1
@@ -144,6 +149,8 @@ then
     echo "Error: Invalid IP address format: $IP"
     exit 1
 fi
+
+echo "IP: $IP"
 
 # Determine the master IP if not provided
 if [[ -z "$MASTER_IP" || -n "$MASTER_HOSTNAME" ]]; then
