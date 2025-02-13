@@ -1,5 +1,6 @@
 # Argument for ROS version
 ARG ROS_DISTRO=noetic
+ARG ARCH
 
 # Base image with ROS on Ubuntu 20.04
 FROM ros:$ROS_DISTRO-ros-base
@@ -20,35 +21,61 @@ WORKDIR /home/$USER
 # Switch back to root
 USER root
 
-# Install stuff
-# Docker will cache the layers, so if you change something in the Dockerfile,
-# it will only rebuild the layers that have changed AND the layers that come after it.
-# Avoid installing new stuff before large packages to avoid large rebuilds.
-# Unless you have fast internet (pay to win smh)
-RUN apt-get update && apt-get install -y python3
-RUN apt-get install -y python3-pip
-RUN apt-get install -y python3-serial
-RUN apt-get install -y python3-catkin-tools
-RUN apt-get install -y iputils-ping
-RUN apt-get install -y ros-$ROS_DISTRO-navigation
-RUN apt-get install -y ros-$ROS_DISTRO-teleop-twist-joy
-RUN apt-get install -y ros-$ROS_DISTRO-joy
-RUN apt-get install -y ros-$ROS_DISTRO-rviz
-RUN apt-get install -y ros-$ROS_DISTRO-usb-cam
-RUN apt-get install -y ros-$ROS_DISTRO-image-transport-plugins
-RUN apt-get install -y ros-$ROS_DISTRO-image-view
-RUN apt-get install -y avahi-daemon libnss-mdns avahi-utils
-RUN apt-get install -y dbus
-RUN apt-get install python3-pigpio
-RUN apt-get install -y wget unzip build-essential
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    wget \
+    tar \
+    python3 \
+    python3-pip \
+    python3-serial \
+    python3-catkin-tools \
+    iputils-ping \
+    avahi-daemon \
+    libnss-mdns \
+    avahi-utils \
+    dbus \
+    zip \
+    ros-$ROS_DISTRO-navigation \
+    ros-$ROS_DISTRO-teleop-twist-joy \
+    ros-$ROS_DISTRO-joy \
+    ros-$ROS_DISTRO-rviz \
+    ros-$ROS_DISTRO-usb-cam \
+    ros-$ROS_DISTRO-image-transport-plugins \
+    ros-$ROS_DISTRO-image-view
+
+# Create catkin workspace
+RUN mkdir -p /home/$USER/catkin_ws/src
+RUN chown -R $USER:$USER /home/$USER/catkin_ws
+
+# Download and extract the correct Slamtec SDK based on the architecture
 WORKDIR /tmp
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "aarch64" ]; then \
+        wget -O sdk.tar.gz https://download-en.slamtec.com/api/download/slamware-ros-sdk_aarch64_gcc7/5.1.1-rtm?lang=netural && \
+        tar -xzf sdk.tar.gz && \
+        cp -r slamware_ros_sdk_linux-aarch64-gcc7/src/* /home/$USER/catkin_ws/src/ && \
+        rm -rf /tmp/slamware_ros_sdk_linux-aarch64-gcc7 /tmp/sdk.tar.gz; \
+    elif [ "$ARCH" = "x86_64" ]; then \
+        wget -O sdk.tar.gz https://download-en.slamtec.com/api/download/slamware-ros-sdk_x86_64_gcc7/5.1.1-rtm?lang=netural && \
+        tar -xzf sdk.tar.gz && \
+        cp -r slamware_ros_sdk_linux-x86_64-gcc7/src/* /home/$USER/catkin_ws/src/ && \
+        rm -rf /tmp/slamware_ros_sdk_linux-x86_64-gcc7 /tmp/sdk.tar.gz; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi
+
+# Install pigpio library
 RUN wget https://github.com/joan2937/pigpio/archive/master.zip && \
     unzip master.zip && \
     cd pigpio-master && \
     make && \
     make install && \
     rm -rf /tmp/pigpio-master /tmp/master.zip
+
 WORKDIR /root
+
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -57,7 +84,6 @@ RUN mkdir -p /var/run/dbus && chmod 755 /var/run/dbus
 
 # Start dbus-daemon and avahi-daemon
 RUN dbus-daemon --system --fork && avahi-daemon --daemonize
-
 
 # Copy the ros2_ws folder into the container
 COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws

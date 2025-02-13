@@ -214,6 +214,14 @@ fi
 # Build the container if requested
 if [[ "$BUILD_CONTAINER" = true ]]; then
     echo "Building the Docker container..."
+
+    # ARCH=$(uname -m)
+    # if [[ "$ARCH" != "x86_64" && "$ARCH" == "aarch64" ]]; then
+    #     echo "Error: Unsupported architecture: $ARCH"
+    #     exit 1
+    # fi
+
+    # docker build --build-arg $ARCH -t $IMAGE_NAME .
     docker build -t $IMAGE_NAME .
 fi
 
