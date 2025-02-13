@@ -139,14 +139,15 @@ if [[ -z "$IP" ]]; then
 fi
 
 # Validate the IP address
-if ! validate_ip "$IP"; then
+if ! validate_ip "$IP"
+then
     echo "Error: Invalid IP address format: $IP"
     exit 1
 fi
 
 # Determine the master IP if not provided
-if [[ -z "$MASTER_IP" || -n "$MASTER_HOSTNAME"]]; then
-    if [[ -n "$MASTER_IP"]]; then
+if [[ -z "$MASTER_IP" || -n "$MASTER_HOSTNAME" ]]; then
+    if [[ -n "$MASTER_IP" ]]; then
         OLD_MASTER_IP=$MASTER_IP
     fi
 
@@ -156,7 +157,7 @@ if [[ -z "$MASTER_IP" || -n "$MASTER_HOSTNAME"]]; then
         MASTER_IP=$(ping -c 1 $MASTER_HOSTNAME | grep 'PING' | awk -F'[()]' '{print $2}')
     fi
 
-    if [[ -n "$MASTER_IP" && "$MASTER_IP" != "$OLD_MASTER_IP"]]; then
+    if [[ -n "$MASTER_IP" && "$MASTER_IP" != "$OLD_MASTER_IP" ]]; then
         echo "Warning: IP address discrepancy. Using master IP address: $MASTER_IP"
     fi
 
@@ -168,6 +169,7 @@ if [[ -z "$MASTER_IP" || -n "$MASTER_HOSTNAME"]]; then
         else
             echo "Error: No master IP address."
             exit 1
+        fi
     fi
 fi
 
