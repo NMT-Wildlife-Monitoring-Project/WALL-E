@@ -99,7 +99,7 @@ RUN wget https://github.com/joan2937/pigpio/archive/master.zip && \
     rm -rf /tmp/pigpio-master /tmp/master.zip
 
 # Ensure the /var/run/dbus directory exists
-# RUN mkdir -p /var/run/dbus && chmod 755 /var/run/dbus
+RUN mkdir -p /var/run/dbus && chmod 755 /var/run/dbus
 
 # # Start dbus-daemon and avahi-daemon
 # RUN dbus-daemon --system --fork && avahi-daemon --daemonize
