@@ -9,4 +9,9 @@
     <node name="motor_control_node" pkg="motor_control" type="motor_control_node.py" output="screen">
         <!-- Add any necessary parameters for motor_control_node here -->
     </node>
+
+    <!-- Launch mapper -->
+    <include file="$(find slamware_ros_sdk)/launch/slamware_ros_sdk_server_node.launch">
+        <arg name="ip_address" value="192.168.11.1" />
+    </include>
 </launch>

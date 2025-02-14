@@ -9,8 +9,10 @@ IP=""
 # MASTER_IP="129.138.167.128"
 MASTER_IP=""
 ROS_MASTER_PORT=11311
-DISPLAY_ENABLED=false
+
 DOCKER_RUN_FLAGS=()
+
+DISPLAY_ENABLED=false
 COMMAND_TO_RUN=""
 ENV_FILE="env_file.txt"
 RUN_ROSCORE=false
@@ -18,12 +20,14 @@ BUILD_CONTAINER=false
 STOP_CONTAINER=false
 RESTART_CONTAINER=false
 RUN_VIEW_CAMERA_LAUNCH=false
+RUN_MAPPING_LAUNCH=false
+RUN_VIEW_MAP_LAUNCH=false   # NEW flag for view-map
 QUIET_MODE=false
 
 # Function to show usage
 usage() {
     echo "Usage: $0 [--start (-s) | --teleop (-t) | --usb-cam (-u) | --video-stream (-v) |"
-    echo "           --command (-c) <command> | --roscore (-r) | --build (-b) | --stop (-x) |"
+    echo "           --mapping (-M) | --view-map (-w) | --command (-c) <command> | --roscore (-r) | --build (-b) | --stop (-x) |"
     echo "           --restart (-R)] [--port (-p) <port>] [--ip (-i) <host_ip>] [--master-ip (-m) <master_ip>]"
     echo "           [--master-hostname (-n) <master_hostname>] [--display (-d)] [--quiet (-q)] [--help (-h)]"
     echo "This script is used to start and manage a Docker container for WALL-E the wildlife monitoring robot."
@@ -33,10 +37,12 @@ usage() {
     echo "  --start (-s)                Start all processes on the robot"
     echo "  --teleop (-t)               Run joystick control using teleop.launch"
     echo "  --usb-cam (-u)              Run usb camera node using usb_cam.launch"
-    echo "  --video-stream (-v)          View the video stream using view_camera.launch"
+    echo "  --video-stream (-v)         View the video stream using view_camera.launch"
+    echo "  --mapping (-M)              Run mapping process using the slamtec mapper"
+    echo "  --view-map (-w)             Run map view using view_slamware_ros_sdk_server_node.launch"
     echo "  --command (-c) <command>    Pass a command to be run in the container"
-    echo "Options:"
     echo "  --roscore (-r)              Run roscore"
+    echo "Options:"
     echo "  --port (-p) <port>          Specify custom ROS master port (default is 11311)"
     echo "  --ip (-i) <host_ip>         Specify host IP"
     echo "  --master-ip (-m) <master_ip> Specify master IP"
@@ -60,6 +66,8 @@ while [[ "$#" -gt 0 ]]; do
         --teleop|-t) RUN_TELEOP_LAUNCH=true; shift ;;
         --usb-cam|-u) RUN_USB_CAM_NODE=true; shift ;;
         --video-stream|-v) RUN_VIEW_CAMERA_LAUNCH=true; DISPLAY_ENABLED=true; shift ;;
+        --mapping|-M) RUN_MAPPING_LAUNCH=true; shift ;;
+        --view-map|-w) RUN_VIEW_MAP_LAUNCH=true DISPLAY_ENABLED=true; shift ;;
         --command|-c) COMMAND_TO_RUN="$2"; shift 2 ;;
         --roscore|-r) RUN_ROSCORE=true; shift ;;
         --port|-p) ROS_MASTER_PORT="$2"; shift 2 ;;
@@ -79,6 +87,8 @@ if [ "$RUN_ROBOT_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
 if [ "$RUN_TELEOP_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
 if [ "$RUN_USB_CAM_NODE" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
 if [ "$RUN_VIEW_CAMERA_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
+if [ "$RUN_MAPPING_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
+if [ "$RUN_VIEW_MAP_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
 if [ -n "$COMMAND_TO_RUN" ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
 if [ "$RUN_ROSCORE" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
 
@@ -267,6 +277,12 @@ elif [ "$RUN_USB_CAM_NODE" = true ]; then
 elif [ "$RUN_VIEW_CAMERA_LAUNCH" = true ]; then
     echo "Viewing ROS Camera feed..."
     docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch control view_camera.launch
+elif [ "$RUN_MAPPING_LAUNCH" = true ]; then
+    echo "Running mapping process..."
+    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch slamware_ros_sdk slamware_ros_sdk_server_node.launch ip_address:=192.168.11.1
+elif [ "$RUN_VIEW_MAP_LAUNCH" = true ]; then
+    echo "Running map view..."
+    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch slamware_ros_sdk view_slamware_ros_sdk_server_node.launch
 elif [ -n "$COMMAND_TO_RUN" ]; then
     echo "Running custom command: $COMMAND_TO_RUN"
     docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh $COMMAND_TO_RUN
