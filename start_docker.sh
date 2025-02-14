@@ -131,12 +131,7 @@ validate_ip() {
 
 # Get the active IP address if not provided
 if [[ -z "$IP" ]]; then
-    IP=$(hostname -I | awk '{print $1}')
-    if ! ping -c 1 google.com &> /dev/null; then
-        IP=$(hostname -I | awk '{print $1}')
-    else
-        IP=$(ip route get 8.8.8.8 | awk '{print $7; exit}')
-    fi
+    IP=$(ip route get 8.8.8.8 | awk '{print $7; exit}')
     if [[ -z "$IP" ]]; then
         echo "Error: Unable to determine IP address"
         exit 1
@@ -225,14 +220,6 @@ fi
 # Build the container if requested
 if [[ "$BUILD_CONTAINER" = true ]]; then
     echo "Building the Docker container..."
-
-    # ARCH=$(uname -m)
-    # if [[ "$ARCH" != "x86_64" && "$ARCH" == "aarch64" ]]; then
-    #     echo "Error: Unsupported architecture: $ARCH"
-    #     exit 1
-    # fi
-
-    # docker build --build-arg $ARCH -t $IMAGE_NAME .
     docker build -t $IMAGE_NAME .
 fi
 
