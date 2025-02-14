@@ -3,7 +3,10 @@
 import rospy
 from geometry_msgs.msg import Twist
 import serial
-
+from dual_g2_hpmd_rpi import motors, MAX_SPEED
+rospy.init_node('motor_control', anonymous=True)
+rospy.logdebug("Setting log level to INFO")
+rospy.loginfo("This is a test INFO message")
 
 class MotorControlNode:
     def __init__(self):
@@ -17,9 +20,9 @@ class MotorControlNode:
         self.wheel_diameter = rospy.get_param(
             '~wheel_diameter', 0.1)  # Default in meters
         # Maximum RPM value for motor control
-        self.max_rpm = rospy.get_param('~max_rpm', 100)
+        self.max_rpm = rospy.get_param('~max_velocity', 5)
         # Minimum RPM value for motor control
-        self.min_rpm = rospy.get_param('~min_rpm', 10)
+        self.min_rpm = rospy.get_param('~min_velocity', 0.1)
         self.motor_serial_device = rospy.get_param(
             '~motor_serial_device', '/dev/serial0')  # Default serial device
 
@@ -43,26 +46,13 @@ class MotorControlNode:
         v_left = v - (omega * self.wheel_base / 2.0)
         v_right = v + (omega * self.wheel_base / 2.0)
 
-        # Convert linear velocities to RPM:
-        # RPM = (linear speed / wheel circumference) * 60,
-        # where circumference = 2 * pi * wheel_radius.
-        rpm_left = (v_left / (2 * 3.14159 * self.wheel_radius)) * 60
-        rpm_right = (v_right / (2 * 3.14159 * self.wheel_radius)) * 60
-
         # Apply a deadband for small speeds.
-        if abs(rpm_left) < self.min_rpm:
-            rpm_left = 0
-        if abs(rpm_right) < self.min_rpm:
-            rpm_right = 0
-
-        # Cap the RPM values to the maximum allowed.
-        rpm_left = max(min(rpm_left, self.max_rpm), -self.max_rpm)
-        rpm_right = max(min(rpm_right, self.max_rpm), -self.max_rpm)
-
-        # Scale the computed RPM values to the command range expected by the driver.
-        # This converts the RPM (in range [-max_rpm, max_rpm]) to a speed value in [-MAX_SPEED, MAX_SPEED].
-        speed_left = int((rpm_left / self.max_rpm) * MAX_SPEED)
-        speed_right = int((rpm_right / self.max_rpm) * MAX_SPEED)
+        if abs(v_left) < self.min_velocity:
+            v_left = 0
+        if abs(v_right) < self.min_velocity:
+            v_right = 0
+        speed_left = int(v_left/self.max_velocity * MAX_SPEED)
+        speed_right = int(v_right/self.max_velocity * MAX_SPEED)
 
         # Send the speed commands via the dual_g2_hpmd_rpi API.
         motors.setSpeeds(speed_left, speed_right)
