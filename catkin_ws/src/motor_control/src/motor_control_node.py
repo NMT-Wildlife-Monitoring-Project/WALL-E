@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 import rospy
 from geometry_msgs.msg import Twist
 from dual_g2_hpmd_rpi import motors, MAX_SPEED
