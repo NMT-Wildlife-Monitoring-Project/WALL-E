@@ -47,7 +47,8 @@ class MotorControlNode:
 
         # Send the speed commands via the dual_g2_hpmd_rpi API.
         motors.setSpeeds(speed_left, speed_right)
-
+        print("Set speeds: motor1: %d, motor2: %d",
+                      speed_left, speed_right)
         rospy.loginfo("Set speeds: motor1: %d, motor2: %d",
                       speed_left, speed_right)
 
