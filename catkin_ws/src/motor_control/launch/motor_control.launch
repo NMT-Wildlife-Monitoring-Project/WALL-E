@@ -4,5 +4,6 @@
 
     <!-- Start the motor control node -->
     <node name="motor_control_node" pkg="motor_control" type="motor_control_node.py" output="screen">
+        <param name="cmd_vel_topic" value="/joy_teleop/cmd_vel"/>
     </node>
 </launch>
