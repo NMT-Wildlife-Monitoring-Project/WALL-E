@@ -15,7 +15,7 @@ class MotorControlNode:
             '~wheel_base', 0.5)  # Default in meters
         self.wheel_diameter = rospy.get_param(
             '~wheel_diameter', 0.1)  # Default in meters
-        self.max_velocity = rospy.get_param('~max_velocity', 5)
+        self.max_velocity = rospy.get_param('~max_velocity', 1)
         self.min_velocity = rospy.get_param('~min_velocity', 0.1)
         self.motor_serial_device = rospy.get_param(
             '~motor_serial_device', '/dev/serial0')  # Default serial device
@@ -32,16 +32,22 @@ class MotorControlNode:
         omega = msg.angular.z  # angular velocity (rad/s)
 
         # Calculate wheel velocities (m/s)
-        v_left = v - (omega * self.wheel_base / 2.0)
-        v_right = v + (omega * self.wheel_base / 2.0)
+        v_left = v - (omega)
+        v_right = v + (omega)
 
         # Apply a deadband for small speeds.
         if abs(v_left) < self.min_velocity:
             v_left = 0
         if abs(v_right) < self.min_velocity:
             v_right = 0
-        speed_left = int(v_left/self.max_velocity * MAX_SPEED)
-        speed_right = int(v_right/self.max_velocity * MAX_SPEED)
+
+        if abs(v_left) > self.max_velocity:
+            v_left = self.max_velocity * ((v_left < 0) * -1)
+        if abs(v_right) > self.max_velocity:
+            v_right = self.max_velocity * ((v_right < 0) * -1)
+        
+        speed_left = int(v_left * MAX_SPEED)
+        speed_right = int(v_right * MAX_SPEED)
 
         # Send the speed commands via the dual_g2_hpmd_rpi API.
         motors.setSpeeds(speed_left, speed_right)
