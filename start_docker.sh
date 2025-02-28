@@ -3,7 +3,7 @@ set -e
 
 # Default values
 IMAGE_NAME="walle/ros1:noetic"
-MASTER_HOSTNAME="raspberrypi.local"
+# MASTER_HOSTNAME="raspberrypi.local"
 # MASTER_HOSTNAME="pi"
 IP=""
 # MASTER_IP="129.138.167.128"
@@ -162,6 +162,11 @@ fi
 echo "IP: $IP"
 
 # Determine the master IP if not provided
+if [[ -z "$MASTER_IP" && -z "$MASTER_HOSTNAME" ]]; then
+    echo "We are the master. You must all obey"
+    MASTER_IP=$IP
+fi
+
 if [[ -z "$MASTER_IP" || -n "$MASTER_HOSTNAME" ]]; then
     if [[ -n "$MASTER_IP" ]]; then
         OLD_MASTER_IP=$MASTER_IP
