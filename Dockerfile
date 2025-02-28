@@ -67,8 +67,18 @@ RUN bash -c "if [[ \$(uname -m) = \"aarch64\" || \$(uname -m) = \"x86_64\" ]]; t
         echo \"Unsupported architecture: \$ARCH\" && exit 73; \
     fi"
 
+# Install pigpio library
+USER root
+RUN wget https://github.com/joan2937/pigpio/archive/master.zip && \
+    unzip master.zip && \
+    cd pigpio-master && \
+    make && \
+    make install && \
+    rm -rf /tmp/pigpio-master /tmp/master.zip
+
 # Create catkin workspace
-COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws
+USER $USER
+RUN mkdir -p /home/$USER/catkin_ws/src
 
 RUN ARCH=$(uname -m) && \
     cp -r slamware_ros_sdk_linux-$ARCH-gcc7/src/* /home/$USER/catkin_ws/src/ && \
@@ -80,19 +90,10 @@ RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_init_workspace'
 
 # Build the workspace
 WORKDIR /home/$USER/catkin_ws
-RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make -DCMAKE_C_COMPILER=/usr/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/bin/g++-7 -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"'
+RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/bin/g++-7 -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"'
 
-# Switch back to root to continue with the rest of the Dockerfile
-USER root
-WORKDIR /tmp
-
-# Install pigpio library
-RUN wget https://github.com/joan2937/pigpio/archive/master.zip && \
-    unzip master.zip && \
-    cd pigpio-master && \
-    make && \
-    make install && \
-    rm -rf /tmp/pigpio-master /tmp/master.zip
+COPY --chown=$USER:$USER catkin_ws/* /home/$USER/catkin_ws/
+RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make'
 
 # Ensure the /var/run/dbus directory exists
 # RUN mkdir -p /var/run/dbus && chmod 755 /var/run/dbus
