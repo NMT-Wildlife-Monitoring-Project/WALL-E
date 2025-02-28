@@ -110,7 +110,7 @@ RUN chmod +x /entrypoint.sh
 
 # Set entrypoint to use the external script
 ENTRYPOINT ["/entrypoint.sh"]
-
+RUN sudo pigpiod
 # Switch back to non-root user 'walle'
 USER $USER
 WORKDIR /home/$USER
