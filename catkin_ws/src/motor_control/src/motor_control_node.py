@@ -15,10 +15,8 @@ class MotorControlNode:
             '~wheel_base', 0.5)  # Default in meters
         self.wheel_diameter = rospy.get_param(
             '~wheel_diameter', 0.1)  # Default in meters
-        # Maximum RPM value for motor control
-        self.max_rpm = rospy.get_param('~max_velocity', 5)
-        # Minimum RPM value for motor control
-        self.min_rpm = rospy.get_param('~min_velocity', 0.1)
+        self.max_velocity = rospy.get_param('~max_velocity', 5)
+        self.min_velocity = rospy.get_param('~min_velocity', 0.1)
         self.motor_serial_device = rospy.get_param(
             '~motor_serial_device', '/dev/serial0')  # Default serial device
 
