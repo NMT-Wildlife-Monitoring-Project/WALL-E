@@ -75,6 +75,7 @@ RUN wget https://github.com/joan2937/pigpio/archive/master.zip && \
     make && \
     make install && \
     rm -rf /tmp/pigpio-master /tmp/master.zip
+RUN pigpiod
 
 # Create catkin workspace
 USER $USER
@@ -111,7 +112,6 @@ RUN chmod +x /entrypoint.sh
 
 # Set entrypoint to use the external script
 ENTRYPOINT ["/entrypoint.sh"]
-RUN sudo pigpiod
 # Switch back to non-root user 'walle'
 USER $USER
 WORKDIR /home/$USER
