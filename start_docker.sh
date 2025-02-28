@@ -41,7 +41,7 @@ usage() {
     echo "  --video-stream (-v)         View the video stream using view_camera.launch"
     echo "  --mapping (-M)              Run mapping process using the slamtec mapper"
     echo "  --view-map (-w)             Run map view using view_slamware_ros_sdk_server_node.launch"
-    echo "  --motors (-m)               Run motor control using motor_control.launch"
+    echo "  --motors (-g)               Run motor control using motor_control.launch"
     echo "  --command (-c) <command>    Pass a command to be run in the container"
     echo "  --roscore (-r)              Run roscore"
     echo "Options:"
@@ -70,7 +70,7 @@ while [[ "$#" -gt 0 ]]; do
         --video-stream|-v) RUN_VIEW_CAMERA_LAUNCH=true; DISPLAY_ENABLED=true; shift ;;
         --mapping|-M) RUN_MAPPING_LAUNCH=true; shift ;;
         --view-map|-w) RUN_VIEW_MAP_LAUNCH=true DISPLAY_ENABLED=true; shift ;;
-        --motors|-m) RUN_MOTORS_LAUNCH=true; shift ;;  # NEW case for motors
+        --motors|-g) RUN_MOTORS_LAUNCH=true; shift ;;  # NEW case for motors
         --command|-c) COMMAND_TO_RUN="$2"; shift 2 ;;
         --roscore|-r) RUN_ROSCORE=true; shift ;;
         --port|-p) ROS_MASTER_PORT="$2"; shift 2 ;;
