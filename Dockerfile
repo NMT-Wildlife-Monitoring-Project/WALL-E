@@ -58,25 +58,21 @@ RUN rm -rf /var/lib/apt/lists/*
 
 USER $USER
 
+# Download and extract the correct Slamtec SDK based on the architecture
+WORKDIR /tmp
+RUN bash -c "if [[ \$(uname -m) = \"aarch64\" || \$(uname -m) = \"x86_64\" ]]; then \
+        wget -O sdk.tar.gz https://download-en.slamtec.com/api/download/slamware-ros-sdk_\$(uname -m)_gcc7/5.1.1-rtm?lang=netural && \
+        tar -xzf sdk.tar.gz; \
+    else \
+        echo \"Unsupported architecture: \$ARCH\" && exit 73; \
+    fi"
+
 # Create catkin workspace
 COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws
 
-# Download and extract the correct Slamtec SDK based on the architecture
-WORKDIR /tmp
 RUN ARCH=$(uname -m) && \
-    if [ "$ARCH" = "aarch64" ]; then \
-        wget -O sdk.tar.gz https://download-en.slamtec.com/api/download/slamware-ros-sdk_aarch64_gcc7/5.1.1-rtm?lang=netural && \
-        tar -xzf sdk.tar.gz && \
-        cp -r slamware_ros_sdk_linux-aarch64-gcc7/src/* /home/$USER/catkin_ws/src/ && \
-        rm -rf /tmp/slamware_ros_sdk_linux-aarch64-gcc7 /tmp/sdk.tar.gz; \
-    elif [ "$ARCH" = "x86_64" ]; then \
-        wget -O sdk.tar.gz https://download-en.slamtec.com/api/download/slamware-ros-sdk_x86_64_gcc7/5.1.1-rtm?lang=netural && \
-        tar -xzf sdk.tar.gz && \
-        cp -r slamware_ros_sdk_linux-x86_64-gcc7/src/* /home/$USER/catkin_ws/src/ && \
-        rm -rf /tmp/slamware_ros_sdk_linux-x86_64-gcc7 /tmp/sdk.tar.gz; \
-    else \
-        echo "Unsupported architecture: $ARCH" && exit 1; \
-    fi
+    cp -r slamware_ros_sdk_linux-$ARCH-gcc7/src/* /home/$USER/catkin_ws/src/ && \
+    rm -rf /tmp/slamware_* /tmp/sdk.tar.gz;
 
 # Initialize the workspace
 WORKDIR /home/$USER/catkin_ws/src

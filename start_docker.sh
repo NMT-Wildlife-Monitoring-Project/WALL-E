@@ -22,12 +22,13 @@ RESTART_CONTAINER=false
 RUN_VIEW_CAMERA_LAUNCH=false
 RUN_MAPPING_LAUNCH=false
 RUN_VIEW_MAP_LAUNCH=false   # NEW flag for view-map
+RUN_MOTORS_LAUNCH=false     # NEW flag for motors
 QUIET_MODE=false
 
 # Function to show usage
 usage() {
     echo "Usage: $0 [--start (-s) | --teleop (-t) | --usb-cam (-u) | --video-stream (-v) |"
-    echo "           --mapping (-M) | --view-map (-w) | --command (-c) <command> | --roscore (-r) | --build (-b) | --stop (-x) |"
+    echo "           --mapping (-M) | --view-map (-w) | --motors (-m) | --command (-c) <command> | --roscore (-r) | --build (-b) | --stop (-x) |"
     echo "           --restart (-R)] [--port (-p) <port>] [--ip (-i) <host_ip>] [--master-ip (-m) <master_ip>]"
     echo "           [--master-hostname (-n) <master_hostname>] [--display (-d)] [--quiet (-q)] [--help (-h)]"
     echo "This script is used to start and manage a Docker container for WALL-E the wildlife monitoring robot."
@@ -40,6 +41,7 @@ usage() {
     echo "  --video-stream (-v)         View the video stream using view_camera.launch"
     echo "  --mapping (-M)              Run mapping process using the slamtec mapper"
     echo "  --view-map (-w)             Run map view using view_slamware_ros_sdk_server_node.launch"
+    echo "  --motors (-m)               Run motor control using motor_control.launch"
     echo "  --command (-c) <command>    Pass a command to be run in the container"
     echo "  --roscore (-r)              Run roscore"
     echo "Options:"
@@ -68,6 +70,7 @@ while [[ "$#" -gt 0 ]]; do
         --video-stream|-v) RUN_VIEW_CAMERA_LAUNCH=true; DISPLAY_ENABLED=true; shift ;;
         --mapping|-M) RUN_MAPPING_LAUNCH=true; shift ;;
         --view-map|-w) RUN_VIEW_MAP_LAUNCH=true DISPLAY_ENABLED=true; shift ;;
+        --motors|-m) RUN_MOTORS_LAUNCH=true; shift ;;  # NEW case for motors
         --command|-c) COMMAND_TO_RUN="$2"; shift 2 ;;
         --roscore|-r) RUN_ROSCORE=true; shift ;;
         --port|-p) ROS_MASTER_PORT="$2"; shift 2 ;;
@@ -89,6 +92,7 @@ if [ "$RUN_USB_CAM_NODE" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
 if [ "$RUN_VIEW_CAMERA_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
 if [ "$RUN_MAPPING_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
 if [ "$RUN_VIEW_MAP_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
+if [ "$RUN_MOTORS_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi  # NEW action count for motors
 if [ -n "$COMMAND_TO_RUN" ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
 if [ "$RUN_ROSCORE" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
 
@@ -283,6 +287,9 @@ elif [ "$RUN_MAPPING_LAUNCH" = true ]; then
 elif [ "$RUN_VIEW_MAP_LAUNCH" = true ]; then
     echo "Running map view..."
     docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch slamware_ros_sdk view_slamware_ros_sdk_server_node.launch
+elif [ "$RUN_MOTORS_LAUNCH" = true ]; then
+    echo "Running motor control..."
+    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch motor_control motor_control.launch
 elif [ -n "$COMMAND_TO_RUN" ]; then
     echo "Running custom command: $COMMAND_TO_RUN"
     docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh $COMMAND_TO_RUN
