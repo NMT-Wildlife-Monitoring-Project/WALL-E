@@ -42,19 +42,18 @@ class MotorControlNode:
             v_right = 0
 
         if abs(v_left) > self.max_velocity:
-            v_left = self.max_velocity * ((v_left < 0) * -1)
+            v_left = self.max_velocity if v_left > 0 else -self.max_velocity
         if abs(v_right) > self.max_velocity:
-            v_right = self.max_velocity * ((v_right < 0) * -1)
+            v_right = self.max_velocity if v_right > 0 else -self.max_velocity
         
-        speed_left = int(v_left * MAX_SPEED)
-        speed_right = int(v_right * MAX_SPEED)
+        speed_left = int(v_left * self.max_velocity)
+        speed_right = int(v_right * self.max_velocity)
 
         # Send the speed commands via the dual_g2_hpmd_rpi API.
         motors.setSpeeds(speed_left, speed_right)
-        print("Set speeds: motor1: %d, motor2: %d",
-                      speed_left, speed_right)
-        rospy.loginfo("Set speeds: motor1: %d, motor2: %d",
-                      speed_left, speed_right)
+        #print("Set speeds: motor1: %d, motor2: %d", speed_left, speed_right)
+        rospy.loginfo("Set speeds: motor1: %f, motor2: %f",
+                      v_left, v_right)
 
 
 def main():
