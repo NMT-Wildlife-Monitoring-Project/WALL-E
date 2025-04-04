@@ -1,0 +1,13 @@
+<launch>
+    <!-- SLAMTEC Mapper SDK Node -->
+    <node name="slamware_sdk_server" pkg="slamware_ros_sdk" type="slamware_ros_sdk_server_node" output="screen">
+        <!-- You can set the IP address of the M2M2 if it's on Ethernet/WiFi -->
+        <param name="slamware_ip_address" value="192.168.11.1"/>
+
+        <!-- Optionally remap goal input -->
+        <remap from="move_base_simple/goal" to="/move_base_simple/goal"/>
+    </node>
+
+    <!-- TF tree sanity check -->
+    <param name="use_sim_time" value="false"/>
+</launch>
