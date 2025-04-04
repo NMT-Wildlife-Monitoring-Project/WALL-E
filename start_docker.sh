@@ -267,6 +267,12 @@ else
     DOCKER_EXEC_FLAGS="-it"
 fi
 
+# Attempt to run sudo pigpiod in the container
+echo "Starting pigpiod..."
+if ! docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID sudo pigpiod; then
+    echo "Warning: Failed to start pigpiod. Continuing without it..."
+fi
+
 if [ "$RUN_ROSCORE" = true ]; then
     echo "Running roscore..."
     docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roscore
