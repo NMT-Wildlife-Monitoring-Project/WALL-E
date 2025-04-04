@@ -25,6 +25,37 @@ git clone git@github.com:NMT-Wildlife-Monitoring-Project/WALL-E.git
 cd WALL-E
 ```
 
+## Installing robot_start.service
+
+To set up the `robot_start.service` for automatic startup:
+
+1. Copy the service file to the systemd directory:
+  ```
+  sudo cp robot_start.service /etc/systemd/system/
+  ```
+
+2. Reload the systemd manager configuration:
+  ```
+  sudo systemctl daemon-reload
+  ```
+
+3. Enable the service to start on boot:
+  ```
+  sudo systemctl enable robot_start.service
+  ```
+
+4. Start the service manually (optional):
+  ```
+  sudo systemctl start robot_start.service
+  ```
+
+5. Check the status of the service:
+  ```
+  sudo systemctl status robot_start.service
+  ```
+
+Make sure the `robot_start.service` file is correctly configured with the desired settings before enabling it.
+
 # USAGE
 
 ## start_docker.sh
