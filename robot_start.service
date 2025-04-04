@@ -1,0 +1,17 @@
+[Unit]
+Description=Start ROS Docker Robot Stack
+After=network-online.target docker.service
+Wants=network-online.target docker.service
+
+[Service]
+ExecStart=/home/pi/WALL-E/start_robot.sh -s
+WorkingDirectory=/home/pi
+StandardOutput=inherit
+StandardError=inherit
+Restart=on-failure
+User=pi
+Environment=DISPLAY=:0
+Environment=HOME=/home/pi
+
+[Install]
+WantedBy=multi-user.target

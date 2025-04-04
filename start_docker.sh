@@ -288,7 +288,7 @@ elif [ "$RUN_VIEW_CAMERA_LAUNCH" = true ]; then
     docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch control view_camera.launch
 elif [ "$RUN_MAPPING_LAUNCH" = true ]; then
     echo "Running mapping process..."
-    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch slamware_ros_sdk slamware_ros_sdk_server_node.launch ip_address:=192.168.11.1
+    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch control mapping.launch
 elif [ "$RUN_VIEW_MAP_LAUNCH" = true ]; then
     echo "Running map view..."
     docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch slamware_ros_sdk view_slamware_ros_sdk_server_node.launch
