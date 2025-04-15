@@ -6,7 +6,7 @@ export USER="$USER"
 
 . /opt/ros/$ROS_DISTRO/setup.bash
 . $HOME/catkin_ws/devel/setup.bash
-
+# sudo pigpiod
 # sudo dbus-daemon --system --fork
 
 # Start Avahi Daemon

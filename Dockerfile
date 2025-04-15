@@ -75,7 +75,6 @@ RUN wget https://github.com/joan2937/pigpio/archive/master.zip && \
     make && \
     make install && \
     rm -rf /tmp/pigpio-master /tmp/master.zip
-RUN pigpiod
 
 # Create catkin workspace
 USER $USER
