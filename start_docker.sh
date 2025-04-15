@@ -3,7 +3,10 @@ set -e
 
 # Default values
 IMAGE_NAME="walle/ros1:noetic"
+# MASTER_HOSTNAME="raspberrypi.local"
+# MASTER_HOSTNAME="pi"
 IP=""
+# MASTER_IP="129.138.167.128"
 MASTER_IP=""
 ROS_MASTER_PORT=11311
 
@@ -18,15 +21,14 @@ STOP_CONTAINER=false
 RESTART_CONTAINER=false
 RUN_VIEW_CAMERA_LAUNCH=false
 RUN_MAPPING_LAUNCH=false
-RUN_VIEW_MAP_LAUNCH=false
-RUN_MOTORS_LAUNCH=false
-RUN_MOTOR_TELEOP_LAUNCH=false  # NEW flag for motor teleop
+RUN_VIEW_MAP_LAUNCH=false   # NEW flag for view-map
+RUN_MOTORS_LAUNCH=false     # NEW flag for motors
 QUIET_MODE=false
 
 # Function to show usage
 usage() {
     echo "Usage: $0 [--start (-s) | --teleop (-t) | --usb-cam (-u) | --video-stream (-v) |"
-    echo "           --mapping (-M) | --view-map (-w) | --motors (-m) | --motor-teleop (-T) | --command (-c) <command> | --roscore (-r) | --build (-b) | --stop (-x) |"
+    echo "           --mapping (-M) | --view-map (-w) | --motors (-m) | --command (-c) <command> | --roscore (-r) | --build (-b) | --stop (-x) |"
     echo "           --restart (-R)] [--port (-p) <port>] [--ip (-i) <host_ip>] [--master-ip (-m) <master_ip>]"
     echo "           [--master-hostname (-n) <master_hostname>] [--display (-d)] [--quiet (-q)] [--help (-h)]"
     echo "This script is used to start and manage a Docker container for WALL-E the wildlife monitoring robot."
@@ -40,7 +42,6 @@ usage() {
     echo "  --mapping (-M)              Run mapping process using the slamtec mapper"
     echo "  --view-map (-w)             Run map view using view_slamware_ros_sdk_server_node.launch"
     echo "  --motors (-g)               Run motor control using motor_control.launch"
-    echo "  --motor-teleop (-T)         Run motor teleop using motor_teleop.launch"  # NEW usage entry
     echo "  --command (-c) <command>    Pass a command to be run in the container"
     echo "  --roscore (-r)              Run roscore"
     echo "Options:"
@@ -69,8 +70,7 @@ while [[ "$#" -gt 0 ]]; do
         --video-stream|-v) RUN_VIEW_CAMERA_LAUNCH=true; DISPLAY_ENABLED=true; shift ;;
         --mapping|-M) RUN_MAPPING_LAUNCH=true; shift ;;
         --view-map|-w) RUN_VIEW_MAP_LAUNCH=true DISPLAY_ENABLED=true; shift ;;
-        --motors|-g) RUN_MOTORS_LAUNCH=true; shift ;;
-        --motor-teleop|-T) RUN_MOTOR_TELEOP_LAUNCH=true; shift ;;  # NEW case for motor teleop
+        --motors|-g) RUN_MOTORS_LAUNCH=true; shift ;;  # NEW case for motors
         --command|-c) COMMAND_TO_RUN="$2"; shift 2 ;;
         --roscore|-r) RUN_ROSCORE=true; shift ;;
         --port|-p) ROS_MASTER_PORT="$2"; shift 2 ;;
@@ -92,8 +92,7 @@ if [ "$RUN_USB_CAM_NODE" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
 if [ "$RUN_VIEW_CAMERA_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
 if [ "$RUN_MAPPING_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
 if [ "$RUN_VIEW_MAP_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
-if [ "$RUN_MOTORS_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
-if [ "$RUN_MOTOR_TELEOP_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi  # NEW action count for motor teleop
+if [ "$RUN_MOTORS_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi  # NEW action count for motors
 if [ -n "$COMMAND_TO_RUN" ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
 if [ "$RUN_ROSCORE" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
 
@@ -103,7 +102,184 @@ if [ "$ACTION_COUNT" -gt 1 ]; then
     exit 1
 fi
 
+# Check if the container is already running
+RUNNING=false
+if docker ps -q -f ancestor=$IMAGE_NAME | grep -q .; then
+    echo "Docker container is running."
+    RUNNING=true
+else
+    echo "Docker container is not running."
+fi
+
+# Stop or restart the container if requested
+if [[ "$STOP_CONTAINER" = true || "$RESTART_CONTAINER" = true  || "$BUILD_CONTAINER" = true ]]; then
+    if [[ "$RUNNING" = true ]]; then
+        echo "Stopping the running Docker container..."
+        docker stop $(docker ps -q -f ancestor=$IMAGE_NAME)
+        RUNNING=false
+    else
+        echo "Nothing to stop."
+    fi
+
+    if [[ "$STOP_CONTAINER" = true ]]; then
+        echo "Exiting..."
+        exit 0
+    fi
+fi
+
+# Function to validate IP address
+validate_ip() {
+    local ip=$1
+    local stat=1
+
+    if [[ $ip =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+        OIFS=$IFS
+        IFS='.'
+        ip=($ip)
+        IFS=$OIFS
+        [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+        stat=$?
+    fi
+    return $stat
+}
+
+# Get the active IP address if not provided
+if [[ -z "$IP" ]]; then
+    IP=$(ip route get 8.8.8.8 | awk '{print $7; exit}')
+    if [[ -z "$IP" ]]; then
+        echo "Error: Unable to determine IP address"
+        exit 1
+    fi
+fi
+
+# Validate the IP address
+if ! validate_ip "$IP"
+then
+    echo "Error: Invalid IP address format: $IP"
+    exit 1
+fi
+
+echo "IP: $IP"
+
+# Determine the master IP if not provided
+if [[ -z "$MASTER_IP" && -z "$MASTER_HOSTNAME" ]]; then
+    echo "We are the master. You must all obey"
+    MASTER_IP=$IP
+fi
+
+if [[ -z "$MASTER_IP" || -n "$MASTER_HOSTNAME" ]]; then
+    if [[ -n "$MASTER_IP" ]]; then
+        OLD_MASTER_IP=$MASTER_IP
+    fi
+
+    if [[ "$(hostname)" == "$MASTER_HOSTNAME" ]]; then
+        MASTER_IP=$IP
+    else
+        MASTER_IP=$(ping -c 1 $MASTER_HOSTNAME | grep 'PING' | awk -F'[()]' '{print $2}')
+    fi
+
+    if [[ -n "$OLD_MASTER_IP" && "$MASTER_IP" != "$OLD_MASTER_IP" ]]; then
+        echo "Warning: IP address discrepancy. Given IP: ($OLD_MASTER_IP), Detected IP: ($MASTER_IP)"
+        MASTER_IP=$OLD_MASTER_IP
+    fi
+
+    if [[ -z "$MASTER_IP" ]]; then
+        echo "Warning: Unable to determine the master IP address from hostname."
+        if [[ -n "$OLD_MASTER_IP" ]]; then
+            MASTER_IP=$OLD_MASTER_IP
+        else
+            echo "Error: No master IP address."
+            exit 1
+        fi
+    fi
+fi
+
+# Validate the master IP address
+if ! validate_ip "$MASTER_IP"; then
+    echo "Error: Invalid master IP address format: $MASTER_IP"
+    exit 1
+fi
+
+echo "Master IP: $MASTER_IP"
+
+# Set ROS_IP and ROS_MASTER_URI
+ROS_IP="$IP"
+ROS_MASTER_URI="http://$MASTER_IP:$ROS_MASTER_PORT"
+
+# Write environment variables to file
+echo "ROS_IP=$ROS_IP" > $ENV_FILE
+echo "ROS_MASTER_URI=$ROS_MASTER_URI" >> $ENV_FILE
+
+# No longer part of the Bourgeois 
+DOCKER_RUN_FLAGS+=("--privileged")
+DOCKER_RUN_FLAGS+=("--net=host")
+DOCKER_RUN_FLAGS+=("--cap-add=NET_ADMIN")
+DOCKER_RUN_FLAGS+=("--device=/dev/net/tun")
+
+
+# Add Docker flag to mount /dev with correct permissions
+DOCKER_RUN_FLAGS+=("--volume=/dev:/dev:rw")
+
+if [ "$RUN_USB_CAM_NODE" = true ]; then
+    if [ -e /dev/video0 ]; then
+        DOCKER_RUN_FLAGS+=("--device=/dev/video0")
+    else
+        echo "Error: /dev/video0 does not exist."
+        exit 1
+    fi
+fi
+
+# Enable display if requested
+if [[ "$DISPLAY_ENABLED" = true ]]; then
+    echo "DISPLAY=$DISPLAY" >> $ENV_FILE
+    DOCKER_RUN_FLAGS+=("--volume=/tmp/.X11-unix:/tmp/.X11-unix:rw")
+    xhost +local:docker
+fi
+
+# Build the container if requested
+if [[ "$BUILD_CONTAINER" = true ]]; then
+    echo "Building the Docker container..."
+    docker build -t $IMAGE_NAME .
+fi
+
+# Start the container if it is not already running
+if [[ "$RUNNING" = false ]]; then
+    echo "Starting the Docker container..."
+    docker run -dit --env-file $ENV_FILE "${DOCKER_RUN_FLAGS[@]}" $IMAGE_NAME bash
+fi
+
+CONTAINER_ID=$(docker ps -q -f ancestor=$IMAGE_NAME) # Get container ID
+CONTAINER_ID=$(echo "$CONTAINER_ID" | xargs) # Trim whitespace
+echo "Container ID: $CONTAINER_ID"
+
+# Check if the container ID is empty
+if [[ -z "$CONTAINER_ID" ]]; then
+    echo "Error: Failed to start the Docker container."
+    exit 1
+fi
+
+# Run docker commands in detached mode if quiet mode is enabled
+if [ "$QUIET_MODE" = true ]; then
+    echo "Quiet mode enabled. Suppressing output..."
+    exec 1>/dev/null
+    DOCKER_EXEC_FLAGS="-dt"
+else
+    DOCKER_EXEC_FLAGS="-it"
+fi
+
+# Attempt to run sudo pigpiod in the container
+echo "Starting pigpiod..."
+if ! docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID sudo pigpiod; then
+    echo "Warning: Failed to start pigpiod. Continuing without it..."
+fi
+
+if [ "$RUN_ROSCORE" = true ]; then
+    echo "Running roscore..."
+    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roscore
+fi
+
 # Execute the specified option
+
 if [ "$RUN_ROBOT_LAUNCH" = true ]; then
     echo "Determining tolerable amounts of sentience..."
     docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch control robot_start.launch
@@ -124,10 +300,7 @@ elif [ "$RUN_VIEW_MAP_LAUNCH" = true ]; then
     docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch slamware_ros_sdk view_slamware_ros_sdk_server_node.launch
 elif [ "$RUN_MOTORS_LAUNCH" = true ]; then
     echo "Running motor control..."
-    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch motor_control motor_control.launch
-elif [ "$RUN_MOTOR_TELEOP_LAUNCH" = true ]; then
-    echo "Running motor teleop..."
-    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch control motor_teleop.launch  # NEW execution for motor teleop
+    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch control motor_teleop.launch
 elif [ -n "$COMMAND_TO_RUN" ]; then
     echo "Running custom command: $COMMAND_TO_RUN"
     docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh $COMMAND_TO_RUN
