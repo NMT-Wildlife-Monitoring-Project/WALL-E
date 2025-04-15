@@ -10,7 +10,6 @@ class MotorControlNode:
         rospy.init_node('motor_control_node', anonymous=True)
 
         # Get parameters
-        self.cmd_vel_topic = rospy.get_param('~cmd_vel_topic', 'cmd_vel')
         self.wheel_base = rospy.get_param(
             '~wheel_base', 0.5)  # Default in meters
         self.wheel_diameter = rospy.get_param(
@@ -22,9 +21,11 @@ class MotorControlNode:
 
         self.wheel_radius = self.wheel_diameter / 2.0
 
-        # Subscriber
+        # Subscribers
         self.cmd_vel_subscriber = rospy.Subscriber(
-            self.cmd_vel_topic, Twist, self.cmd_vel_callback)
+            'cmd_vel', Twist, self.cmd_vel_callback)
+        self.joy_cmd_vel_subscriber = rospy.Subscriber(
+            'joy_teleop/cmd_vel', Twist, self.cmd_vel_callback)
 
     def cmd_vel_callback(self, msg):
         # Extract linear and angular velocities
@@ -51,7 +52,6 @@ class MotorControlNode:
 
         # Send the speed commands via the dual_g2_hpmd_rpi API.
         motors.setSpeeds(speed_left, speed_right)
-        #print("Set speeds: motor1: %d, motor2: %d", speed_left, speed_right)
         rospy.loginfo("Set speeds: motor1: %f, motor2: %f",
                       v_left, v_right)
 
