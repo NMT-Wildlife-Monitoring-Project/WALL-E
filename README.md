@@ -61,3 +61,6 @@ Run the teleop node
 'ros2 launch teleop teleop_launch.py'
 See <https://wiki.ros.org/joy> and <https://wiki.ros.org/teleop_twist_joy>. The documentation is for ros 1 but the parameters are the same for the most part. Use
 `ros2 param list` when running the node to see available parameters.
+
+# Cellular
+<https://www.waveshare.com/wiki/SIM7600E-H_4G_HAT>
