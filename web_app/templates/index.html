@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Robot Location and Video</title>
+</head>
+<body>
+    <h1>Robot Current Location</h1>
+
+    <p>Latitude: {{ gps.latitude }}</p>
+    <p>Longitude: {{ gps.longitude }}</p>
+
+    <h2>Map View</h2>
+    <iframe
+        width="600"
+        height="450"
+        style="border:0"
+        loading="lazy"
+        allowfullscreen
+        src="https://maps.google.com/maps?q={{ gps.latitude }},{{ gps.longitude }}&z=15&output=embed">
+    </iframe>
+
+    <h2>Live Camera Feed</h2>
+    <img src="{{ url_for('video_feed') }}" width="640" height="480">
+
+</body>
+</html>
+

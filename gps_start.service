@@ -1,0 +1,11 @@
+[Unit]
+Description=Start GPS on SIM7600 at boot
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/pi5-walle/WALL-E/start_gps.sh
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
