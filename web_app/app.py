@@ -25,17 +25,24 @@ def get_gps_data():
     return {'latitude': 0.0, 'longitude': 0.0}
 
 # New function to generate video frames
-def generate_frames():
+def generate_frames(framerate=15):
     while True:
         success, frame = camera.read()
         if not success:
             break
         else:
-            ret, buffer = cv2.imencode('.jpg', frame)
+            # OPTIONAL: Resize the frame smaller for faster LTE streaming
+            frame = cv2.resize(frame, (320, 240))  # Resize to 320x240
+
+            # Encode the frame as JPEG with more compression
+            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 30]  # 0-100, lower = more compressed
+            ret, buffer = cv2.imencode('.jpg', frame, encode_param)
             frame = buffer.tobytes()
+
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-
+            time.sleep(1 / framerate)  # Control the frame rate
+            
 @app.route('/')
 def index():
     gps_data = get_gps_data()
