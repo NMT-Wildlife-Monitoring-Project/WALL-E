@@ -87,3 +87,6 @@ To view the stream from another computer, replace raspberrypi.local with the pi'
 
 ## Slamtec Ros SDK Documentation
 <https://developer.slamtec.com/docs/slamware/ros-sdk-en/2.8.2_rtm/slamware_ros_sdk_server_node/>
+
+## Cellular shield
+<https://www.waveshare.com/wiki/SIM7600E-H_4G_HAT?
