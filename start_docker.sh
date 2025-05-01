@@ -84,6 +84,13 @@ while [[ "$#" -gt 0 ]]; do
     esac
 done
 
+# Check if quiet mode is enabled and re-run the script in the background
+if [ "$QUIET_MODE" = true ] && [ -z "$QUIET_MODE_BACKGROUND" ]; then
+    echo "Quiet mode enabled. Running the script in the background..."
+    nohup bash "$0" "$@" QUIET_MODE_BACKGROUND=true >/dev/null 2>&1 &
+    exit 0
+fi
+
 # Check if multiple actions are specified
 ACTION_COUNT=0
 if [ "$RUN_ROBOT_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
@@ -308,3 +315,4 @@ else
     echo "No options specified. Opening interactive bash terminal in the container..."
     docker exec -it --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh bash
 fi
+
