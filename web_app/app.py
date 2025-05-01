@@ -2,6 +2,7 @@
 from flask import Flask, render_template, Response
 import gps
 import cv2
+import time
 
 app = Flask(__name__)
 
@@ -25,7 +26,10 @@ def get_gps_data():
     return {'latitude': 0.0, 'longitude': 0.0}
 
 def generate_camera_frames(framerate=15):
+    frame_interval = 1.0 / framerate  # Time to wait between frames
+    
     while True:
+        start_time = time.time()
         success, frame = camera.read()
         if not success:
             break
@@ -40,9 +44,18 @@ def generate_camera_frames(framerate=15):
 
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+            
+            # Sleep to maintain framerate
+            elapsed = time.time() - start_time
+            sleep_time = max(0, frame_interval - elapsed)
+            if sleep_time > 0:
+                time.sleep(sleep_time)
 
 def generate_map_frames(framerate=5):
+    frame_interval = 1.0 / framerate  # Time to wait between frames
+    
     while True:
+        start_time = time.time()
         # Read the map image from the file
         map_image = cv2.imread('/tmp/shared/map_stream.jpg')
         if map_image is None:
@@ -56,6 +69,12 @@ def generate_map_frames(framerate=5):
 
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+               
+        # Sleep to maintain framerate
+        elapsed = time.time() - start_time
+        sleep_time = max(0, frame_interval - elapsed)
+        if sleep_time > 0:
+            time.sleep(sleep_time)
             
 @app.route('/')
 def index():
