@@ -42,12 +42,13 @@ class MapImgNode:
     
     def empty_map_image(self):
         # Create a 10x10 black image
-        black_image = np.zeros((10, 10, 3), dtype=np.uint8)
+        black_image = np.zeros((100, 100, 3), dtype=np.uint8)
         
         # Save to the file path
-        cv2.imwrite(self.image_path, black_image)
-        
-        rospy.loginfo("No map. Placeholder image at %s" % self.image_path)
+        if not cv2.imwrite(self.image_path, black_image):
+            rospy.logerr("Failed to save placeholder image to %s" % self.image_path)
+        else:
+            rospy.loginfo("No map. Placeholder image at %s" % self.image_path)
 
     def convert_map_to_image(self):
         # Convert map to numpy image
