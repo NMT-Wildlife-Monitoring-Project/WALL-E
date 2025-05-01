@@ -12,7 +12,7 @@ class MapImgNode:
         self.default_image_path = "/tmp/map_stream.jpg"
         self.image_path = rospy.get_param("~image_path", self.default_image_path)
         if not os.path.exists(os.path.dirname(self.image_path)):
-            rospy.logwarn(f"Image path {self.image_path} does not exist")
+            rospy.logwarn("Image path %s does not exist" % self.image_path)
             self.image_path = self.default_image_path
         
         self.map_data = None
@@ -38,7 +38,7 @@ class MapImgNode:
             self.save_map_image(trans, rot)
         except Exception as e:
             self.save_map_image()
-            rospy.logwarn(f"TF Lookup failed with error: {e}")
+            rospy.logwarn("TF Lookup failed with error: %s" % e)
     
     def empty_map_image(self):
         # Create a 10x10 black image
@@ -47,7 +47,7 @@ class MapImgNode:
         # Save to the file path
         cv2.imwrite(self.image_path, black_image)
         
-        rospy.loginfo(f"No map. Placeholder image at {self.image_path}")
+        rospy.loginfo("No map. Placeholder image at %s" % self.image_path)
 
     def convert_map_to_image(self):
         # Convert map to numpy image
