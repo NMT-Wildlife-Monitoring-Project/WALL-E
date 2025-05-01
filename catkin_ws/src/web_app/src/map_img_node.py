@@ -9,7 +9,7 @@ import os
 class MapImgNode:
     def __init__(self):
         self.listener = tf.TransformListener()
-        self.default_image_path = "/tmp/map_stream.jpg"
+        self.default_image_path = "/tmp/shared/map_stream.jpg"
         self.image_path = rospy.get_param("~image_path", self.default_image_path)
         if not os.path.exists(os.path.dirname(self.image_path)):
             rospy.logwarn("Image path %s does not exist" % self.image_path)
