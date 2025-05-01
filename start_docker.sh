@@ -87,9 +87,11 @@ done
 # Check if quiet mode is enabled and re-run the script in the background
 if [ "$QUIET_MODE" = true ] && [ -z "$QUIET_MODE_BACKGROUND" ]; then
     echo "Quiet mode enabled. Running the script in the background..."
-    nohup bash "$0" "$@" QUIET_MODE_BACKGROUND=true >/dev/null 2>&1 &
+    export QUIET_MODE_BACKGROUND=true
+    nohup bash "$0" "$@" >/dev/null 2>&1 &
     exit 0
 fi
+export QUIET_MODE_BACKGROUND=false
 
 # Check if multiple actions are specified
 ACTION_COUNT=0
