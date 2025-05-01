@@ -25,7 +25,7 @@ def get_gps_data():
     return {'latitude': 0.0, 'longitude': 0.0}
 
 # New function to generate video frames
-def generate_frames(framerate=15):
+def generate_frames():
     while True:
         success, frame = camera.read()
         if not success:
@@ -41,7 +41,6 @@ def generate_frames(framerate=15):
 
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-            time.sleep(1 / framerate)  # Control the frame rate
             
 @app.route('/')
 def index():
