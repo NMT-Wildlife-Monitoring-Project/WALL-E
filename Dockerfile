@@ -75,13 +75,13 @@ RUN bash -c "if [[ \$(uname -m) = \"aarch64\" || \$(uname -m) = \"x86_64\" ]]; t
     fi"
 
 # Install pigpio library
-USER root
-RUN wget https://github.com/joan2937/pigpio/archive/master.zip && \
-    unzip master.zip && \
-    cd pigpio-master && \
-    make && \
-    make install && \
-    rm -rf /tmp/pigpio-master /tmp/master.zip
+# USER root
+# RUN wget https://github.com/joan2937/pigpio/archive/master.zip && \
+#     unzip master.zip && \
+#     cd pigpio-master && \
+#     make && \
+#     make install && \
+#     rm -rf /tmp/pigpio-master /tmp/master.zip
 
 # Create catkin workspace
 USER $USER
