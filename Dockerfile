@@ -55,7 +55,7 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 50 && \
 
 # Install flask dependencies
 RUN pip3 install --upgrade pip && \
-    pip3 install flask flask_socketio eventlet requests
+    pip3 install flask
 RUN pip3 install opencv-python && \
     pip3 install opencv-python-headless
 RUN apt-get install -y gpsd gpsd-clients python-gps
