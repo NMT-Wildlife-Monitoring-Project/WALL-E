@@ -91,16 +91,7 @@ def video_feed():
 def map_feed():
     return Response(generate_map_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-def get_zerotier_ip():
-    for iface in netifaces.interfaces():
-        if iface.startswith("zt"):  # all ZeroTier interfaces begin with "zt"
-            addrs = netifaces.ifaddresses(iface).get(netifaces.AF_INET)
-            if addrs:
-                return addrs[0]['addr']
-    return '0.0.0.0'  # fallback
-
 if __name__ == "__main__":
-    zt_ip = get_zerotier_ip()
-    print(f"🔌 Binding Flask to {zt_ip}")
-    app.run(host=zt_ip, port=5000)
+    app.run(host='0 .0.0.0', port=5000, debug=True)
+    camera.release()
 
