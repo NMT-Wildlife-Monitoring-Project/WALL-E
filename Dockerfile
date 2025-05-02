@@ -54,8 +54,9 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 50 && \
     update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 50
 
 # Install flask dependencies
-RUN pip3 install flask
-RUN pip3 install opencv-python-headless
+RUN apt-get update && apt-get install -y \
+    python3-flask \
+    python3-opencv
 RUN apt-get update && \
     apt-get install -y gpsd gpsd-clients python-gps
 
