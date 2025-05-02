@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <launch>
     <!-- Launch the USB camera node -->
-    <node name="usb_cam_node" pkg="usb_cam" type="usb_cam_node" output="screen">
+    <!-- <node name="usb_cam_node" pkg="usb_cam" type="usb_cam_node" output="screen">
         <param name="video_device" value="/dev/video0" />
-    </node>
+    </node> -->
 
     <!-- Launch the motor control node -->
     <node name="motor_control_node" pkg="motor_control" type="motor_control_node.py" output="screen">
@@ -11,9 +11,8 @@
     </node>
 
     <!-- Launch mapper -->
-    <include file="$(find slamware_ros_sdk)/launch/slamware_ros_sdk_server_node.launch">
-        <arg name="ip_address" value="192.168.11.1" />
-    </include>
+    <!-- Launch mapper -->
+    <include file="$(find control)/launch/mapping.launch" />
 
     <!-- Launch the teleop node -->
     <include file="$(find control)/launch/teleop.launch" />
