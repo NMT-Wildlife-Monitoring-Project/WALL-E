@@ -54,11 +54,11 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 50 && \
     update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 50
 
 # Install flask dependencies
-RUN pip3 install --upgrade pip && \
-    pip3 install flask
-RUN pip3 install opencv-python && \
-    pip3 install opencv-python-headless
-RUN apt-get install -y gpsd gpsd-clients python-gps
+# RUN pip3 install --upgrade pip && \
+#     pip3 install flask
+# RUN pip3 install opencv-python && \
+#     pip3 install opencv-python-headless
+# RUN apt-get install -y gpsd gpsd-clients python-gps
 
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
@@ -103,10 +103,10 @@ COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws/
 RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make'
 
 # Copy the flask app into the container
-WORKDIR /home/$USER
-COPY --chown=$USER:$USER web_app /home/$USER/web_app
-RUN chmod +x /home/$USER/web_app/app.py
-EXPOSE 5000
+# WORKDIR /home/$USER
+# COPY --chown=$USER:$USER web_app /home/$USER/web_app
+# RUN chmod +x /home/$USER/web_app/app.py
+# EXPOSE 5000
 
 # Copy the entrypoint script into the container
 USER root

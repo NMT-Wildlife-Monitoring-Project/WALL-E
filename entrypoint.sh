@@ -8,8 +8,8 @@ export USER="$USER"
 . $HOME/catkin_ws/devel/setup.bash
 
 # Run the web app in the background
-echo "Starting web app..."
-cd $HOME/web_app && python3 app.py &
+# echo "Starting web app..."
+# cd $HOME/web_app && python3 app.py &
 
 # Wait for the web app to start
 sleep 2
