@@ -54,11 +54,10 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 50 && \
     update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 50
 
 # Install flask dependencies
-RUN apt-get update && apt-get install -y \
-    python3-flask \
-    python3-opencv
-RUN apt-get update && \
-    apt-get install -y gpsd gpsd-clients python-gps
+RUN pip3 install --upgrade pip && \
+    pip3 install flask flask_socketio eventlet requests
+RUN pip3 install opencv-python && \
+    pip3 install opencv-python-headless
 
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
