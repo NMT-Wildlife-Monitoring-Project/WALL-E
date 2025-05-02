@@ -12,7 +12,7 @@ app = Flask(__name__)
 
 # === Camera Setup ===
 def init_camera(index=0):
-    cam = cv2.VideoCapture(index)
+    cam = cv2.VideoCapture(index, cv2.CAP_V4L2)
     if not cam.isOpened():
         print("Warning: Could not open camera.")
         return None
