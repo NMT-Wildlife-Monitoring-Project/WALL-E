@@ -1,86 +1,102 @@
-#!/usr/bin/python
-from flask import Flask, render_template, Response
+#!/usr/bin/python3
+from flask import Flask, render_template, Response, jsonify
 import gps
 import cv2
 import time
-import socket
 import netifaces
+import numpy as np
+import signal
+import sys
 
 app = Flask(__name__)
 
-# Setup the camera (0 = first detected camera)
-camera = cv2.VideoCapture(0)
+# === Camera Setup ===
+def init_camera(index=0):
+    cam = cv2.VideoCapture(index)
+    if not cam.isOpened():
+        print("Warning: Could not open camera.")
+        return None
 
-def get_gps_data():
+    for _ in range(10):
+        success, _ = cam.read()
+        if success:
+            print("Camera initialized.")
+            return cam
+        time.sleep(0.2)
+
+    print("Warning: Camera opened but not returning frames.")
+    cam.release()
+    return None
+
+camera = init_camera()
+
+# === GPS Data ===
+def get_gps_data(timeout=2.0):
+    print("Getting GPS data...")
+    data = {
+        'latitude': None,
+        'longitude': None,
+        'fix': False,
+        'satellites': None,
+        'timestamp': None
+    }
     try:
-        # Connect to the gpsd daemon
         session = gps.gps(mode=gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE)
-
+        start = time.time()
         for report in session:
+            if time.time() - start > timeout:
+                print("GPS timeout")
+                break
             if report['class'] == 'TPV':
-                latitude = getattr(report, 'lat', None)
-                longitude = getattr(report, 'lon', None)
-                if latitude is not None and longitude is not None:
-                    return {'latitude': latitude, 'longitude': longitude}
+                data['latitude'] = getattr(report, 'lat', None)
+                data['longitude'] = getattr(report, 'lon', None)
+                data['timestamp'] = getattr(report, 'time', None)
+                data['fix'] = True if getattr(report, 'mode', 0) >= 2 else False
+            elif report['class'] == 'SKY':
+                data['satellites'] = len(report.get('satellites', []))
+            if data['fix'] and data['latitude'] and data['longitude']:
+                break
     except Exception as e:
         print(f"GPS error: {e}")
+    return data
 
-    return {'latitude': 0.0, 'longitude': 0.0}
-
+# === Video Stream Generator ===
 def generate_camera_frames(framerate=15):
-    frame_interval = 1.0 / framerate  # Time to wait between frames
+    if camera is None:
+        while True:
+            frame = np.zeros((240, 320, 3), dtype=np.uint8)
+            cv2.putText(frame, "No Camera", (70, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+            ret, buffer = cv2.imencode('.jpg', frame)
+            yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+            time.sleep(1.0 / framerate)
     
     while True:
-        start_time = time.time()
         success, frame = camera.read()
         if not success:
-            break
-        else:
-            # OPTIONAL: Resize the frame smaller for faster LTE streaming
-            frame = cv2.resize(frame, (320, 240))  # Resize to 320x240
+            continue
 
-            # Encode the frame as JPEG with more compression
-            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 30]  # 0-100, lower = more compressed
-            ret, buffer = cv2.imencode('.jpg', frame, encode_param)
-            frame = buffer.tobytes()
+        frame = cv2.resize(frame, (320, 240))
+        _, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 30])
+        yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+        time.sleep(1.0 / framerate)
 
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-            
-            # Sleep to maintain framerate
-            elapsed = time.time() - start_time
-            sleep_time = max(0, frame_interval - elapsed)
-            if sleep_time > 0:
-                time.sleep(sleep_time)
-
+# === Map Stream Generator ===
 def generate_map_frames(framerate=5):
-    frame_interval = 1.0 / framerate  # Time to wait between frames
-    
     while True:
-        start_time = time.time()
-        # Read the map image from the file
         map_image = cv2.imread('/tmp/shared/map_stream.jpg')
         if map_image is None:
-            print("Map image not found")
-            break
+            print("⚠️ Map image not found.")
+            time.sleep(1.0 / framerate)
+            continue
 
-        # Encode the map image as JPEG with more compression
-        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 100]  # 0-100, lower = more compressed
-        ret, buffer = cv2.imencode('.jpg', map_image, encode_param)
-        frame = buffer.tobytes()
+        _, buffer = cv2.imencode('.jpg', map_image, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
+        yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+        time.sleep(1.0 / framerate)
 
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-               
-        # Sleep to maintain framerate
-        elapsed = time.time() - start_time
-        sleep_time = max(0, frame_interval - elapsed)
-        if sleep_time > 0:
-            time.sleep(sleep_time)
-            
+# === Flask Routes ===
 @app.route('/')
 def index():
-    gps_data = get_gps_data()
+    gps_data = get_gps_data(timeout=2.0)
     return render_template('index.html', gps=gps_data)
 
 @app.route('/video_feed')
@@ -91,7 +107,22 @@ def video_feed():
 def map_feed():
     return Response(generate_map_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-if __name__ == "__main__":
-    app.run(host='0 .0.0.0', port=5000, debug=True)
-    camera.release()
+@app.route('/api/gps_status')
+def gps_status():
+    data = get_gps_data(timeout=2.0)
+    return jsonify(data)
 
+# === Cleanup ===
+def shutdown_handler(sig, frame):
+    print("Shutting down. Releasing camera.")
+    if camera is not None:
+        camera.release()
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, shutdown_handler)
+signal.signal(signal.SIGTERM, shutdown_handler)
+
+# === Start App ===
+if __name__ == "__main__":
+    print("Starting Flask app on all interfaces (0.0.0.0:5000)...")
+    app.run(host='0.0.0.0', port=5000, debug=True)
