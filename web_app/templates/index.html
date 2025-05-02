@@ -2,10 +2,17 @@
 <html>
 <head>
     <title>Robot Location and Video</title>
+    <style>
+        #joystick-zone {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            touch-action: none;
+        }
+    </style>
 </head>
 <body>
     <h1>Robot Current Location</h1>
-
     <p>Latitude: {{ gps.latitude }}</p>
     <p>Longitude: {{ gps.longitude }}</p>
 
@@ -25,6 +32,68 @@
     <h2>Generated Map</h2>
     <img src="{{ url_for('map_feed') }}" width="640" height="480">
 
+    <h2>Joystick Control</h2>
+    <div id="joystick-zone"></div>
+
+    <!-- Include libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.7.3/nipplejs.min.js"></script>
+
+    {% comment %} <script>
+        // Replace this IP with your ROS machine’s IP
+        var ros = new ROSLIB.Ros({
+            url: 'ws://192.168.1.100:9090'
+        });
+
+        ros.on('connection', function() {
+            console.log('Connected to websocket server.');
+        });
+
+        ros.on('error', function(error) {
+            console.log('Error connecting to websocket server: ', error);
+        });
+
+        ros.on('close', function() {
+            console.log('Connection to websocket server closed.');
+        });
+
+        var cmdVel = new ROSLIB.Topic({
+            ros: ros,
+            name: '/cmd_vel',
+            messageType: 'geometry_msgs/Twist'
+        });
+
+        var joystick = nipplejs.create({
+            zone: document.getElementById('joystick-zone'),
+            mode: 'static',
+            position: { left: '50%', top: '50%' },
+            color: 'blue',
+            size: 150
+        });
+
+        joystick.on('move', function(evt, data) {
+            if (data.direction) {
+                var linear = data.vector.y * -0.5;
+                var angular = data.vector.x * -1.0;
+
+                var twist = new ROSLIB.Message({
+                    linear: { x: linear, y: 0.0, z: 0.0 },
+                    angular: { x: 0.0, y: 0.0, z: angular }
+                });
+
+                cmdVel.publish(twist);
+            }
+        });
+
+        joystick.on('end', function() {
+            // Stop when joystick is released
+            var stop = new ROSLIB.Message({
+                linear: { x: 0.0, y: 0.0, z: 0.0 },
+                angular: { x: 0.0, y: 0.0, z: 0.0 }
+            });
+
+            cmdVel.publish(stop);
+        });
+    </script> {% endcomment %}
 </body>
 </html>
-

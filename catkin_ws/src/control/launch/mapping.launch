@@ -8,6 +8,10 @@
         <remap from="move_base_simple/goal" to="/move_base_simple/goal"/>
     </node>
 
+    <!-- Web Map Image Publisher Node -->
+    <node name="map_img_publisher" pkg="web_app" type="map_img_node.py" output="screen">
+    </node>
+
     <!-- TF tree sanity check -->
     <param name="use_sim_time" value="false"/>
 </launch>

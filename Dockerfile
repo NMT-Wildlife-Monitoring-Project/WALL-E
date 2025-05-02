@@ -53,6 +53,9 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 50 && \
     update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 50
 
+# Install flask dependencies
+RUN pip3 install flask gps opencv-python-headless
+
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -95,11 +98,11 @@ RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make -DCMAKE_BUILD_TYP
 COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws/
 RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make'
 
-# Ensure the /var/run/dbus directory exists
-# RUN mkdir -p /var/run/dbus && chmod 755 /var/run/dbus
-
-# # Start dbus-daemon and avahi-daemon
-# RUN dbus-daemon --system --fork && avahi-daemon --daemonize
+# Copy the flask app into the container
+WORKDIR /home/$USER
+COPY --chown=$USER:$USER web_app /home/$USER/web_app
+RUN chmod +x /home/$USER/web_app/app.py
+EXPOSE 5000
 
 # Copy the entrypoint script into the container
 USER root
