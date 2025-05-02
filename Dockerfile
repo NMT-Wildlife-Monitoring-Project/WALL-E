@@ -58,6 +58,7 @@ RUN pip3 install --upgrade pip && \
     pip3 install flask flask_socketio eventlet requests
 RUN pip3 install opencv-python && \
     pip3 install opencv-python-headless
+RUN apt-get install -y gpsd gpsd-clients python-gps
 
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
