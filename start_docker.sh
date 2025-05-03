@@ -84,15 +84,6 @@ while [[ "$#" -gt 0 ]]; do
     esac
 done
 
-# Check if quiet mode is enabled and re-run the script in the background
-if [ "$QUIET_MODE" = true ] && [ -z "$QUIET_MODE_BACKGROUND" ]; then
-    echo "Quiet mode enabled. Running the script in the background..."
-    export QUIET_MODE_BACKGROUND=true
-    nohup bash "$0" "$@" >/dev/null 2>&1 &
-    exit 0
-fi
-export QUIET_MODE_BACKGROUND=false
-
 # Check if multiple actions are specified
 ACTION_COUNT=0
 if [ "$RUN_ROBOT_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
