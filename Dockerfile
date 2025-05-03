@@ -17,38 +17,19 @@ RUN useradd -m $USER && \
 USER root
 
 # Install necessary dependencies
-RUN apt-get update && \
-    add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
-    apt-get install -y \
-    apt-get install -y gcc-7 g++-7 && \
-    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 50 && \
-    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 50 && \
-    build-essential \
-    cmake \
-    wget \
-    tar \
-    python3 \
-    python3-pip \
-    python-pip \
-    python3-serial \
-    iputils-ping \
-    avahi-daemon \
-    libnss-mdns \
-    avahi-utils \
-    dbus \
-    zip \
-    software-properties-common \
-    ros-$ROS_DISTRO-navigation \
-    ros-$ROS_DISTRO-teleop-twist-joy \
-    ros-$ROS_DISTRO-joy \
-    ros-$ROS_DISTRO-rviz \
-    ros-$ROS_DISTRO-usb-cam \
-    ros-$ROS_DISTRO-image-transport-plugins \
-    ros-$ROS_DISTRO-image-view \
-    gpsd \
-    gpsd-clients \
-    python-gps && \
-    rm -rf /var/lib/apt/lists/*
+# Install add-apt-repository support
+RUN apt-get update \
+ && apt-get install -y software-properties-common
+
+# Add GCC7 PPA and install GCC–G++
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test -y \
+ && apt-get update \
+ && apt-get install -y gcc-7 g++-7 \
+ && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 50 \
+ && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 50
+
+# Install build tools and utilities
+RUN apt-get install -y build-essential cmake wget tar
 
 # Download and extract the correct Slamtec SDK based on the architecture
 WORKDIR /tmp
@@ -61,6 +42,30 @@ RUN bash -c "if [[ \$(uname -m) = \"aarch64\" || \$(uname -m) = \"x86_64\" ]]; t
     mkdir -p /home/$USER/catkin_ws/src && \
     cp -r slamware_ros_sdk_linux-$(uname -m)-gcc7/src/* /home/$USER/catkin_ws/src/ && \
     rm -rf /tmp/slamware_* /tmp/sdk.tar.gz
+
+# Install Python and serial support
+RUN apt-get install -y python3 python3-pip python-pip python3-serial
+
+# Install networking and mDNS
+RUN apt-get install -y iputils-ping avahi-daemon libnss-mdns avahi-utils dbus zip
+
+# Install ROS navigation & vision packages
+RUN apt-get install -y \
+    ros-$ROS_DISTRO-navigation \
+    ros-$ROS_DISTRO-teleop-twist-joy \
+    ros-$ROS_DISTRO-joy \
+    ros-$ROS_DISTRO-rviz \
+    ros-$ROS_DISTRO-usb-cam \
+    ros-$ROS_DISTRO-image-transport-plugins \
+    ros-$ROS_DISTRO-image-view
+
+# Install GPS tooling
+RUN apt-get install -y gpsd gpsd-clients python-gps
+
+# Clean up
+RUN rm -rf /var/lib/apt/lists/*
+
+
 
 # Install Python dependencies
 RUN pip3 install --no-cache-dir \
