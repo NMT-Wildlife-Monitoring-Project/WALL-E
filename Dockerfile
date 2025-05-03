@@ -63,7 +63,7 @@ RUN apt-get install -y \
 RUN apt-get install -y gpsd gpsd-clients python-gps
 
 # GPIO
-RUN pip install RPi.GPIO
+RUN pip install pigpio
 
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
@@ -79,8 +79,6 @@ RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make -DCMAKE_BUILD_TYP
 # Copy the workspace into the container
 COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws/
 RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make'
-
-RUN ln -s /dev/gpiomem0 /dev/gpiomem
 
 # Copy the entrypoint script into the container
 COPY entrypoint.sh /entrypoint.sh
