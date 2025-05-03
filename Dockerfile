@@ -61,7 +61,7 @@ RUN apt-get install -y \
 
 # Install GPS tooling
 RUN apt-get install -y gpsd gpsd-clients python-gps
-RUN apt-get install gpiod
+RUN apt-get install -y gpiod
 
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
