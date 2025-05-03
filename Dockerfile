@@ -95,7 +95,7 @@ RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make'
 
 # Install pigpio via pip
 USER $USER
-RUN pip3 install pigpio
+RUN pip install pigpio
 
 # Copy the flask app into the container
 # WORKDIR /home/$USER
