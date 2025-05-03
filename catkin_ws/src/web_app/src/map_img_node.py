@@ -5,6 +5,7 @@ import numpy as np
 from nav_msgs.msg import OccupancyGrid
 import tf
 import os
+import time
 
 class MapImgNode:
     def __init__(self):
@@ -33,8 +34,10 @@ class MapImgNode:
     
     def process_map(self):
         try:
-            time = self.listener.getLatestCommonTime("map", "base_link")
-            (trans, rot) = self.listener.lookupTransform("map", "base_link", time)
+            # Use the most recent common time to avoid extrapolation errors
+            time.sleep(0.1)
+            timestamp = self.listener.getLatestCommonTime("map", "base_link")
+            (trans, rot) = self.listener.lookupTransform("map", "base_link", timestamp)
             self.save_map_image(trans, rot)
         except Exception as e:
             self.save_map_image()
