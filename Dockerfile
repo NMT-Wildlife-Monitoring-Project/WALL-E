@@ -63,7 +63,7 @@ RUN apt-get install -y \
 RUN apt-get install -y gpsd gpsd-clients python-gps
 
 # Install gpiod
-RUN pt-get install -y \
+RUN apt-get install -y \
     linux-libc-dev \
     build-essential \
     autoconf \
