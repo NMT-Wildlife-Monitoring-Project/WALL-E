@@ -68,7 +68,7 @@ RUN rm -rf /var/lib/apt/lists/*
 
 
 # Install Python dependencies
-RUN pip3 intstall --upgrade pip && \
+RUN pip3 install --upgrade pip && \
     pip3 install --no-cache-dir \
     flask \
     gps \
