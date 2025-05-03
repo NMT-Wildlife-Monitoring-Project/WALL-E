@@ -45,7 +45,7 @@ class MotorControlNode:
             v_left = self.max_velocity if v_left > 0 else -self.max_velocity
         if abs(v_right) > self.max_velocity:
             v_right = self.max_velocity if v_right > 0 else -self.max_velocity
-        
+
         speed_left = int(v_left / self.max_velocity * MAX_SPEED)
         speed_right = int(v_right / self.max_velocity * MAX_SPEED)
 
