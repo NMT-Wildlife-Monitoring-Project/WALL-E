@@ -65,9 +65,6 @@ RUN apt-get install -y gpsd gpsd-clients python-gps
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
-RUN pip install "pip<21" "setuptools<45" "wheel<1"
-
-# Now install pigpio for Python 2
 RUN pip install pigpio
 
 
