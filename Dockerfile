@@ -63,9 +63,7 @@ RUN apt-get install -y \
 RUN apt-get install -y gpsd gpsd-clients python-gps
 
 # GPIO
-RUN apt-get update && apt-get install -y python-rpi.gpio
-
-
+RUN pip install RPi.GPIO
 
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
