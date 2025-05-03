@@ -36,7 +36,7 @@ class MapImgNode:
         try:
             # Use the most recent common time to avoid extrapolation errors
             timestamp = self.listener.getLatestCommonTime("map", "base_link")
-            listener.waitForTransform("map", "base_link", timestamp, rospy.Duration(1.0))
+            self.listener.waitForTransform("map", "base_link", timestamp, rospy.Duration(1.0))
             (trans, rot) = self.listener.lookupTransform("map", "base_link", timestamp)
             self.save_map_image(trans, rot)
         except Exception as e:
