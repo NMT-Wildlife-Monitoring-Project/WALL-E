@@ -108,6 +108,7 @@ WORKDIR /home/$USER
 COPY entrypoint.sh /entrypoint.sh
 
 # Make the entrypoint script executable
+USER root
 RUN chmod +x /entrypoint.sh
 
 # Set entrypoint to use the external script
