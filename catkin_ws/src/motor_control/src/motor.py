@@ -45,8 +45,8 @@ class Motor(object):
             dir_value = 0
 
         speed = min(speed, MAX_SPEED)
-        duty_cycle = (speed / MAX_SPEED) * 100  # Convert to 0–100%
-
+        duty_cycle = (speed / MAX_SPEED) * 100
+        
         GPIO.output(self.dir_pin, dir_value)
         _pwm_channels[self.pwm_pin].ChangeDutyCycle(duty_cycle)
 
