@@ -61,14 +61,10 @@ RUN apt-get install -y \
 
 # Install GPS tooling
 RUN apt-get install -y gpsd gpsd-clients python-gps
+RUN apt-get install gpiod
 
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
-
-RUN pip install "pip<21" "setuptools<45" "wheel<1"
-
-# Now install pigpio for Python 2
-RUN pip install pigpio
 
 
 # Initialize and build the catkin workspace
@@ -81,8 +77,6 @@ RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make -DCMAKE_BUILD_TYP
 # Copy the workspace into the container
 COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws/
 RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make'
-
-EXPOSE 8888
 
 # Copy the entrypoint script into the container
 COPY entrypoint.sh /entrypoint.sh
