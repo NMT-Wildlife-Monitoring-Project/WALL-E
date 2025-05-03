@@ -16,7 +16,7 @@ class MapImgNode:
             self.image_path = self.default_image_path
         
         self.map_data = None
-        rospy.Subscriber("/map", OccupancyGrid, self.map_callback)
+        rospy.Subscriber("/slamware_sdk_server/map", OccupancyGrid, self.map_callback)
         self.rate = rospy.Rate(1)
 
     def map_callback(self, msg):
