@@ -85,7 +85,7 @@ RUN bash -c "if [[ \$(uname -m) = \"aarch64\" || \$(uname -m) = \"x86_64\" ]]; t
 
 # Install gpiozero library
 USER root
-RUN apt-get install -y python3-gpiozero
+RUN apt-get update && apt-get install -y python3-gpiozero
 
 # Create catkin workspace
 USER $USER
