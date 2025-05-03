@@ -16,18 +16,6 @@ RUN useradd -m $USER && \
 # Switch to root for installations
 USER root
 
-# Download and extract the correct Slamtec SDK based on the architecture
-WORKDIR /tmp
-RUN bash -c "if [[ \$(uname -m) = \"aarch64\" || \$(uname -m) = \"x86_64\" ]]; then \
-        wget -O sdk.tar.gz https://download-en.slamtec.com/api/download/slamware-ros-sdk_\$(uname -m)_gcc7/5.1.1-rtm?lang=netural && \
-        tar -xzf sdk.tar.gz; \
-    else \
-        echo \"Unsupported architecture: \$(uname -m)\" && exit 73; \
-    fi" && \
-    mkdir -p /home/$USER/catkin_ws/src && \
-    cp -r slamware_ros_sdk_linux-$(uname -m)-gcc7/src/* /home/$USER/catkin_ws/src/ && \
-    rm -rf /tmp/slamware_* /tmp/sdk.tar.gz
-
 # Install necessary dependencies
 RUN apt-get update && \
     add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
@@ -61,6 +49,18 @@ RUN apt-get update && \
     gpsd-clients \
     python-gps && \
     rm -rf /var/lib/apt/lists/*
+
+# Download and extract the correct Slamtec SDK based on the architecture
+WORKDIR /tmp
+RUN bash -c "if [[ \$(uname -m) = \"aarch64\" || \$(uname -m) = \"x86_64\" ]]; then \
+        wget -O sdk.tar.gz https://download-en.slamtec.com/api/download/slamware-ros-sdk_\$(uname -m)_gcc7/5.1.1-rtm?lang=netural && \
+        tar -xzf sdk.tar.gz; \
+    else \
+        echo \"Unsupported architecture: \$(uname -m)\" && exit 73; \
+    fi" && \
+    mkdir -p /home/$USER/catkin_ws/src && \
+    cp -r slamware_ros_sdk_linux-$(uname -m)-gcc7/src/* /home/$USER/catkin_ws/src/ && \
+    rm -rf /tmp/slamware_* /tmp/sdk.tar.gz
 
 # Install Python dependencies
 RUN pip3 install --no-cache-dir \
