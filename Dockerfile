@@ -61,13 +61,23 @@ RUN apt-get install -y \
 
 # Install GPS tooling
 RUN apt-get install -y gpsd gpsd-clients python-gps
-RUN apt-get install -y \
+
+# Install gpiod
+RUN apt-get update && apt-get install -y \
     build-essential \
+    git \
     autoconf \
     autoconf-archive \
     libtool \
     pkg-config \
-    libgpiod-dev
+    libffi-dev
+
+RUN git clone https://git.kernel.org/pub/scm/libs/libgpiod/libgpiod.git && \
+    cd libgpiod && \
+    git checkout v1.6.3 && \
+    ./autogen.sh && ./configure && make && make install && \
+    ldconfig && \
+    cd .. && rm -rf libgpiod
 
 
 # Clean up
