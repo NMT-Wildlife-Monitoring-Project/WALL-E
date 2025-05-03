@@ -65,10 +65,11 @@ RUN apt-get install -y gpsd gpsd-clients python-gps
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
-RUN pip install --upgrade pip && \
-    pip install --upgrade setuptools && \
-    pip install --upgrade wheel && \
-    pip install pigpio
+RUN pip install "pip<21" "setuptools<45" "wheel<1"
+
+# Now install pigpio for Python 2
+RUN pip install pigpio
+
 
 # Initialize and build the catkin workspace
 WORKDIR /home/$USER/catkin_ws/src
