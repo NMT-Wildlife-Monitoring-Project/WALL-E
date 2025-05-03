@@ -93,14 +93,17 @@ RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make -DCMAKE_BUILD_TYP
 COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws/
 RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make'
 
+# Install pigpio via pip
+USER root
+RUN pip3 install pigpio
+
 # Copy the flask app into the container
 # WORKDIR /home/$USER
 # COPY --chown=$USER:$USER web_app /home/$USER/web_app
-# RUN chmod +x /home/$USER/web_app/app.py
+# RUN chmod +x /home/$USER/web_app/app.pyRUN
 # EXPOSE 5000
 
 # Copy the entrypoint script into the container
-USER root
 WORKDIR /home/$USER
 COPY entrypoint.sh /entrypoint.sh
 
