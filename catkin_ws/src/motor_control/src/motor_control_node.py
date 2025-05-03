@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 import rospy
 from geometry_msgs.msg import Twist
-from catkin_ws.src.motor_control.src.motor import motors, MAX_SPEED
+from motor import *
 
 
 class MotorControlNode:
