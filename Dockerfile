@@ -68,7 +68,8 @@ RUN rm -rf /var/lib/apt/lists/*
 
 
 # Install Python dependencies
-RUN pip3 install --no-cache-dir \
+RUN pip3 intstall --upgrade pip && \
+    pip3 install --no-cache-dir \
     flask \
     gps \
     opencv-python-headless \
