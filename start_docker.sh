@@ -226,9 +226,7 @@ DOCKER_RUN_FLAGS+=("--cap-add=NET_ADMIN")
 DOCKER_RUN_FLAGS+=("--device=/dev/net/tun")
 mkdir -p /tmp/shared
 DOCKER_RUN_FLAGS+=("--volume=/tmp/shared:/tmp/shared:rw")
-DOCKER_RUN_FLAGS+=("--device /dev/gpiomem")
-
-
+DOCKER_RUN_FLAGS+=("--device=/dev/gpiomem")
 
 # Add Docker flag to mount /dev with correct permissions
 DOCKER_RUN_FLAGS+=("--volume=/dev:/dev:rw")
