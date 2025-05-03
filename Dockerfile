@@ -94,7 +94,7 @@ COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws/
 RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make'
 
 # Install pigpio via pip
-USER root
+USER $USER
 RUN pip3 install pigpio
 
 # Copy the flask app into the container
