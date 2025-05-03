@@ -33,8 +33,8 @@ class MapImgNode:
     
     def process_map(self):
         try:
-            (trans, rot) = self.listener.lookupTransform(
-                "map", "base_link", rospy.Time(0))
+            time = self.listener.getLatestCommonTime("map", "base_link")
+            (trans, rot) = self.listener.lookupTransform("map", "base_link", time)
             self.save_map_image(trans, rot)
         except Exception as e:
             self.save_map_image()
