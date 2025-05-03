@@ -65,16 +65,6 @@ RUN apt-get install -y gpsd gpsd-clients python-gps
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
-
-
-# Install Python dependencies
-RUN pip3 install --upgrade pip && \
-    pip3 install --no-cache-dir \
-    flask \
-    gps \
-    opencv-python-headless \
-    pigpio
-
 RUN pip install --upgrade pip && \
     pip install --upgrade setuptools && \
     pip install --upgrade wheel && \
@@ -90,14 +80,6 @@ RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make -DCMAKE_BUILD_TYP
 # Copy the workspace into the container
 COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws/
 RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make'
-
-# Copy the Flask app into the container
-WORKDIR /home/$USER
-COPY --chown=$USER:$USER web_app /home/$USER/web_app
-RUN chmod +x /home/$USER/web_app/app.py
-
-# Expose Flask app port
-EXPOSE 5000
 
 # Copy the entrypoint script into the container
 COPY entrypoint.sh /entrypoint.sh
