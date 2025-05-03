@@ -83,6 +83,10 @@ RUN bash -c "if [[ \$(uname -m) = \"aarch64\" || \$(uname -m) = \"x86_64\" ]]; t
 #     make install && \
 #     rm -rf /tmp/pigpio-master /tmp/master.zip
 
+# Install gpiozero library
+USER root
+RUN apt-get update && apt-get install -y python3-gpiozero
+
 # Create catkin workspace
 USER $USER
 RUN mkdir -p /home/$USER/catkin_ws/src
