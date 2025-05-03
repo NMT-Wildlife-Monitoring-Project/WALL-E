@@ -5,8 +5,8 @@ set -e
 IMAGE_NAME="walle/ros1:noetic"
 # MASTER_HOSTNAME="raspberrypi.local"
 # MASTER_HOSTNAME="pi"
-IP=""
-# MASTER_IP="129.138.167.128"
+IP="172.27.142.19"
+MASTER_IP="172.27.142.19"
 MASTER_IP=""
 ROS_MASTER_PORT=11311
 
