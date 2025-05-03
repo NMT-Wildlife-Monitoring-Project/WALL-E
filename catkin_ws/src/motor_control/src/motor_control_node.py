@@ -1,8 +1,7 @@
 #!/usr/bin/env python2
 import rospy
 from geometry_msgs.msg import Twist
-from motor import *
-
+from motor import Motors, MAX_SPEED
 
 class MotorControlNode:
     def __init__(self):
