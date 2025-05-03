@@ -9,7 +9,7 @@ import time
 
 class MapImgNode:
     def __init__(self):
-        self.listener = tf.TransformListener()
+        self.listener = tf.TransformListener(cache_time=rospy.Duration(1.0))
         self.default_image_path = "/tmp/shared/map_stream.jpg"
         self.image_path = rospy.get_param("~image_path", self.default_image_path)
         if not os.path.exists(os.path.dirname(self.image_path)):
@@ -35,9 +35,8 @@ class MapImgNode:
     def process_map(self):
         try:
             # Use the most recent common time to avoid extrapolation errors
-            time.sleep(0.1)
             timestamp = self.listener.getLatestCommonTime("map", "base_link")
-            (trans, rot) = self.listener.lookupTransform("map", "base_link", timestamp)
+            (trans, rot) = self.listener.lookupTransform("map", "base_link", rospy.Time(0))
             self.save_map_image(trans, rot)
         except Exception as e:
             self.save_map_image()
