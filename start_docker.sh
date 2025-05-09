@@ -119,6 +119,11 @@ for i in "${!ACTION_FLAGS[@]}"; do
     fi
 done
 
+# If multiple commands are selected, automatically enable quiet mode
+if [ "${#SELECTED_CMDS[@]}" -gt 1 ]; then
+    QUIET_MODE=true
+fi
+
 # Print the selected commands
 if [ ${#SELECTED_CMDS[@]} -gt 0 ]; then
     echo "Selected commands: ${SELECTED_CMDS[@]}"
@@ -288,7 +293,7 @@ fi
 if [ "$QUIET_MODE" = true ]; then
     echo "Quiet mode enabled. Suppressing output..."
     # exec 1>/dev/null
-    DOCKER_EXEC_FLAGS="-dt"
+    DOCKER_EXEC_FLAGS="-d"
 else
     DOCKER_EXEC_FLAGS="-it"
 fi
