@@ -305,10 +305,6 @@ fi
 #     echo "Warning: Failed to start pigpiod. Continuing without it..."
 # fi
 
-# Default log directory
-LOG_DIR="/tmp/ros_docker_logs"
-mkdir -p "$LOG_DIR"
-
 # Run all selected actions
 if [ ${#SELECTED_CMDS[@]} -gt 0 ]; then
     if [ ${#SELECTED_CMDS[@]} -eq 1 ] && [ "$QUIET_MODE" != true ]; then
@@ -317,21 +313,12 @@ if [ ${#SELECTED_CMDS[@]} -gt 0 ]; then
         echo "Executing: $cmd"
         docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh $cmd
     else
-        # Log output for multiple actions or if quiet mode is enabled
         for i in "${!SELECTED_CMDS[@]}"; do
             cmd="${SELECTED_CMDS[i]}"
-            # determine log file name from the matching ACTION_FLAGS entry
-            for j in "${!ACTION_CMDS[@]}"; do
-                if [[ "${ACTION_CMDS[j]}" == "$cmd" ]]; then
-                    flag="${ACTION_FLAGS[j]}"
-                    break
-                fi
-            done
-            log_file="$LOG_DIR/${flag}.log"
-            echo "Executing: $cmd (logging to $log_file)"
-            nohup docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh $cmd > "$log_file" 2>&1 &
+            echo "Executing: $cmd"
+            docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh $cmd
         done
-        echo "Commands are running in the background. Logs are available in $LOG_DIR."
+        echo "Commands are running in the background."
     fi
 else
     echo "No actions specified. Opening interactive bash terminal in the container..."
