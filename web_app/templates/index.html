@@ -12,6 +12,20 @@
             border-radius: 50%;
             position: relative;
         }
+        #manual-control {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #manual-control.active {
+            background-color: #28a745;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.8.0/dist/nipplejs.min.js"></script>
@@ -41,6 +55,7 @@
     <img src="{{ url_for('map_feed') }}" width="640" height="480" alt="Generated Map">
 
     <h2>Joystick Control</h2>
+    <button id="manual-control">Enable Manual Control</button>
     <div id="joystick-zone"></div>
 
     <script>
@@ -69,6 +84,27 @@
             messageType: 'geometry_msgs/Twist'
         });
 
+        // Manual control toggle
+        let manualControlEnabled = false;
+        const manualControlButton = document.getElementById('manual-control');
+        manualControlButton.addEventListener('click', function() {
+            manualControlEnabled = !manualControlEnabled;
+            if (manualControlEnabled) {
+                manualControlButton.textContent = 'Disable Manual Control';
+                manualControlButton.classList.add('active');
+            } else {
+                manualControlButton.textContent = 'Enable Manual Control';
+                manualControlButton.classList.remove('active');
+
+                // Stop the robot when manual control is disabled
+                const stopTwist = new ROSLIB.Message({
+                    linear: { x: 0.0, y: 0.0, z: 0.0 },
+                    angular: { x: 0.0, y: 0.0, z: 0.0 }
+                });
+                cmdVelTopic.publish(stopTwist);
+            }
+        });
+
         // Initialize the joystick
         const joystickZone = document.getElementById('joystick-zone');
         const joystickManager = nipplejs.create({
@@ -81,7 +117,7 @@
 
         // Handle joystick movements
         joystickManager.on('move', function(evt, data) {
-            if (data && data.vector) {
+            if (manualControlEnabled && data && data.vector) {
                 const linearSpeed = data.vector.y * 0.5; // Scale linear speed
                 const angularSpeed = -data.vector.x * 1.0; // Scale angular speed
 
@@ -97,14 +133,15 @@
 
         // Stop the robot when the joystick is released
         joystickManager.on('end', function() {
-            const stopTwist = new ROSLIB.Message({
-                linear: { x: 0.0, y: 0.0, z: 0.0 },
-                angular: { x: 0.0, y: 0.0, z: 0.0 }
-            });
+            if (manualControlEnabled) {
+                const stopTwist = new ROSLIB.Message({
+                    linear: { x: 0.0, y: 0.0, z: 0.0 },
+                    angular: { x: 0.0, y: 0.0, z: 0.0 }
+                });
 
-            cmdVelTopic.publish(stopTwist);
+                cmdVelTopic.publish(stopTwist);
+            }
         });
     </script>
-
 </body>
 </html>
