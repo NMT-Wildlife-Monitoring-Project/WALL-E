@@ -110,6 +110,7 @@ SELECTED_CMDS=()
 if [ -n "$COMMAND_TO_RUN" ]; then
     ACTION_FLAGS+=("CUSTOM_COMMAND")
     ACTION_CMDS+=("$COMMAND_TO_RUN")
+    echo "Custom command: $COMMAND_TO_RUN"
 fi
 
 for i in "${!ACTION_FLAGS[@]}"; do
