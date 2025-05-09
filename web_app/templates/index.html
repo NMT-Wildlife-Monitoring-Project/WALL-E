@@ -175,17 +175,28 @@
             size: 150
         });
 
-        // Store latest speeds
-        let currentLinear = 0.0;
-        let currentAngular = 0.0;
+        // Sample joystick position at each publish interval instead of only on “move”
+        let latestJoystickData = null;
+        joystickManager.on('start', (evt, data) => { latestJoystickData = data; });
+        joystickManager.on('move',  (evt, data) => { latestJoystickData = data; });
+        joystickManager.on('end',   ()        => { latestJoystickData = null; });
 
-        // Handle joystick movements
-        joystickManager.on('move', function(evt, data) {
-            if (manualControlEnabled && data && data.vector) {
-                currentLinear = data.vector.y * 0.5;     // Scale linear speed
-                currentAngular = -data.vector.x * 1.0;   // Scale angular speed
+        // Publish at 10 Hz
+        setInterval(function() {
+            if (manualControlEnabled) {
+                const lin = latestJoystickData
+                    ? latestJoystickData.vector.y
+                    : 0.0;
+                const ang = latestJoystickData
+                    ? latestJoystickData.vector.x
+                    : 0.0;
+                const twist = new ROSLIB.Message({
+                    linear:  { x: lin, y: 0.0, z: 0.0 },
+                    angular: { x: 0.0, y: 0.0, z: ang }
+                });
+                cmdVelTopic.publish(twist);
             }
-        });
+        }, 100);
 
         // Stop the robot when the joystick is released
         joystickManager.on('end', function() {
@@ -194,17 +205,6 @@
                 currentAngular = 0.0;
             }
         });
-
-        // Publish cmd_vel at 10 Hz when manual control is enabled
-        setInterval(function() {
-            if (manualControlEnabled) {
-                const twist = new ROSLIB.Message({
-                    linear:  { x: currentLinear,  y: 0.0, z: 0.0 },
-                    angular: { x: 0.0,  y: 0.0, z: currentAngular }
-                });
-                cmdVelTopic.publish(twist);
-            }
-        }, 100);
     </script>
 </body>
 </html>
