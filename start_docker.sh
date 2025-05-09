@@ -302,6 +302,7 @@ fi
 # Default log directory
 LOG_DIR="/tmp/ros_docker_logs"
 mkdir -p "$LOG_DIR"
+log_file="$LOG_DIR/$(date +%Y%m%d_%H%M%S).log"
 
 # Run all selected actions
 if [ ${#SELECTED_CMDS[@]} -gt 0 ]; then
@@ -315,7 +316,6 @@ if [ ${#SELECTED_CMDS[@]} -gt 0 ]; then
         for i in "${!SELECTED_CMDS[@]}"; do
             cmd="${SELECTED_CMDS[i]}"
             flag="${ACTION_FLAGS[i]}"
-            log_file="${LOG_DIR}/${flag}.log"
             echo "Executing: $cmd (logging to $log_file)"
             docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh $cmd > "$log_file" 2>&1 &
         done
