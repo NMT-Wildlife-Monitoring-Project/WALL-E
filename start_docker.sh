@@ -293,7 +293,7 @@ fi
 if [ "$QUIET_MODE" = true ]; then
     echo "Quiet mode enabled. Suppressing output..."
     # exec 1>/dev/null
-    DOCKER_EXEC_FLAGS="-d"
+    DOCKER_EXEC_FLAGS="-dt"
 else
     DOCKER_EXEC_FLAGS="-it"
 fi
