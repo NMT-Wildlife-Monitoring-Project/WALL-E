@@ -12,20 +12,6 @@
             border-radius: 50%;
             position: relative;
         }
-        #manual-control {
-            display: block;
-            margin: 20px auto;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #manual-control.active {
-            background-color: #28a745;
-        }
         .toggle-button {
             display: block;
             margin: 10px auto;
@@ -82,7 +68,7 @@
     </div>
 
     <h2>Joystick Control</h2>
-    <button id="manual-control">Enable Manual Control</button>
+    <button class="toggle-button" id="joystick-control">Enable Manual Control</button>
     <div id="joystick-zone"></div>
 
     <script>
@@ -156,9 +142,9 @@
             messageType: 'geometry_msgs/Twist'
         });
 
-        // Manual control toggle
+        // Joystick control toggle
         let manualControlEnabled = false;
-        const manualControlButton = document.getElementById('manual-control');
+        const manualControlButton = document.getElementById('joystick-control');
         manualControlButton.addEventListener('click', function() {
             manualControlEnabled = !manualControlEnabled;
             if (manualControlEnabled) {
