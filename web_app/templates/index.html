@@ -31,7 +31,7 @@
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.8.0/dist/nipplejs.min.js"></script>
+    <script src="{{ url_for('static', filename='JoyStick/joy.min.js') }}"></script>
 </head>
 <body>
     <h1>WALLE Control Panel</h1>
@@ -117,6 +117,27 @@
             }
         });
 
+        // Toggle joystick control
+        const joystickControlButton = document.getElementById('joystick-control');
+        let manualControlEnabled = false;
+
+        joystickControlButton.addEventListener('click', function() {
+            manualControlEnabled = !manualControlEnabled;
+            joystickControlButton.textContent = manualControlEnabled
+                ? 'Disable Manual Control'
+                : 'Enable Manual Control';
+            joystickControlButton.classList.toggle('active', manualControlEnabled);
+
+            // If manual control has just been disabled, send zero-velocity to stop the robot
+            if (!manualControlEnabled) {
+                const stopTwist = new ROSLIB.Message({
+                    linear:  { x: 0.0, y: 0.0, z: 0.0 },
+                    angular: { x: 0.0, y: 0.0, z: 0.0 }
+                });
+                cmdVelTopic.publish(stopTwist);
+            }
+        });
+
         // Connect to ROSBridge
         const ros = new ROSLIB.Ros({
             url: 'ws://172.27.142.19:9090' // Update if rosbridge is on a different host/port
@@ -142,69 +163,34 @@
             messageType: 'geometry_msgs/Twist'
         });
 
-        // Joystick control toggle
-        let manualControlEnabled = false;
-        const manualControlButton = document.getElementById('joystick-control');
-        manualControlButton.addEventListener('click', function() {
-            manualControlEnabled = !manualControlEnabled;
-            if (manualControlEnabled) {
-                manualControlButton.textContent = 'Disable Manual Control';
-                manualControlButton.classList.add('active');
-            } else {
-                manualControlButton.textContent = 'Enable Manual Control';
-                manualControlButton.classList.remove('active');
-
-                // Stop the robot when manual control is disabled
-                currentLinear = 0;
-                currentAngular = 0;
-                const stopTwist = new ROSLIB.Message({
-                    linear: { x: 0.0, y: 0.0, z: 0.0 },
-                    angular: { x: 0.0, y: 0.0, z: 0.0 }
-                });
-                cmdVelTopic.publish(stopTwist);
-            }
-        });
-
         // Initialize the joystick
-        const joystickZone = document.getElementById('joystick-zone');
-        const joystickManager = nipplejs.create({
-            zone: joystickZone,
-            mode: 'static',
-            position: { left: '50%', top: '50%' },
-            color: 'blue',
-            size: 150
+        const joystickContainer = document.getElementById('joystick-container');
+        const joystick = new JoyStick(joystickContainer, {
+            title: "joystick",
+            width: 200,
+            height: 200,
+            internalFillColor: "#007bff",
+            internalLineWidth: 2,
+            internalStrokeColor: "#003f7f",
+            externalLineWidth: 2,
+            externalStrokeColor: "#003f7f",
+            autoReturnToCenter: true
         });
-
-        // Sample joystick position at each publish interval instead of only on “move”
-        let latestJoystickData = null;
-        joystickManager.on('start', (evt, data) => { latestJoystickData = data; });
-        joystickManager.on('move',  (evt, data) => { latestJoystickData = data; });
-        joystickManager.on('end',   ()        => { latestJoystickData = null; });
 
         // Publish at 10 Hz
         setInterval(function() {
             if (manualControlEnabled) {
-                const lin = latestJoystickData
-                    ? latestJoystickData.vector.y
-                    : 0.0;
-                const ang = latestJoystickData
-                    ? latestJoystickData.vector.x
-                    : 0.0;
+                const linearSpeed = joystick.GetY() / 100; // Scale linear speed
+                const angularSpeed = -joystick.GetX() / 100; // Scale angular speed
+
                 const twist = new ROSLIB.Message({
-                    linear:  { x: lin, y: 0.0, z: 0.0 },
-                    angular: { x: 0.0, y: 0.0, z: ang }
+                    linear: { x: linearSpeed, y: 0.0, z: 0.0 },
+                    angular: { x: 0.0, y: 0.0, z: angularSpeed }
                 });
+
                 cmdVelTopic.publish(twist);
             }
         }, 100);
-
-        // Stop the robot when the joystick is released
-        joystickManager.on('end', function() {
-            if (manualControlEnabled) {
-                currentLinear = 0.0;
-                currentAngular = 0.0;
-            }
-        });
     </script>
 </body>
 </html>
