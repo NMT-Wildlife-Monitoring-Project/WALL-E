@@ -106,17 +106,18 @@ done
 
 # Build a list of selected commands
 SELECTED_CMDS=()
+
+if [ -n "$COMMAND_TO_RUN" ]; then
+    ACTION_FLAGS+=("CUSTOM_COMMAND")
+    ACTION_CMDS+=("$COMMAND_TO_RUN")
+fi
+
 for i in "${!ACTION_FLAGS[@]}"; do
     FLAG_NAME="${ACTION_FLAGS[i]}"
     if [ "${!FLAG_NAME}" = true ]; then
         SELECTED_CMDS+=("${ACTION_CMDS[i]}")
     fi
 done
-
-# Add custom command if provided
-if [ -n "$COMMAND_TO_RUN" ]; then
-    SELECTED_CMDS+=("$COMMAND_TO_RUN")
-fi
 
 # Print the selected commands
 if [ ${#SELECTED_CMDS[@]} -gt 0 ]; then
