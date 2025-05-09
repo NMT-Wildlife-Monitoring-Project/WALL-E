@@ -85,7 +85,7 @@ def generate_map_frames(framerate=5):
     while True:
         map_image = cv2.imread('/tmp/shared/map_stream.jpg')
         if map_image is None:
-            print("⚠️ Map image not found.")
+            print("Map image not found.")
             time.sleep(1.0 / framerate)
             continue
 

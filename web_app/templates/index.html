@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Robot Location and Video</title>
+    <title>WALLE: Control Panel</title>
     <style>
         #joystick-zone {
             width: 200px;
             height: 200px;
             margin: 20px auto;
             touch-action: none;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            position: relative;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.8.0/dist/nipplejs.min.js"></script>
 </head>
 <body>
     <h1>Robot Current Location</h1>
@@ -38,65 +43,68 @@
     <h2>Joystick Control</h2>
     <div id="joystick-zone"></div>
 
-    <!-- Include libraries -->
-    <!--script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script-->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.7.3/nipplejs.min.js"></script>
-    <!--
     <script>
-        // Replace this IP with your ROS machine’s IP
-        var ros = new ROSLIB.Ros({
-            url: 'ws://192.168.1.100:9090'
+        // Connect to ROSBridge
+        const ros = new ROSLIB.Ros({
+            url: 'ws://172.27.142.19:9090' // Update if rosbridge is on a different host/port
         });
 
         ros.on('connection', function() {
-            console.log('Connected to websocket server.');
+            console.log('Connected to ROSBridge WebSocket server.');
         });
 
         ros.on('error', function(error) {
-            console.log('Error connecting to websocket server: ', error);
+            console.error('Error connecting to ROSBridge:', error);
+            alert('Failed to connect to ROSBridge. Please check the connection.');
         });
 
         ros.on('close', function() {
-            console.log('Connection to websocket server closed.');
+            console.log('Connection to ROSBridge closed.');
         });
 
-        var cmdVel = new ROSLIB.Topic({
+        // Create a ROS topic for cmd_vel
+        const cmdVelTopic = new ROSLIB.Topic({
             ros: ros,
             name: '/cmd_vel',
             messageType: 'geometry_msgs/Twist'
         });
 
-        var joystick = nipplejs.create({
-            zone: document.getElementById('joystick-zone'),
+        // Initialize the joystick
+        const joystickZone = document.getElementById('joystick-zone');
+        const joystickManager = nipplejs.create({
+            zone: joystickZone,
             mode: 'static',
             position: { left: '50%', top: '50%' },
             color: 'blue',
             size: 150
         });
 
-        joystick.on('move', function(evt, data) {
-            if (data.direction) {
-                var linear = data.vector.y * -0.5;
-                var angular = data.vector.x * -1.0;
+        // Handle joystick movements
+        joystickManager.on('move', function(evt, data) {
+            if (data && data.vector) {
+                const linearSpeed = data.vector.y * 0.5; // Scale linear speed
+                const angularSpeed = -data.vector.x * 1.0; // Scale angular speed
 
-                var twist = new ROSLIB.Message({
-                    linear: { x: linear, y: 0.0, z: 0.0 },
-                    angular: { x: 0.0, y: 0.0, z: angular }
+                // Create and send a Twist message
+                const twist = new ROSLIB.Message({
+                    linear: { x: linearSpeed, y: 0.0, z: 0.0 },
+                    angular: { x: 0.0, y: 0.0, z: angularSpeed }
                 });
 
-                cmdVel.publish(twist);
+                cmdVelTopic.publish(twist);
             }
         });
 
-        joystick.on('end', function() {
-            // Stop when joystick is released
-            var stop = new ROSLIB.Message({
+        // Stop the robot when the joystick is released
+        joystickManager.on('end', function() {
+            const stopTwist = new ROSLIB.Message({
                 linear: { x: 0.0, y: 0.0, z: 0.0 },
                 angular: { x: 0.0, y: 0.0, z: 0.0 }
             });
 
-            cmdVel.publish(stop);
+            cmdVelTopic.publish(stopTwist);
         });
-    </script>-->
+    </script>
+
 </body>
 </html>
