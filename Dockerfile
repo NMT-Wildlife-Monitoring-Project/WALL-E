@@ -65,6 +65,11 @@ RUN apt-get install -y gpsd gpsd-clients python-gps
 # GPIO
 RUN pip install pigpio
 
+# Rosbridge
+RUN apt-get update && apt-get install -y \
+    ros-$ROS_DISTRO-rosbridge-suite && \
+    rm -rf /var/lib/apt/lists/*
+
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 

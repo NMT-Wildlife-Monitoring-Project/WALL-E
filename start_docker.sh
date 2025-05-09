@@ -15,15 +15,33 @@ DOCKER_RUN_FLAGS=()
 DISPLAY_ENABLED=false
 COMMAND_TO_RUN=""
 ENV_FILE="env_file.txt"
-RUN_ROSCORE=false
 BUILD_CONTAINER=false
 STOP_CONTAINER=false
 RESTART_CONTAINER=false
-RUN_VIEW_CAMERA_LAUNCH=false
-RUN_MAPPING_LAUNCH=false
-RUN_VIEW_MAP_LAUNCH=false   # NEW flag for view-map
-RUN_MOTORS_LAUNCH=false     # NEW flag for motors
 QUIET_MODE=false
+
+# Actions
+# Map each “run” flag variable to the corresponding docker command
+declare -a ACTION_FLAGS=(
+    RUN_ROBOT_LAUNCH
+    RUN_TELEOP_LAUNCH
+    RUN_USB_CAM_NODE
+    RUN_VIEW_CAMERA_LAUNCH
+    RUN_MAPPING_LAUNCH
+    RUN_VIEW_MAP_LAUNCH
+    RUN_MOTORS_LAUNCH
+    RUN_ROSBRIDGE
+)
+declare -a ACTION_CMDS=(
+    "roslaunch control robot_start.launch"
+    "roslaunch control teleop.launch"
+    "roslaunch control usb_cam.launch"
+    "roslaunch control view_camera.launch"
+    "roslaunch control mapping.launch"
+    "roslaunch slamware_ros_sdk view_slamware_ros_sdk_server_node.launch"
+    "roslaunch control motor_teleop.launch"
+    "roslaunch rosbridge_server rosbridge_websocket.launch"
+)
 
 # Function to show usage
 usage() {
@@ -42,8 +60,9 @@ usage() {
     echo "  --mapping (-M)              Run mapping process using the slamtec mapper"
     echo "  --view-map (-w)             Run map view using view_slamware_ros_sdk_server_node.launch"
     echo "  --motors (-g)               Run motor control using motor_control.launch"
-    echo "  --command (-c) <command>    Pass a command to be run in the container"
+    echo "  --rosbridge (-B)            Run rosbridge server"
     echo "  --roscore (-r)              Run roscore"
+    echo "  --command (-c) <command>    Pass a command to be run in the container"
     echo "Options:"
     echo "  --port (-p) <port>          Specify custom ROS master port (default is 11311)"
     echo "  --ip (-i) <host_ip>         Specify host IP"
@@ -73,6 +92,7 @@ while [[ "$#" -gt 0 ]]; do
         --motors|-g) RUN_MOTORS_LAUNCH=true; shift ;;  # NEW case for motors
         --command|-c) COMMAND_TO_RUN="$2"; shift 2 ;;
         --roscore|-r) RUN_ROSCORE=true; shift ;;
+        --rosbridge|-B) RUN_ROSBRIDGE=true; shift ;;
         --port|-p) ROS_MASTER_PORT="$2"; shift 2 ;;
         --display|-d) DISPLAY_ENABLED=true; shift ;;
         --build|-b) BUILD_CONTAINER=true; shift ;;
@@ -84,22 +104,25 @@ while [[ "$#" -gt 0 ]]; do
     esac
 done
 
-# Check if multiple actions are specified
-ACTION_COUNT=0
-if [ "$RUN_ROBOT_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
-if [ "$RUN_TELEOP_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
-if [ "$RUN_USB_CAM_NODE" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
-if [ "$RUN_VIEW_CAMERA_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
-if [ "$RUN_MAPPING_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
-if [ "$RUN_VIEW_MAP_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
-if [ "$RUN_MOTORS_LAUNCH" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi  # NEW action count for motors
-if [ -n "$COMMAND_TO_RUN" ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
-if [ "$RUN_ROSCORE" = true ]; then ACTION_COUNT=$((ACTION_COUNT + 1)); fi
+# Build a list of selected commands
+SELECTED_CMDS=()
+for i in "${!ACTION_FLAGS[@]}"; do
+    FLAG_NAME="${ACTION_FLAGS[i]}"
+    if [ "${!FLAG_NAME}" = true ]; then
+        SELECTED_CMDS+=("${ACTION_CMDS[i]}")
+    fi
+done
 
-if [ "$ACTION_COUNT" -gt 1 ]; then
-    echo "Error: You greedy pig. Multiple actions specified. You get ONE."
-    usage
-    exit 1
+# Add custom command if provided
+if [ -n "$COMMAND_TO_RUN" ]; then
+    SELECTED_CMDS+=("$COMMAND_TO_RUN")
+fi
+
+# Print the selected commands
+if [ ${#SELECTED_CMDS[@]} -gt 0 ]; then
+    echo "Selected commands: ${SELECTED_CMDS[@]}"
+else
+    echo "No commands selected. Defaulting to interactive bash terminal."
 fi
 
 # Check if the container is already running
@@ -263,7 +286,7 @@ fi
 # Run docker commands in detached mode if quiet mode is enabled
 if [ "$QUIET_MODE" = true ]; then
     echo "Quiet mode enabled. Suppressing output..."
-    exec 1>/dev/null
+    # exec 1>/dev/null
     DOCKER_EXEC_FLAGS="-dt"
 else
     DOCKER_EXEC_FLAGS="-it"
@@ -275,39 +298,13 @@ fi
 #     echo "Warning: Failed to start pigpiod. Continuing without it..."
 # fi
 
-if [ "$RUN_ROSCORE" = true ]; then
-    echo "Running roscore..."
-    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roscore
-fi
-
-# Execute the specified option
-
-if [ "$RUN_ROBOT_LAUNCH" = true ]; then
-    echo "Determining tolerable amounts of sentience..."
-    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch control robot_start.launch
-elif [ "$RUN_TELEOP_LAUNCH" = true ]; then
-    echo "Running joystick control..."
-    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch control teleop.launch
-elif [ "$RUN_USB_CAM_NODE" = true ]; then
-    echo "Running usb camera..."
-    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch control usb_cam.launch
-elif [ "$RUN_VIEW_CAMERA_LAUNCH" = true ]; then
-    echo "Viewing ROS Camera feed..."
-    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch control view_camera.launch
-elif [ "$RUN_MAPPING_LAUNCH" = true ]; then
-    echo "Running mapping process..."
-    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch control mapping.launch
-elif [ "$RUN_VIEW_MAP_LAUNCH" = true ]; then
-    echo "Running map view..."
-    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch slamware_ros_sdk view_slamware_ros_sdk_server_node.launch
-elif [ "$RUN_MOTORS_LAUNCH" = true ]; then
-    echo "Running motor control..."
-    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh roslaunch control motor_teleop.launch
-elif [ -n "$COMMAND_TO_RUN" ]; then
-    echo "Running custom command: $COMMAND_TO_RUN"
-    docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh $COMMAND_TO_RUN
+# Run all selected actions
+if [ ${#SELECTED_CMDS[@]} -gt 0 ]; then
+    for cmd in "${SELECTED_CMDS[@]}"; do
+        echo "Executing: $cmd"
+        docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh $cmd
+    done
 else
-    echo "No options specified. Opening interactive bash terminal in the container..."
+    echo "No actions specified. Opening interactive bash terminal in the container..."
     docker exec -it --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh bash
 fi
-

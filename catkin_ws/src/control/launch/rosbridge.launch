@@ -1,0 +1,6 @@
+<launch>
+    <!-- Start rosbridge_websocket -->
+    <node name="rosbridge_websocket" pkg="rosbridge_server" type="rosbridge_websocket" output="screen">
+        <param name="port" value="9090" />
+    </node>
+</launch>
