@@ -329,7 +329,7 @@ if [ ${#SELECTED_CMDS[@]} -gt 0 ]; then
             done
             log_file="$LOG_DIR/${flag}.log"
             echo "Executing: $cmd (logging to $log_file)"
-            docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh $cmd | tee "$log_file" &
+            nohup docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh $cmd > "$log_file" 2>&1 &
         done
         echo "Commands are running in the background. Logs are available in $LOG_DIR."
     fi
