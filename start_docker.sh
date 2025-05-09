@@ -110,9 +110,7 @@ SELECTED_CMDS=()
 if [ -n "$COMMAND_TO_RUN" ]; then
     ACTION_FLAGS+=("CUSTOM_COMMAND")
     ACTION_CMDS+=("$COMMAND_TO_RUN")
-    for cmd in "${ACTION_CMDS[@]}"; do
-        echo "Command: $cmd"
-    done
+    SELECTED_CMDS+=("$COMMAND_TO_RUN")
 fi
 
 for i in "${!ACTION_FLAGS[@]}"; do
@@ -122,16 +120,16 @@ for i in "${!ACTION_FLAGS[@]}"; do
     fi
 done
 
-# If multiple commands are selected, automatically enable quiet mode
-if [ "${#SELECTED_CMDS[@]}" -gt 1 ]; then
-    QUIET_MODE=true
-fi
-
 # Print the selected commands
 if [ ${#SELECTED_CMDS[@]} -gt 0 ]; then
     echo "Selected commands: ${SELECTED_CMDS[@]}"
 else
     echo "No commands selected. Defaulting to interactive bash terminal."
+fi
+
+# If multiple commands are selected, automatically enable quiet mode
+if [ "${#SELECTED_CMDS[@]}" -gt 1 ]; then
+    QUIET_MODE=true
 fi
 
 # Check if the container is already running
@@ -322,8 +320,14 @@ if [ ${#SELECTED_CMDS[@]} -gt 0 ]; then
         # Log output for multiple actions or if quiet mode is enabled
         for i in "${!SELECTED_CMDS[@]}"; do
             cmd="${SELECTED_CMDS[i]}"
-            log_file_name=$(echo "$cmd" | tr ' ' '_')
-            log_file="${LOG_DIR}/${log_file_name}.log"
+            # determine log file name from the matching ACTION_FLAGS entry
+            for j in "${!ACTION_CMDS[@]}"; do
+                if [[ "${ACTION_CMDS[j]}" == "$cmd" ]]; then
+                    flag="${ACTION_FLAGS[j]}"
+                    break
+                fi
+            done
+            log_file="$LOG_DIR/${flag}.log"
             echo "Executing: $cmd (logging to $log_file)"
             docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh $cmd | tee "$log_file" &
         done
