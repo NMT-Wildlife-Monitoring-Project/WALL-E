@@ -26,12 +26,30 @@
         #manual-control.active {
             background-color: #28a745;
         }
+        .toggle-button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            font-size: 14px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .toggle-button.active {
+            background-color: #28a745;
+        }
+        .hidden {
+            display: none;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.8.0/dist/nipplejs.min.js"></script>
 </head>
 <body>
-    <h1>Robot Current Location</h1>
+    <h1>WALLE Control Panel</h1>
+    <h2>GPS Data</h2>
     <p>Latitude: {{ gps.latitude }}</p>
     <p>Longitude: {{ gps.longitude }}</p>
     <p>Fix: {{ gps.fix }}</p>
@@ -39,26 +57,80 @@
     <p>Timestamp: {{ gps.timestamp }}</p>
 
     <h2>Map View</h2>
-    <iframe
-        width="600"
-        height="450"
-        style="border:0"
-        loading="lazy"
-        allowfullscreen
-        src="https://maps.google.com/maps?q={{ gps.latitude }},{{ gps.longitude }}&z=15&output=embed">
-    </iframe>
+    <button class="toggle-button" id="toggle-map-view">Hide Map View</button>
+    <div id="map-view">
+        <iframe
+            width="600"
+            height="450"
+            style="border:0"
+            loading="lazy"
+            allowfullscreen
+            src="https://maps.google.com/maps?q={{ gps.latitude }},{{ gps.longitude }}&z=15&output=embed">
+        </iframe>
+    </div>
 
     <h2>Live Camera Feed</h2>
-    <img src="{{ url_for('video_feed') }}" width="640" height="480" alt="Live Camera Feed">
+    <button class="toggle-button" id="toggle-video-feed">Hide Video Feed</button>
+    <div id="video-feed">
+        <img src="{{ url_for('video_feed') }}" width="640" height="480" alt="Live Camera Feed">
+    </div>
 
     <h2>Generated Map</h2>
-    <img src="{{ url_for('map_feed') }}" width="640" height="480" alt="Generated Map">
+    <button class="toggle-button" id="toggle-generated-map">Hide Generated Map</button>
+    <div id="generated-map">
+        <img src="{{ url_for('map_feed') }}" width="640" height="480" alt="Generated Map">
+    </div>
 
     <h2>Joystick Control</h2>
     <button id="manual-control">Enable Manual Control</button>
     <div id="joystick-zone"></div>
 
     <script>
+        // Toggle visibility of map view
+        const toggleMapViewButton = document.getElementById('toggle-map-view');
+        const mapView = document.getElementById('map-view');
+        toggleMapViewButton.addEventListener('click', function() {
+            if (mapView.classList.contains('hidden')) {
+                mapView.classList.remove('hidden');
+                toggleMapViewButton.textContent = 'Hide Map View';
+                toggleMapViewButton.classList.remove('active');
+            } else {
+                mapView.classList.add('hidden');
+                toggleMapViewButton.textContent = 'Show Map View';
+                toggleMapViewButton.classList.add('active');
+            }
+        });
+
+        // Toggle visibility of video feed
+        const toggleVideoFeedButton = document.getElementById('toggle-video-feed');
+        const videoFeed = document.getElementById('video-feed');
+        toggleVideoFeedButton.addEventListener('click', function() {
+            if (videoFeed.classList.contains('hidden')) {
+                videoFeed.classList.remove('hidden');
+                toggleVideoFeedButton.textContent = 'Hide Video Feed';
+                toggleVideoFeedButton.classList.remove('active');
+            } else {
+                videoFeed.classList.add('hidden');
+                toggleVideoFeedButton.textContent = 'Show Video Feed';
+                toggleVideoFeedButton.classList.add('active');
+            }
+        });
+
+        // Toggle visibility of generated map
+        const toggleGeneratedMapButton = document.getElementById('toggle-generated-map');
+        const generatedMap = document.getElementById('generated-map');
+        toggleGeneratedMapButton.addEventListener('click', function() {
+            if (generatedMap.classList.contains('hidden')) {
+                generatedMap.classList.remove('hidden');
+                toggleGeneratedMapButton.textContent = 'Hide Generated Map';
+                toggleGeneratedMapButton.classList.remove('active');
+            } else {
+                generatedMap.classList.add('hidden');
+                toggleGeneratedMapButton.textContent = 'Show Generated Map';
+                toggleGeneratedMapButton.classList.add('active');
+            }
+        });
+
         // Connect to ROSBridge
         const ros = new ROSLIB.Ros({
             url: 'ws://172.27.142.19:9090' // Update if rosbridge is on a different host/port
