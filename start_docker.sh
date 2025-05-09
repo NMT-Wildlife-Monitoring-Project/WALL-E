@@ -298,12 +298,28 @@ fi
 #     echo "Warning: Failed to start pigpiod. Continuing without it..."
 # fi
 
+# Default log directory
+LOG_DIR="/tmp/ros_docker_logs"
+mkdir -p "$LOG_DIR"
+
 # Run all selected actions
 if [ ${#SELECTED_CMDS[@]} -gt 0 ]; then
-    for cmd in "${SELECTED_CMDS[@]}"; do
+    if [ ${#SELECTED_CMDS[@]} -eq 1 ] && [ "$QUIET_MODE" != true ]; then
+        # If only one action is specified and not in quiet mode, show output
+        cmd="${SELECTED_CMDS[0]}"
         echo "Executing: $cmd"
         docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh $cmd
-    done
+    else
+        # Log output for multiple actions or if quiet mode is enabled
+        for i in "${!SELECTED_CMDS[@]}"; do
+            cmd="${SELECTED_CMDS[i]}"
+            flag="${ACTION_FLAGS[i]}"
+            log_file="${LOG_DIR}/${flag}.log"
+            echo "Executing: $cmd (logging to $log_file)"
+            docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh $cmd > "$log_file" 2>&1 &
+        done
+        echo "Commands are running in the background. Logs are available in $LOG_DIR."
+    fi
 else
     echo "No actions specified. Opening interactive bash terminal in the container..."
     docker exec -it --env-file $ENV_FILE $CONTAINER_ID /entrypoint.sh bash
