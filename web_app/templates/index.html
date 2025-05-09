@@ -97,6 +97,8 @@
                 manualControlButton.classList.remove('active');
 
                 // Stop the robot when manual control is disabled
+                currentLinear = 0;
+                currentAngular = 0;
                 const stopTwist = new ROSLIB.Message({
                     linear: { x: 0.0, y: 0.0, z: 0.0 },
                     angular: { x: 0.0, y: 0.0, z: 0.0 }
@@ -115,33 +117,36 @@
             size: 150
         });
 
+        // Store latest speeds
+        let currentLinear = 0.0;
+        let currentAngular = 0.0;
+
         // Handle joystick movements
         joystickManager.on('move', function(evt, data) {
             if (manualControlEnabled && data && data.vector) {
-                const linearSpeed = data.vector.y * 0.5; // Scale linear speed
-                const angularSpeed = -data.vector.x * 1.0; // Scale angular speed
-
-                // Create and send a Twist message
-                const twist = new ROSLIB.Message({
-                    linear: { x: linearSpeed, y: 0.0, z: 0.0 },
-                    angular: { x: 0.0, y: 0.0, z: angularSpeed }
-                });
-
-                cmdVelTopic.publish(twist);
+                currentLinear = data.vector.y * 0.5;     // Scale linear speed
+                currentAngular = -data.vector.x * 1.0;   // Scale angular speed
             }
         });
 
         // Stop the robot when the joystick is released
         joystickManager.on('end', function() {
             if (manualControlEnabled) {
-                const stopTwist = new ROSLIB.Message({
-                    linear: { x: 0.0, y: 0.0, z: 0.0 },
-                    angular: { x: 0.0, y: 0.0, z: 0.0 }
-                });
-
-                cmdVelTopic.publish(stopTwist);
+                currentLinear = 0.0;
+                currentAngular = 0.0;
             }
         });
+
+        // Publish cmd_vel at 10 Hz when manual control is enabled
+        setInterval(function() {
+            if (manualControlEnabled) {
+                const twist = new ROSLIB.Message({
+                    linear:  { x: currentLinear,  y: 0.0, z: 0.0 },
+                    angular: { x: 0.0,  y: 0.0, z: currentAngular }
+                });
+                cmdVelTopic.publish(twist);
+            }
+        }, 100);
     </script>
 </body>
 </html>
