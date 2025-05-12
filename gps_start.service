@@ -9,3 +9,4 @@ ExecStart=/home/walle/WALL-E/start_gps.sh
 RemainAfterExit=true
 
 [Install]
+WantedBy=multi-user.target
