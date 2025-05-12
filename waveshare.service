@@ -1,10 +1,11 @@
 [Unit]
-Description=Start GPS on SIM7600 at boot
+Description=SIM7600 Modem Setup
 After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/home/pi5-walle/WALL-E/start_gps.sh
+ExecStart=/home/walle/waveshare_start.sh
 RemainAfterExit=true
 
 [Install]
