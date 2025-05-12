@@ -22,8 +22,8 @@ newgrp docker
 ### Join network
 `sudo zerotier-cli join 6ab565387a6fafa0`  
 After joining, be sure to authorize the new device on the ZeroTier website.
-### Install gps dependencies  
-`sudo apt install gpsd python3-gps`  
+### Install apt dependencies  
+`sudo apt install gpsd gpsd-client python3-gps python3-flask python3-gps python3-opencv python3-numpy python3-netifaces`  
 
 ## Clone repository  
 Ensure you have an SSH key set up with Github  
@@ -38,11 +38,28 @@ cd WALL-E
 ## Setup Waveshare cellular shield  
 
 ### Disable Bluetooth  
-`sudo nano /boot/firmware/config.txt`  
-Add `dtoverlay=disable-bt` before or inside `[all`. Ensure `enable_uart=1` is present.  
-`sudo systemctl disable hciuart`  
-Reboot  
-`sudo reboot`  
+1. `sudo nano /boot/firmware/config.txt`  
+2. Add `dtoverlay=disable-bt` before or inside `[all`. Ensure `enable_uart=1` is present.  
+3. `sudo systemctl disable hciuart`  
+4. Reboot  
+5. `sudo reboot`  
+
+## Setup GPS
+1. Edit `sudo nano /etc/default/gpsd` to match
+```
+START_DAEMON="true"
+GPSD_OPTIONS=""
+DEVICES="/dev/ttyUSB1"
+USBAUTO="false"
+GPSD_SOCKET="/var/run/gpsd.sock"
+```
+2. Start the service
+```
+sudo systemctl daemon-reload
+sudo systemctl enable gpsd
+sudo systemctl restart gpsd
+```
+3. Test with `cgps`
 
 
 ## Installing Services

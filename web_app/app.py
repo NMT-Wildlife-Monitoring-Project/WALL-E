@@ -31,6 +31,7 @@ def init_camera(index=0):
 camera = init_camera()
 
 # === GPS Data ===
+
 def get_gps_data(timeout=2.0):
     print("Getting GPS data...")
     data = {
@@ -40,24 +41,31 @@ def get_gps_data(timeout=2.0):
         'satellites': None,
         'timestamp': None
     }
+    start_time = time.time()
     try:
         session = gps.gps(mode=gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE)
-        start = time.time()
         for report in session:
-            if time.time() - start > timeout:
-                print("GPS timeout")
+            # Check for timeout
+            if time.time() - start_time > timeout:
+                print("GPS timeout reached.")
                 break
-            if report['class'] == 'TPV':
+
+            if report.get('class') == 'TPV':
                 data['latitude'] = getattr(report, 'lat', None)
                 data['longitude'] = getattr(report, 'lon', None)
                 data['timestamp'] = getattr(report, 'time', None)
                 data['fix'] = True if getattr(report, 'mode', 0) >= 2 else False
-            elif report['class'] == 'SKY':
+
+            elif report.get('class') == 'SKY':
                 data['satellites'] = len(report.get('satellites', []))
-            if data['fix'] and data['latitude'] and data['longitude']:
+
+            # Stop early if we have a valid fix
+            if data['fix'] and data['latitude'] is not None and data['longitude'] is not None:
                 break
+
     except Exception as e:
         print(f"GPS error: {e}")
+
     return data
 
 # === Video Stream Generator ===
