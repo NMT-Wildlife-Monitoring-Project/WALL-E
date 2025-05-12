@@ -4,10 +4,10 @@ After=network-online.target gpsd.service
 
 [Service]
 Type=simple
-WorkingDirectory=/home/pi5-walle/WALL-E/web_app
-ExecStart=/home/pi5-walle/WALL-E/web_app/app.py
+WorkingDirectory=/home/walle/WALL-E/web_app
+ExecStart=/home/walle/WALL-E/web_app/app.py
 Restart=on-failure
-User=pi5-walle
+User=walle
 
 [Install]
 WantedBy=multi-user.target

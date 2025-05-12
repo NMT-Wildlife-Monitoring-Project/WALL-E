@@ -4,14 +4,14 @@ After=network-online.target docker.service
 Wants=network-online.target docker.service
 
 [Service]
-ExecStart=/home/pi5-walle/WALL-E/start_docker.sh -M -q
-WorkingDirectory=/home/pi5-walle
+ExecStart=/home/walle/WALL-E/start_docker.sh -M -q
+WorkingDirectory=/home/walle
 StandardOutput=inherit
 StandardError=inherit
 Restart=on-failure
-User=pi5-walle
+User=walle
 Environment=DISPLAY=:0
-Environment=HOME=/home/pi5-walle
+Environment=HOME=/home/walle
 Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 Environment=DOCKER_HOST=unix:///var/run/docker.sock
 Group=docker
