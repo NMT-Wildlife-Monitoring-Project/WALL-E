@@ -20,7 +20,7 @@ newgrp docker
 ### Install Zerotier  
 `curl -s https://install.zerotier.com | sudo bash`
 ### Join network
-`zerotier-cli join`
+`zerotier-cli join 6ab565387a6fafa0`
 
 gpsd
 `sudo apt install gpsd`
@@ -39,34 +39,34 @@ cd WALL-E
 
 To set up the services for automatic startup:
 
-1. Copy the service files to the systemd directory:
+1. Copy the service files to the systemd directory:  
   ```
   sudo cp *.service /etc/systemd/system/
   ```
 
-2. Reload the systemd manager configuration:
+2. Reload the systemd manager configuration  
   ```
   sudo systemctl daemon-reload
   ```
 
-3. Enable the services to start on boot:
+3. Enable the services to start on boot:  
   ```
   sudo systemctl enable robot_start.service
   sudo systemctl enable gps_start.service
   sudo systemctl enable web_app.service
   ```
 
-4. Start the services manually or restart:
+4. Start the services manually or restart:  
   ```
   sudo systemctl start robot_start.service
   sudo systemctl start gps_start.service
   sudo systemctl start web_app.service
   ```
 
-5. Check the status of the service:
-  `sudo systemctl status robot_start.service`
-  `sudo systemctl status gps_start.service`
-  `sudo systemctl status web_app.service`
+5. Check the status of the service:  
+  `sudo systemctl status robot_start.service`  
+  `sudo systemctl status gps_start.service`  
+  `sudo systemctl status web_app.service`  
 
 # USAGE
 
