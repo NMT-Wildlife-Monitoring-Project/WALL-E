@@ -1,11 +1,11 @@
 [Unit]
-Description=SIM7600 Modem Setup
+Description=Start Waveshare-CM Tool as root
 After=network-online.target
 Wants=network-online.target
 
 [Service]
-Type=oneshot
-ExecStart=/home/walle/waveshare_start.sh
+ExecStart=/usr/local/bin/waveshare-CM
+Type=simple
 RemainAfterExit=true
 
 [Install]
