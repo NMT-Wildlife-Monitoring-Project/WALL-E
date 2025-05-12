@@ -6,7 +6,7 @@ The main repository for the New Mexico Tech Wildlife Monitoring Project
 
 This system is designed to run in Docker on linux.  
 
-Install docker  
+## Install docker  
 <https://docs.docker.com/engine/install/ubuntu/>  
 
 To use docker without sudo, run the following commands  
@@ -16,6 +16,16 @@ sudo usermod -aG docker $USER
 newgrp docker
 ```
 
+## Install dependencies  
+### Install Zerotier  
+`curl -s https://install.zerotier.com | sudo bash`
+### Join network
+`zerotier-cli join`
+
+gpsd
+`sudo apt install gpsd`
+
+## Clone repository  
 Ensure you have an SSH key set up with Github  
 <https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account>  
 
@@ -25,13 +35,13 @@ git clone git@github.com:NMT-Wildlife-Monitoring-Project/WALL-E.git
 cd WALL-E
 ```
 
-## Installing robot_start.service
+## Installing Services
 
-To set up the `robot_start.service` for automatic startup:
+To set up the services for automatic startup:
 
-1. Copy the service file to the systemd directory:
+1. Copy the service files to the systemd directory:
   ```
-  sudo cp robot_start.service /etc/systemd/system/
+  sudo cp *.service /etc/systemd/system/
   ```
 
 2. Reload the systemd manager configuration:
@@ -39,22 +49,24 @@ To set up the `robot_start.service` for automatic startup:
   sudo systemctl daemon-reload
   ```
 
-3. Enable the service to start on boot:
+3. Enable the services to start on boot:
   ```
   sudo systemctl enable robot_start.service
+  sudo systemctl enable gps_start.service
+  sudo systemctl enable web_app.service
   ```
 
-4. Start the service manually (optional):
+4. Start the services manually or restart:
   ```
   sudo systemctl start robot_start.service
+  sudo systemctl start gps_start.service
+  sudo systemctl start web_app.service
   ```
 
 5. Check the status of the service:
-  ```
-  sudo systemctl status robot_start.service
-  ```
-
-Make sure the `robot_start.service` file is correctly configured with the desired settings before enabling it.
+  `sudo systemctl status robot_start.service`
+  `sudo systemctl status gps_start.service`
+  `sudo systemctl status web_app.service`
 
 # USAGE
 
