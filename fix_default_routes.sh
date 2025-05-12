@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # fix_default_routes.sh
-# Prefer wlan0 for default route (lower metric), fall back to wwan0 (higher metric)
+# Set wwan0 default route with metric 100 and wlan0 with metric 600
 
 set -e
 
@@ -11,18 +11,39 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 WWAN_DEV=wwan0
+WLAN_DEV=wlan0
+WWAN_METRIC=600
+WLAN_METRIC=100
 
-echo "Removing default route for $WWAN_DEV..."
-# Get the current default gateway for wwan0
-GATEWAY=$(ip route show dev $WWAN_DEV default | awk '{print $3}')
+# Fix wwan0 default route
+echo "Configuring default route for $WWAN_DEV..."
+WWAN_GATEWAY=$(ip route show dev $WWAN_DEV default | awk '{print $3}')
 
-if [ -n "$GATEWAY" ]; then
+if [ -n "$WWAN_GATEWAY" ]; then
     # Delete the current default route
-    ip route del default via $GATEWAY dev $WWAN_DEV
-
+    ip route del default via $WWAN_GATEWAY dev $WWAN_DEV
+    
     # Add it back with metric 100
-    echo "Adding default route for $WWAN_DEV with metric 100..."
-    ip route add default via $GATEWAY dev $WWAN_DEV metric 100
+    echo "Adding default route for $WWAN_DEV with metric $WWAN_METRIC..."
+    ip route add default via $WWAN_GATEWAY dev $WWAN_DEV metric $WWAN_METRIC
 else
     echo "No default route found for $WWAN_DEV"
 fi
+
+# Fix wlan0 default route
+echo "Configuring default route for $WLAN_DEV..."
+WLAN_GATEWAY=$(ip route show dev $WLAN_DEV default | awk '{print $3}')
+
+if [ -n "$WLAN_GATEWAY" ]; then
+    # Delete the current default route
+    ip route del default via $WLAN_GATEWAY dev $WLAN_DEV
+    
+    # Add it back with metric 600
+    echo "Adding default route for $WLAN_DEV with metric $WLAN_METRIC..."
+    ip route add default via $WLAN_GATEWAY dev $WLAN_DEV metric $WLAN_METRIC proto dhcp
+else
+    echo "No default route found for $WLAN_DEV"
+fi
+
+echo "Current default routes:"
+ip route show default
