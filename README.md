@@ -20,7 +20,8 @@ newgrp docker
 ### Install Zerotier  
 `curl -s https://install.zerotier.com | sudo bash`  
 ### Join network
-`zerotier-cli join 6ab565387a6fafa0`  
+`sudo zerotier-cli join 6ab565387a6fafa0`  
+After joining, be sure to authorize the new device on the ZeroTier website.
 ### Install gpsd  
 `sudo apt install gpsd`  
 
