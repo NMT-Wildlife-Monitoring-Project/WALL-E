@@ -18,12 +18,11 @@ newgrp docker
 
 ## Install dependencies  
 ### Install Zerotier  
-`curl -s https://install.zerotier.com | sudo bash`
+`curl -s https://install.zerotier.com | sudo bash`  
 ### Join network
-`zerotier-cli join 6ab565387a6fafa0`
-
-gpsd
-`sudo apt install gpsd`
+`zerotier-cli join 6ab565387a6fafa0`  
+### Install gpsd  
+`sudo apt install gpsd`  
 
 ## Clone repository  
 Ensure you have an SSH key set up with Github  
