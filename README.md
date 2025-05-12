@@ -35,6 +35,16 @@ git clone git@github.com:NMT-Wildlife-Monitoring-Project/WALL-E.git
 cd WALL-E
 ```
 
+## Setup Waveshare cellular shield  
+
+### Disable Bluetooth  
+`sudo nano /boot/firmware/config.txt`  
+Add `dtoverlay=disable-bt` before or inside `[all`. Ensure `enable_uart=1` is present.  
+`sudo systemctl disable hciuart`  
+Reboot  
+`sudo reboot`  
+
+
 ## Installing Services
 
 To set up the services for automatic startup:
@@ -54,6 +64,7 @@ To set up the services for automatic startup:
   sudo systemctl enable robot_start.service
   sudo systemctl enable gps_start.service
   sudo systemctl enable web_app.service
+  sudo systemctl enable waveshare.service
   ```
 
 4. Start the services manually or restart:  
@@ -61,12 +72,15 @@ To set up the services for automatic startup:
   sudo systemctl start robot_start.service
   sudo systemctl start gps_start.service
   sudo systemctl start web_app.service
+  sudo systemctl start waveshare.service
   ```
 
 5. Check the status of the service:  
-  `sudo systemctl status robot_start.service`  
-  `sudo systemctl status gps_start.service`  
+  `sudo systemctl status robot_start.service`    
+  `sudo systemctl status gps_start.service`    
   `sudo systemctl status web_app.service`  
+  `sudo systemctl status waveshare.service`  
+
 
 # USAGE
 
