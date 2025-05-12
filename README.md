@@ -22,8 +22,8 @@ newgrp docker
 ### Join network
 `sudo zerotier-cli join 6ab565387a6fafa0`  
 After joining, be sure to authorize the new device on the ZeroTier website.
-### Install gpsd  
-`sudo apt install gpsd`  
+### Install gps dependencies  
+`sudo apt install gpsd python3-gps`  
 
 ## Clone repository  
 Ensure you have an SSH key set up with Github  
