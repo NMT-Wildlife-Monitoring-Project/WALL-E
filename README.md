@@ -35,7 +35,7 @@ After joining, be sure to authorize the new device on the ZeroTier website.
 ### Raspberry pi installed packages
 `sudo apt install gpsd gpsd-client python3-gps python3-flask python3-gps python3-opencv python3-numpy python3-netifaces python3-pigpio`  
 
-## Clone repository  
+## Clone this repository  
 Make an SSH key with `ssh-keygen`.  
 Ensure you have your SSH key set up with your Github account.  
 <https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account>  

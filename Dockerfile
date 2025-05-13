@@ -43,8 +43,18 @@ RUN bash -c "if [[ \$(uname -m) = \"aarch64\" || \$(uname -m) = \"x86_64\" ]]; t
     cp -r slamware_ros_sdk_linux-$(uname -m)-gcc7/src/* /home/$USER/catkin_ws/src/ && \
     rm -rf /tmp/slamware_* /tmp/sdk.tar.gz
 
+# Initialize and build the catkin workspace
+WORKDIR /home/$USER/catkin_ws/src
+RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_init_workspace'
+
+WORKDIR /home/$USER/catkin_ws
+RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/bin/g++-7 -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"'
+
+# Install apt dependencies
+
 # Install Python and serial support
 RUN apt-get install -y python3 python3-pip python-pip python3-serial
+
 
 # Install networking and mDNS
 RUN apt-get install -y iputils-ping avahi-daemon libnss-mdns avahi-utils dbus zip
@@ -73,13 +83,11 @@ RUN apt-get update && apt-get install -y \
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
-
-# Initialize and build the catkin workspace
-WORKDIR /home/$USER/catkin_ws/src
-RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_init_workspace'
-
-WORKDIR /home/$USER/catkin_ws
-RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; catkin_make -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/bin/g++-7 -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"'
+# Install Pololu G2 motor driver Python module
+RUN git clone https://github.com/pololu/dual-g2-high-power-motor-driver-rpi && \
+    cd dual-g2-high-power-motor-driver-rpi && \
+    python3 setup.py install && \
+    cd .. && rm -rf dual-g2-high-power-motor-driver-rpi
 
 # Copy the workspace into the container
 COPY --chown=$USER:$USER catkin_ws /home/$USER/catkin_ws/
