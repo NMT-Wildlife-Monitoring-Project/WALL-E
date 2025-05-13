@@ -73,7 +73,7 @@ def main():
     except rospy.ROSInterruptException:
         pass
     except Exception as e:
-        rospy.logerr(f"Error in motor control node: {e}")
+        rospy.logerr("Error in motor control node: {}".format(e))
         # Try to stop motors in case of error
         try:
             Motors().setSpeeds(0, 0)
