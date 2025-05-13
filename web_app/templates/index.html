@@ -77,9 +77,11 @@
     </div>
 
     <script>
+        console.log("Script starting");
+
         // Connect to ROSBridge
         const ros = new ROSLIB.Ros({
-            url: 'ws://172.27.33.111:9090' // Update if rosbridge is on a different host/port
+            url: 'ws://172.27.32.111:9090' // Update if rosbridge is on a different host/port
         });
 
         ros.on('connection', function() {
@@ -102,141 +104,157 @@
             messageType: 'geometry_msgs/Twist'
         });
 
-        // Wait for DOM to be fully loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize the joystick
-            const joystick = new JoyStick('joystick-container', {
-                title: "joystick",
-                width: 200,
-                height: 200,
-                internalFillColor: "#007bff",
-                internalLineWidth: 2,
-                internalStrokeColor: "#003f7f",
-                externalLineWidth: 2,
-                externalStrokeColor: "#003f7f",
-                autoReturnToCenter: true
-            });
-
-            let joystickX = 0;
-            let joystickY = 0;
-            let joystickDir = 'center';
-            let joystickDist = 0;
-            let manualControlEnabled = false;
-
-            // Update joystick values and send commands
-            setInterval(function() {
-                joystickX = joystick.GetX();
-                joystickY = joystick.GetY();
-                joystickDir = joystick.GetDirection();
-                joystickDist = joystick.GetDistance();
-
-                document.getElementById('joystick-x').textContent = joystickX;
-                document.getElementById('joystick-y').textContent = joystickY;
-                document.getElementById('joystick-dir').textContent = joystickDir;
-                document.getElementById('joystick-dist').textContent = joystickDist;
-                document.getElementById('control-status').textContent = manualControlEnabled ? 'Enabled' : 'Disabled';
-
-                // Only send joystick commands if manual control is enabled
-                if (manualControlEnabled) {
-                    // Normalize values and create ROS message
-                    // Invert Y axis for intuitive control (forward is negative Y in the joystick)
-                    const linearX = -joystickY / 100 * 0.5; // Max speed of 0.5 m/s
-                    const angularZ = -joystickX / 100 * 1.0; // Max angular velocity of 1.0 rad/s
-
-                    const twist = new ROSLIB.Message({
-                        linear: { x: linearX, y: 0.0, z: 0.0 },
-                        angular: { x: 0.0, y: 0.0, z: angularZ }
-                    });
-
-                    cmdVelTopic.publish(twist);
-                }
-            }, 100);
-
-            // Toggle visibility of map view
-            const toggleMapViewButton = document.getElementById('toggle-map-view');
-            const mapView = document.getElementById('map-view');
-            let mapViewContent = mapView.innerHTML; // Store the original content
+        // Self-executing function to initialize everything
+        (function() {
+            // Check if DOM is already loaded
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initializeApp);
+            } else {
+                // DOM is already loaded
+                initializeApp();
+            }
             
-            toggleMapViewButton.addEventListener('click', function() {
-                if (mapView.classList.contains('hidden')) {
-                    // Restore the content when showing
-                    mapView.innerHTML = mapViewContent;
-                    mapView.classList.remove('hidden');
-                    toggleMapViewButton.textContent = 'Hide Map View';
-                    toggleMapViewButton.classList.remove('active');
-                } else {
-                    // Remove the content when hiding
-                    mapViewContent = mapView.innerHTML; // Save current state
-                    mapView.innerHTML = '';
-                    mapView.classList.add('hidden');
-                    toggleMapViewButton.textContent = 'Show Map View';
-                    toggleMapViewButton.classList.add('active');
-                }
-            });
+            function initializeApp() {
+                // Initialize the joystick
+                const joystick = new JoyStick('joystick-container', {
+                    title: "joystick",
+                    width: 200,
+                    height: 200,
+                    internalFillColor: "#007bff",
+                    internalLineWidth: 2,
+                    internalStrokeColor: "#003f7f",
+                    externalLineWidth: 2,
+                    externalStrokeColor: "#003f7f",
+                    autoReturnToCenter: true
+                });
 
-            // Toggle visibility of video feed
-            const toggleVideoFeedButton = document.getElementById('toggle-video-feed');
-            const videoFeed = document.getElementById('video-feed');
-            let videoFeedContent = videoFeed.innerHTML; // Store the original content
-            
-            toggleVideoFeedButton.addEventListener('click', function() {
-                if (videoFeed.classList.contains('hidden')) {
-                    // Restore the content when showing
-                    videoFeed.innerHTML = videoFeedContent;
-                    videoFeed.classList.remove('hidden');
-                    toggleVideoFeedButton.textContent = 'Hide Video Feed';
-                    toggleVideoFeedButton.classList.remove('active');
-                } else {
-                    // Remove the content when hiding
-                    videoFeedContent = videoFeed.innerHTML; // Save current state
-                    videoFeed.innerHTML = '';
-                    videoFeed.classList.add('hidden');
-                    toggleVideoFeedButton.textContent = 'Show Video Feed';
-                    toggleVideoFeedButton.classList.add('active');
-                }
-            });
+                let joystickX = 0;
+                let joystickY = 0;
+                let joystickDir = 'center';
+                let joystickDist = 0;
+                let manualControlEnabled = false;
 
-            // Toggle visibility of generated map
-            const toggleGeneratedMapButton = document.getElementById('toggle-generated-map');
-            const generatedMap = document.getElementById('generated-map');
-            let generatedMapContent = generatedMap.innerHTML; // Store the original content
-            
-            toggleGeneratedMapButton.addEventListener('click', function() {
-                if (generatedMap.classList.contains('hidden')) {
-                    // Restore the content when showing
-                    generatedMap.innerHTML = generatedMapContent;
-                    generatedMap.classList.remove('hidden');
-                    toggleGeneratedMapButton.textContent = 'Hide Generated Map';
-                    toggleGeneratedMapButton.classList.remove('active');
-                } else {
-                    // Remove the content when hiding
-                    generatedMapContent = generatedMap.innerHTML; // Save current state
-                    generatedMap.innerHTML = '';
-                    generatedMap.classList.add('hidden');
-                    toggleGeneratedMapButton.textContent = 'Show Generated Map';
-                    toggleGeneratedMapButton.classList.add('active');
-                }
-            });
+                // Update joystick values and send commands
+                setInterval(function() {
+                    joystickX = joystick.GetX();
+                    joystickY = joystick.GetY();
+                    joystickDir = joystick.GetDirection();
+                    joystickDist = joystick.GetDistance();
 
-            // Toggle joystick control
-            const joystickControlButton = document.getElementById('joystick-control');
-            joystickControlButton.addEventListener('click', function() {
-                manualControlEnabled = !manualControlEnabled;
-                joystickControlButton.textContent = manualControlEnabled
-                    ? 'Disable Manual Control'
-                    : 'Enable Manual Control';
-                joystickControlButton.classList.toggle('active', manualControlEnabled);
+                    document.getElementById('joystick-x').textContent = joystickX;
+                    document.getElementById('joystick-y').textContent = joystickY;
+                    document.getElementById('joystick-dir').textContent = joystickDir;
+                    document.getElementById('joystick-dist').textContent = joystickDist;
+                    document.getElementById('control-status').textContent = manualControlEnabled ? 'Enabled' : 'Disabled';
 
-                // If manual control has just been disabled, send zero-velocity to stop the robot
-                if (!manualControlEnabled) {
-                    const stopTwist = new ROSLIB.Message({
-                        linear:  { x: 0.0, y: 0.0, z: 0.0 },
-                        angular: { x: 0.0, y: 0.0, z: 0.0 }
-                    });
-                    cmdVelTopic.publish(stopTwist);
-                }
-            });
-        });
+                    // Only send joystick commands if manual control is enabled
+                    if (manualControlEnabled) {
+                        // Normalize values and create ROS message
+                        // Invert Y axis for intuitive control (forward is negative Y in the joystick)
+                        const linearX = -joystickY / 100 * 0.5; // Max speed of 0.5 m/s
+                        const angularZ = -joystickX / 100 * 1.0; // Max angular velocity of 1.0 rad/s
+
+                        const twist = new ROSLIB.Message({
+                            linear: { x: linearX, y: 0.0, z: 0.0 },
+                            angular: { x: 0.0, y: 0.0, z: angularZ }
+                        });
+
+                        cmdVelTopic.publish(twist);
+                    }
+                }, 100);
+
+                // Toggle visibility of map view
+                const toggleMapViewButton = document.getElementById('toggle-map-view');
+                const mapView = document.getElementById('map-view');
+                let mapViewContent = mapView.innerHTML; // Store the original content
+                
+                toggleMapViewButton.addEventListener('click', function() {
+                    if (mapView.classList.contains('hidden')) {
+                        // Restore the content when showing
+                        mapView.innerHTML = mapViewContent;
+                        mapView.classList.remove('hidden');
+                        toggleMapViewButton.textContent = 'Hide Map View';
+                        toggleMapViewButton.classList.remove('active');
+                    } else {
+                        // Remove the content when hiding
+                        mapViewContent = mapView.innerHTML; // Save current state
+                        mapView.innerHTML = '';
+                        mapView.classList.add('hidden');
+                        toggleMapViewButton.textContent = 'Show Map View';
+                        toggleMapViewButton.classList.add('active');
+                    }
+                });
+
+                // Toggle visibility of video feed
+                const toggleVideoFeedButton = document.getElementById('toggle-video-feed');
+                const videoFeed = document.getElementById('video-feed');
+                let videoFeedContent = videoFeed.innerHTML; // Store the original content
+                
+                toggleVideoFeedButton.addEventListener('click', function() {
+                    if (videoFeed.classList.contains('hidden')) {
+                        // Restore the content when showing
+                        videoFeed.innerHTML = videoFeedContent;
+                        videoFeed.classList.remove('hidden');
+                        toggleVideoFeedButton.textContent = 'Hide Video Feed';
+                        toggleVideoFeedButton.classList.remove('active');
+                    } else {
+                        // Remove the content when hiding
+                        videoFeedContent = videoFeed.innerHTML; // Save current state
+                        videoFeed.innerHTML = '';
+                        videoFeed.classList.add('hidden');
+                        toggleVideoFeedButton.textContent = 'Show Video Feed';
+                        toggleVideoFeedButton.classList.add('active');
+                    }
+                });
+
+                // Toggle visibility of generated map
+                const toggleGeneratedMapButton = document.getElementById('toggle-generated-map');
+                const generatedMap = document.getElementById('generated-map');
+                let generatedMapContent = generatedMap.innerHTML; // Store the original content
+                
+                toggleGeneratedMapButton.addEventListener('click', function() {
+                    if (generatedMap.classList.contains('hidden')) {
+                        // Restore the content when showing
+                        generatedMap.innerHTML = generatedMapContent;
+                        generatedMap.classList.remove('hidden');
+                        toggleGeneratedMapButton.textContent = 'Hide Generated Map';
+                        toggleGeneratedMapButton.classList.remove('active');
+                    } else {
+                        // Remove the content when hiding
+                        generatedMapContent = generatedMap.innerHTML; // Save current state
+                        generatedMap.innerHTML = '';
+                        generatedMap.classList.add('hidden');
+                        toggleGeneratedMapButton.textContent = 'Show Generated Map';
+                        toggleGeneratedMapButton.classList.add('active');
+                    }
+                });
+
+                // Toggle joystick control
+                const joystickControlButton = document.getElementById('joystick-control');
+                joystickControlButton.addEventListener('click', function() {
+                    manualControlEnabled = !manualControlEnabled;
+                    joystickControlButton.textContent = manualControlEnabled
+                        ? 'Disable Manual Control'
+                        : 'Enable Manual Control';
+                    joystickControlButton.classList.toggle('active', manualControlEnabled);
+
+                    // If manual control has just been disabled, send zero-velocity to stop the robot
+                    if (!manualControlEnabled) {
+                        const stopTwist = new ROSLIB.Message({
+                            linear:  { x: 0.0, y: 0.0, z: 0.0 },
+                            angular: { x: 0.0, y: 0.0, z: 0.0 }
+                        });
+                        cmdVelTopic.publish(stopTwist);
+                    }
+                });
+            }
+        })();
+
+        // Check if elements exist
+        console.log("Toggle map button exists:", !!document.getElementById('toggle-map-view'));
+        console.log("Toggle video button exists:", !!document.getElementById('toggle-video-feed'));
+        console.log("Toggle map button exists:", !!document.getElementById('toggle-generated-map'));
+        console.log("Joystick control button exists:", !!document.getElementById('joystick-control'));
     </script>
 </body>
 </html>
