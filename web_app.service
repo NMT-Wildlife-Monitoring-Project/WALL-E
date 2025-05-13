@@ -7,6 +7,7 @@ Type=simple
 WorkingDirectory=/home/walle/WALL-E/web_app
 ExecStart=/home/walle/WALL-E/web_app/app.py
 Restart=on-failure
+RestartSec=5
 User=walle
 
 [Install]
