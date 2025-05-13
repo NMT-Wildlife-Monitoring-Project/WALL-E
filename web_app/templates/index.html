@@ -130,18 +130,15 @@
 
                 let joystickX = 0;
                 let joystickY = 0;
-                let joystickDist = 0;
                 let manualControlEnabled = false;
 
                 // Update joystick values and send commands
                 setInterval(function() {
                     joystickX = joystick.GetX();
                     joystickY = joystick.GetY();
-                    joystickDist = joystick.GetDistance();
 
                     document.getElementById('joystick-x').textContent = joystickX;
                     document.getElementById('joystick-y').textContent = joystickY;
-                    document.getElementById('joystick-dist').textContent = joystickDist;
                     document.getElementById('control-status').textContent = manualControlEnabled ? 'Enabled' : 'Disabled';
 
                     // Only send joystick commands if manual control is enabled
