@@ -130,7 +130,6 @@
 
                 let joystickX = 0;
                 let joystickY = 0;
-                let joystickDir = 'center';
                 let joystickDist = 0;
                 let manualControlEnabled = false;
 
@@ -138,12 +137,10 @@
                 setInterval(function() {
                     joystickX = joystick.GetX();
                     joystickY = joystick.GetY();
-                    joystickDir = joystick.GetDirection();
                     joystickDist = joystick.GetDistance();
 
                     document.getElementById('joystick-x').textContent = joystickX;
                     document.getElementById('joystick-y').textContent = joystickY;
-                    document.getElementById('joystick-dir').textContent = joystickDir;
                     document.getElementById('joystick-dist').textContent = joystickDist;
                     document.getElementById('control-status').textContent = manualControlEnabled ? 'Enabled' : 'Disabled';
 
