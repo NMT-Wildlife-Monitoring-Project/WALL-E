@@ -46,7 +46,7 @@ declare -a ACTION_CMDS=(
 usage() {
     echo "Usage: $0 [--start (-s) | --teleop (-t) | --usb-cam (-u) | --video-stream (-v) |"
     echo "           --mapping (-M) | --view-map (-w) | --motors (-m) | --command (-c) <command> | --roscore (-r) | --build (-b) | --stop (-x) |"
-    echo "           --restart (-R)] [--port (-p) <port>] [--ip (-i) <host_ip>] [--master-ip (-m) <master_ip>]"
+    echo "           --restart (-R)] [--port (-p) <port>] [--ip (-i) <local_ip>] [--master-ip (-m) <master_ip>]"
     echo "           [--master-hostname (-n) <master_hostname>] [--display (-d)] [--quiet (-q)] [--help (-h)]"
     echo "This script is used to start and manage a Docker container for WALL-E the wildlife monitoring robot."
     echo "If no IP addresses are specified, the script will attempt to determine them from the hostname. If this fails, try setting the hostname or IP."
@@ -64,7 +64,7 @@ usage() {
     echo "  --command (-c) <command>    Pass a command to be run in the container"
     echo "Options:"
     echo "  --port (-p) <port>          Specify custom ROS master port (default is 11311)"
-    echo "  --ip (-i) <host_ip>         Specify host IP"
+    echo "  --ip (-i) <local_ip>         Specify local IP"
     echo "  --master-ip (-m) <master_ip> Specify master IP"
     echo "  --master-hostname (-n) <master_hostname> Specify master hostname (default is raspberrypi.local)"
     echo "  --display (-d)              Enable display support (forward X11 display)"

@@ -2,9 +2,19 @@
 Wildlife Activity Life Explorer
 The main repository for the New Mexico Tech Wildlife Monitoring Project
 
-# INSTALLATION
+# Installation - Linux
 
-This system is designed to run in Docker on linux.  
+To use ros kinetic in docker to control WALLE remotely, see the follwing sections
+in the Raspberry Pi Installation Section
+
+1. Install Docker
+2. Install Zerotier and join network <https://www.zerotier.com/download/>
+2. Clone repository with SSH
+3. Build with Docker
+
+# Installation - Raspberry Pi
+
+These instructions are for seting up ros kinetic in docker on a raspberry pi for WALLE
 
 ## Install docker  
 <https://docs.docker.com/engine/install/ubuntu/>  
@@ -22,11 +32,12 @@ newgrp docker
 ### Join network
 `sudo zerotier-cli join 6ab565387a6fafa0`  
 After joining, be sure to authorize the new device on the ZeroTier website.
-### Install apt dependencies  
-`sudo apt install gpsd gpsd-client python3-gps python3-flask python3-gps python3-opencv python3-numpy python3-netifaces`  
+### Raspberry pi installed packages
+`sudo apt install gpsd gpsd-client python3-gps python3-flask python3-gps python3-opencv python3-numpy python3-netifaces python3-pigpio`  
 
 ## Clone repository  
-Ensure you have an SSH key set up with Github  
+Make an SSH key with `ssh-keygen`.  
+Ensure you have your SSH key set up with your Github account.  
 <https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account>  
 
 Clone this repository with SSH and cd into it  
@@ -34,6 +45,13 @@ Clone this repository with SSH and cd into it
 git clone git@github.com:NMT-Wildlife-Monitoring-Project/WALL-E.git
 cd WALL-E
 ```
+
+## Build with Docker
+`start_docker.sh -b` or `--build` will handle building the Docker container. The Docker
+container will copy in the catkin workspace and build with catkin. If any changes are made
+to the catkin workspace or dockerfile, the container must be rebuilt. It can also be run
+with other options. 
+`walle@raspberrypi:~/WALL-E $ ./start_docker.sh -b`  
 
 ## Setup Waveshare cellular shield  
 
@@ -54,11 +72,6 @@ USBAUTO="false"
 GPSD_SOCKET="/var/run/gpsd.sock"
 ```
 2. Start the service
-```
-sudo systemctl daemon-reload
-sudo systemctl enable gpsd
-sudo systemctl restart gpsd
-```
 3. Test with `cgps`
 
 
@@ -82,6 +95,8 @@ To set up the services for automatic startup:
   sudo systemctl enable gps_start.service
   sudo systemctl enable web_app.service
   sudo systemctl enable waveshare.service
+  sudo systemctl enable gpsd
+  sudo systemctl enable pigpiod
   ```
 
 4. Start the services manually or restart:  
@@ -90,33 +105,67 @@ To set up the services for automatic startup:
   sudo systemctl start gps_start.service
   sudo systemctl start web_app.service
   sudo systemctl start waveshare.service
+  sudo systemctl start gpsd
+  sudo systemctl start pigpiod
   ```
 
 5. Check the status of the service:  
-  `sudo systemctl status robot_start.service`    
-  `sudo systemctl status gps_start.service`    
-  `sudo systemctl status web_app.service`  
-  `sudo systemctl status waveshare.service`  
-
+  `sudo systemctl status service_name`  
+  `journalctl -eu service_name`  
 
 # USAGE
 
+## Website Control Panel
+To visit the website to view WALLE's location, map, and camera feed or control WALLE remotely (IN DEVELOPMENT)
+go to http://raspberrypi_zerotier_ip:5000 (<http://172.27.32.111:5000>). You must have joined the zerotier
+network and been authorized to view the website.
+
 ## start_docker.sh
 ```
-pi5-walle@raspberrypi:~/WALL-E $ ./start_docker.sh -h
-Usage: ./start_docker.sh [--start (-s) | --teleop (-t) | --usb-cam (-u) | --command (-c) <command> | --roscore (-r) | --build (-b) | --stop (-x)] [--port (-p) <port>] [--ip (-i) <host_ip>] [--display (-d)] [--help (-h)]
-  --start (-s)                Run robot_start.launch from package control
-  --teleop (-t)               Run teleop.launch from package control
-  --usb-cam (-u)              Run rosrun usb_cam usb_cam_node
-  --command (-c) <command>    Pass a command to be run in the container
+walle@raspberrypi:~/WALL-E $ ./start_docker.sh -h
+Usage: ./start_docker.sh [--start (-s) | --teleop (-t) | --usb-cam (-u) | --video-stream (-v) |
+           --mapping (-M) | --view-map (-w) | --motors (-m) | --command (-c) <command> | --roscore (-r) | --build (-b) | --stop (-x) |
+           --restart (-R)] [--port (-p) <port>] [--ip (-i) <local_ip>] [--master-ip (-m) <master_ip>]
+           [--master-hostname (-n) <master_hostname>] [--display (-d)] [--quiet (-q)] [--help (-h)]
+This script is used to start and manage a Docker container for WALL-E the wildlife monitoring robot.
+If no IP addresses are specified, the script will attempt to determine them from the hostname. If this fails, try setting the hostname or IP.
+If no action is specified, the script will open an interactive bash terminal in the container.
+Actions (pick ONE):
+  --start (-s)                Start all processes on the robot
+  --teleop (-t)               Run joystick control using teleop.launch
+  --usb-cam (-u)              Run usb camera node using usb_cam.launch
+  --video-stream (-v)         View the video stream using view_camera.launch
+  --mapping (-M)              Run mapping process using the slamtec mapper
+  --view-map (-w)             Run map view using view_slamware_ros_sdk_server_node.launch
+  --motors (-g)               Run motor control using motor_control.launch
+  --rosbridge (-B)            Run rosbridge server
   --roscore (-r)              Run roscore
+  --command (-c) <command>    Pass a command to be run in the container
+Options:
   --port (-p) <port>          Specify custom ROS master port (default is 11311)
-  --ip (-i) <host_ip>         Specify host IP
+  --ip (-i) <local_ip>         Specify local IP
+  --master-ip (-m) <master_ip> Specify master IP
+  --master-hostname (-n) <master_hostname> Specify master hostname (default is raspberrypi.local)
   --display (-d)              Enable display support (forward X11 display)
-  --build (-b)                Build the Docker container
-  --stop (-x)                 Stop the Docker container if it is running
+  --build (-b)                Build the Docker container (will stop the running container if any)
+  --stop (-x)                 Stop the running Docker container
+  --restart (-R)              Restart the Docker container if it is running
+  --quiet (-q)                Suppress output
   --help (-h)                 Show this help message
 ```
+
+Without the proper IP addresses, ROS 1 will not work across machines. Normally, ROS over wifi
+would also only work if all machines are on the same network and can ping each other. Ros
+requires two IP addresses for this, the IP of the local machine, and the IP address of the machine
+running the ROS master, which should normally be the Raspberry Pi through a systemctl service.
+Zerotier will connect the machines across networks so that they can ping each other with their zerotier
+IP address.
+
+These IP addresses are set at the top of `start_docker.sh` (recommended for permanent IP addresses)
+or passed as command line arguments with `--ip` and `--master-ip`. Unless the cellular shield is not
+being used, these should be the zerotier IP address.
+
+# Spare Docs
 
 ## mjpg_streaner
 
