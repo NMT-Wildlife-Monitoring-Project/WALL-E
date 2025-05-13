@@ -77,17 +77,6 @@
     </div>
 
     <script>
-        // Update joystick status information
-        setInterval(function() {
-            document.getElementById('joystick-x').textContent = joystick.GetX().toFixed(2);
-            document.getElementById('joystick-y').textContent = joystick.GetY().toFixed(2);
-            document.getElementById('joystick-dir').textContent = joystick.GetDir();
-            document.getElementById('joystick-dist').textContent = Math.round(joystick.GetDist());
-            document.getElementById('control-status').textContent = manualControlEnabled ? 'Enabled' : 'Disabled';
-        }, 100);
-    </script>
-
-    <script>
         // Connect to ROSBridge
         const ros = new ROSLIB.Ros({
             url: 'ws://172.27.33.111:9090' // Update if rosbridge is on a different host/port
@@ -126,8 +115,27 @@
             autoReturnToCenter: true
         });
 
-        // Publish at 10 Hz
+        let joystickX = 0;
+        let joystickY = 0;
+        let joystickDir = 'center';
+        let joystickDist = 0;
+        let manualControlEnabled = false;
+
         setInterval(function() {
+            joystickX = joystick.GetX();
+            joystickY = joystick.GetY();
+            joystickDir = joystick.GetDirection();
+            joystickDist = joystick.GetDistance();
+
+            document.getElementById('joystick-x').textContent = joystickX;
+            document.getElementById('joystick-y').textContent = joystickY;
+            document.getElementById('joystick-dir').textContent = joystickDir;
+            document.getElementById('joystick-dist').textContent = joystickDist;
+            document.getElementById('control-status').textContent = manualControlEnabled ? 'Enabled' : 'Disabled';
+        }, 100);
+
+        // Publish at 10 Hz
+        {% comment %} setInterval(function() {
             if (manualControlEnabled) {
                 const x = joystick.GetX();
                 const y = joystick.GetY();
@@ -142,7 +150,7 @@
 
                 cmdVelTopic.publish(twist);
             }
-        }, 100);
+        }, 100); {% endcomment %}
 
         // Toggle visibility of map view
         const toggleMapViewButton = document.getElementById('toggle-map-view');
