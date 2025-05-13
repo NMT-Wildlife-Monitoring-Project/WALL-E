@@ -19,6 +19,11 @@ class MotorControlNode:
             '~motor_serial_device', '/dev/serial0')  # Default serial device
 
         self.wheel_radius = self.wheel_diameter / 2.0
+        
+        # Initialize motors
+        # Default pins for Pololu Dual G2 High-Power Motor Driver for Raspberry Pi
+        self.motors = Motors()
+        rospy.loginfo("Motors initialized")
 
         # Subscribers
         self.cmd_vel_subscriber = rospy.Subscriber(
@@ -50,18 +55,30 @@ class MotorControlNode:
         speed_right = int(v_right / self.max_velocity * MAX_SPEED)
 
         # Send the speed commands via the dual_g2_hpmd_rpi API.
-        motors.setSpeeds(speed_left, speed_right)
+        self.motors.setSpeeds(speed_left, speed_right)
         rospy.loginfo("Set speeds: motor1: %f, motor2: %f",
                       v_left, v_right)
 
+    def shutdown(self):
+        """Stop motors when shutting down"""
+        self.motors.setSpeeds(0, 0)
+        rospy.loginfo("Motors stopped")
 
 def main():
     try:
         node = MotorControlNode()
+        # Register shutdown function
+        rospy.on_shutdown(node.shutdown)
         rospy.spin()  # Keep the node running
     except rospy.ROSInterruptException:
         pass
-
+    except Exception as e:
+        rospy.logerr(f"Error in motor control node: {e}")
+        # Try to stop motors in case of error
+        try:
+            Motors().setSpeeds(0, 0)
+        except:
+            pass
 
 if __name__ == '__main__':
     main()

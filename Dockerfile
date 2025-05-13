@@ -86,6 +86,7 @@ RUN rm -rf /var/lib/apt/lists/*
 # Install Pololu G2 motor driver Python module
 RUN git clone https://github.com/pololu/dual-g2-high-power-motor-driver-rpi && \
     cd dual-g2-high-power-motor-driver-rpi && \
+    python setup.py install && \
     python3 setup.py install && \
     cd .. && rm -rf dual-g2-high-power-motor-driver-rpi
 
