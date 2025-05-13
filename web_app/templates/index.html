@@ -134,24 +134,6 @@
             document.getElementById('control-status').textContent = manualControlEnabled ? 'Enabled' : 'Disabled';
         }, 100);
 
-        // Publish at 10 Hz
-        {% comment %} setInterval(function() {
-            if (manualControlEnabled) {
-                const x = joystick.GetX();
-                const y = joystick.GetY();
-
-                const linearSpeed = x;
-                const angularSpeed = y;
-
-                const twist = new ROSLIB.Message({
-                    linear: { x: linearSpeed, y: 0.0, z: 0.0 },
-                    angular: { x: 0.0, y: 0.0, z: angularSpeed }
-                });
-
-                cmdVelTopic.publish(twist);
-            }
-        }, 100); {% endcomment %}
-
         // Toggle visibility of map view
         const toggleMapViewButton = document.getElementById('toggle-map-view');
         const mapView = document.getElementById('map-view');
