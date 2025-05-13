@@ -139,8 +139,8 @@
                 setInterval(function() {
                     joystickX = joystick.GetX();
                     joystickY = joystick.GetY();
-                    linearVelocity = joystickX / 100 * linear_max_vel;
-                    angularVelocity = joystickY / 100 * angular_max_vel;
+                    linearVelocity = joystickY / 100 * linear_max_vel;
+                    angularVelocity = joystickX / 100 * angular_max_vel;
 
                     document.getElementById('linear-velocity').textContent = linearVelocity.toFixed(2);
                     document.getElementById('angular-velocity').textContent = angularVelocity.toFixed(2);
