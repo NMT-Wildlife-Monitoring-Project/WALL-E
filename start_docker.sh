@@ -30,6 +30,7 @@ declare -a ACTION_FLAGS=(
     RUN_VIEW_MAP_LAUNCH
     RUN_MOTORS_LAUNCH
     RUN_ROSBRIDGE
+    RUN_ROSCORE
 )
 declare -a ACTION_CMDS=(
     "roslaunch control robot_start.launch"
@@ -40,6 +41,7 @@ declare -a ACTION_CMDS=(
     "roslaunch slamware_ros_sdk view_slamware_ros_sdk_server_node.launch"
     "roslaunch control motor_teleop.launch"
     "roslaunch rosbridge_server rosbridge_websocket.launch"
+    "roscore"
 )
 
 # Function to show usage
