@@ -69,14 +69,15 @@
     <div id="joystick-container"></div>
     <h2>Joystick Status</h2>
     <div id="joystick-status">
-        <p>X Position: <span id="joystick-x">0</span></p>
-        <p>Y Position: <span id="joystick-y">0</span></p>
-        <p>Direction: <span id="joystick-dir">center</span></p>
-        <p>Distance: <span id="joystick-dist">0</span>%</p>
+        <p>Linear velocity (m/s): <span id="linear-velocity">0.0</span></p>
+        <p>Angular velocity (rad/s): <span id="angular-velocity">0.0</span></p>
         <p>Manual Control: <span id="control-status">Disabled</span></p>
     </div>
 
     <script>
+        let linear_max_vel = 1.0;
+        let angular_max_vel = 1.0;
+
         console.log("Script starting");
 
         // Connect to ROSBridge
@@ -130,27 +131,26 @@
 
                 let joystickX = 0;
                 let joystickY = 0;
+                let linearVelocity = 0.0;
+                let angularVelocity = 0.0;
                 let manualControlEnabled = false;
 
                 // Update joystick values and send commands
                 setInterval(function() {
                     joystickX = joystick.GetX();
                     joystickY = joystick.GetY();
+                    linearVelocity = joystickX / 100 * linear_max_vel;
+                    angularVelocity = joystickY / 100 * angular_max_vel;
 
-                    document.getElementById('joystick-x').textContent = joystickX;
-                    document.getElementById('joystick-y').textContent = joystickY;
+                    document.getElementById('linear-velocity').textContent = linearVelocity.toFixed(2);
+                    document.getElementById('angular-velocity').textContent = angularVelocity.toFixed(2);
                     document.getElementById('control-status').textContent = manualControlEnabled ? 'Enabled' : 'Disabled';
 
                     // Only send joystick commands if manual control is enabled
                     if (manualControlEnabled) {
-                        // Normalize values and create ROS message
-                        // Invert Y axis for intuitive control (forward is negative Y in the joystick)
-                        const linearX = -joystickY / 100 * 0.5; // Max speed of 0.5 m/s
-                        const angularZ = -joystickX / 100 * 1.0; // Max angular velocity of 1.0 rad/s
-
                         const twist = new ROSLIB.Message({
-                            linear: { x: linearX, y: 0.0, z: 0.0 },
-                            angular: { x: 0.0, y: 0.0, z: angularZ }
+                            linear: { x: linearVelocity, y: 0.0, z: 0.0 },
+                            angular: { x: 0.0, y: 0.0, z: angularVelocity }
                         });
 
                         cmdVelTopic.publish(twist);
