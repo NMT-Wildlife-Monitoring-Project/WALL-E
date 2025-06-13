@@ -1,9 +1,0 @@
-motor_control_node:
-  ros__parameters:
-    cmd_vel_topic: "/cmd_vel"
-    wheel_base: 0.5
-    wheel_diameter: 0.1
-    max_velocity: 5
-    min_velocity: 0.1
-    motor_serial_device: "/dev/serial0"
-

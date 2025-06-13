@@ -1,25 +1,13 @@
 #!/bin/bash
 
-cd $PWD
-export HOME="$HOME"
-export USER="$USER"
+source /opt/ros/$ROS_DISTRO/setup.bash
 
-. /opt/ros/$ROS_DISTRO/setup.bash
-. $HOME/catkin_ws/devel/setup.bash
+source /home/$USER/ros2_roboclaw_driver/install/setup.bash
 
-# Run the web app in the background
-# echo "Starting web app..."
-# cd $HOME/web_app && python3 app.py &
+# Source workspace if it exists
+if [ -f "/home/$USER/ros2_ws/install/local_setup.bash" ]; then
+    source /home/$USER/ros2_ws/install/local_setup.bash
+fi
 
-# Wait for the web app to start
-sleep 2
-
-# sudo pigpiod
-# sudo dbus-daemon --system --fork
-
-# Start Avahi Daemon
-# sudo avahi-daemon --daemonize
-
-# sudo rm /run/dbus/pid
-
+# Execute the passed command
 exec "$@"

@@ -2,25 +2,27 @@
 set -e
 
 # Default values
-IMAGE_NAME="walle/ros1:noetic"
-# MASTER_HOSTNAME="raspberrypi.local"
-# MASTER_HOSTNAME="pi"
-IP="172.27.32.111"
-MASTER_IP="$IP"
-ROS_MASTER_PORT=11311
+IMAGE_NAME="walle/ros2:jazzy"
+ROS_DOMAIN_ID=62
 
 DOCKER_RUN_FLAGS=()
-
-DISPLAY_ENABLED=false
-COMMAND_TO_RUN=""
 ENV_FILE="env_file.txt"
-BUILD_CONTAINER=false
-STOP_CONTAINER=false
-RESTART_CONTAINER=false
-QUIET_MODE=false
+
+# Create the environment file if it doesn't exist
+if [ ! -f "$ENV_FILE" ]; then
+    echo "Creating environment file: $ENV_FILE"
+    echo "ROS_DOMAIN_ID=$ROS_DOMAIN_ID" > $ENV_FILE
+else
+    # Update ROS_DOMAIN_ID in existing file
+    if grep -q "^ROS_DOMAIN_ID=" "$ENV_FILE"; then
+        sed -i "s/^ROS_DOMAIN_ID=.*/ROS_DOMAIN_ID=$ROS_DOMAIN_ID/" "$ENV_FILE"
+    else
+        echo "ROS_DOMAIN_ID=$ROS_DOMAIN_ID" >> "$ENV_FILE"
+    fi
+fi
 
 # Actions
-# Map each “run” flag variable to the corresponding docker command
+# Map each “run” flag variable to the corresponding command to be run in docker
 declare -a ACTION_FLAGS=(
     RUN_ROBOT_LAUNCH
     RUN_TELEOP_LAUNCH
@@ -30,45 +32,42 @@ declare -a ACTION_FLAGS=(
     RUN_VIEW_MAP_LAUNCH
     RUN_MOTORS_LAUNCH
     RUN_ROSBRIDGE
-    RUN_ROSCORE
 )
+
 declare -a ACTION_CMDS=(
-    "roslaunch control robot_start.launch"
-    "roslaunch control teleop.launch"
-    "roslaunch control usb_cam.launch"
-    "roslaunch control view_camera.launch"
-    "roslaunch control mapping.launch"
-    "roslaunch slamware_ros_sdk view_slamware_ros_sdk_server_node.launch"
-    "roslaunch control motor_teleop.launch"
-    "roslaunch rosbridge_server rosbridge_websocket.launch"
-    "roscore"
+    "echo 'TODO: implement roslaunch control robot_start.launch'"
+    "echo 'TODO: implement roslaunch control teleop.launch'"
+    "echo 'TODO: implement roslaunch control usb_cam.launch'"
+    "echo 'TODO: implement roslaunch control view_camera.launch'"
+    "echo 'TODO: implement roslaunch control mapping.launch'"
+    "echo 'TODO: implement roslaunch slamware_ros_sdk view_slamware_ros_sdk_server_node.launch'"
+    "echo 'TODO: implement roslaunch control motor_teleop.launch'"
+    "echo 'TODO: implement roslaunch rosbridge_server rosbridge_websocket.launch'"
 )
 
 # Function to show usage
 usage() {
-    echo "Usage: $0 [--start (-s) | --teleop (-t) | --usb-cam (-u) | --video-stream (-v) |"
-    echo "           --mapping (-M) | --view-map (-w) | --motors (-m) | --command (-c) <command> | --roscore (-r) | --build (-b) | --stop (-x) |"
-    echo "           --restart (-R)] [--port (-p) <port>] [--ip (-i) <local_ip>] [--master-ip (-m) <master_ip>]"
-    echo "           [--master-hostname (-n) <master_hostname>] [--display (-d)] [--quiet (-q)] [--help (-h)]"
+    echo "Usage: $0 [ --start (-s) | --teleop (-t) | --usb-cam (-u) \
+    | --video-stream (-v) | --mapping (-M) | --view-map (-w) \
+    | --motors (-g) | --rosbridge (-B) --command (-c) <command>]  \
+    [ --ros-domain-id (-i) <id> | --copy (-C) <from> <to> | --display (-d) \
+    | --build (-b) | --stop (-x) | --restart (-R) | --quiet (-q) | --help (-h) ]"
     echo "This script is used to start and manage a Docker container for WALL-E the wildlife monitoring robot."
     echo "If no IP addresses are specified, the script will attempt to determine them from the hostname. If this fails, try setting the hostname or IP."
     echo "If no action is specified, the script will open an interactive bash terminal in the container."
     echo "Actions (pick ONE):"
     echo "  --start (-s)                Start all processes on the robot"
-    echo "  --teleop (-t)               Run joystick control using teleop.launch"
-    echo "  --usb-cam (-u)              Run usb camera node using usb_cam.launch"
-    echo "  --video-stream (-v)         View the video stream using view_camera.launch"
-    echo "  --mapping (-M)              Run mapping process using the slamtec mapper"
-    echo "  --view-map (-w)             Run map view using view_slamware_ros_sdk_server_node.launch"
-    echo "  --motors (-g)               Run motor control using motor_control.launch"
+    echo "  --teleop (-t)               Run joystick control"
+    echo "  --usb-cam (-u)              Run usb camera node"
+    echo "  --video-stream (-v)         View the video stream"
+    echo "  --mapping (-M)              Run mapping"
+    echo "  --view-map (-w)             Run map view"
+    echo "  --motors (-m)               Run motor control"
     echo "  --rosbridge (-B)            Run rosbridge server"
-    echo "  --roscore (-r)              Run roscore"
     echo "  --command (-c) <command>    Pass a command to be run in the container"
     echo "Options:"
-    echo "  --port (-p) <port>          Specify custom ROS master port (default is 11311)"
-    echo "  --ip (-i) <local_ip>         Specify local IP"
-    echo "  --master-ip (-m) <master_ip> Specify master IP"
-    echo "  --master-hostname (-n) <master_hostname> Specify master hostname (default is raspberrypi.local)"
+    echo "  --ros-domain-id (-i) <id>   Set the ROS domain ID (default: $ROS_DOMAIN_ID)"
+    echo "  --copy (-C) <from> <to>     Copy files from the container to the host"
     echo "  --display (-d)              Enable display support (forward X11 display)"
     echo "  --build (-b)                Build the Docker container (will stop the running container if any)"
     echo "  --stop (-x)                 Stop the running Docker container"
@@ -78,23 +77,45 @@ usage() {
     exit 1
 }
 
+RUN_ROBOT_LAUNCH=false
+RUN_TELEOP_LAUNCH=false
+RUN_USB_CAM_NODE=false
+RUN_VIEW_CAMERA_LAUNCH=false
+RUN_MAPPING_LAUNCH=false
+RUN_VIEW_MAP_LAUNCH=false
+RUN_MOTORS_LAUNCH=false
+RUN_ROSBRIDGE=false
+COMMAND_TO_RUN=""
+
+DISPLAY_ENABLED=false
+BUILD_CONTAINER=false
+STOP_CONTAINER=false
+RESTART_CONTAINER=false
+QUIET_MODE=false
+
+COPY_TO=""
+COPY_FROM=""
+
 # Parse options
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
-        --ip|-i) IP="$2"; shift 2 ;;
-        --master-ip|-m) MASTER_IP="$2"; shift 2 ;;
-        --master-hostname|-n) MASTER_HOSTNAME="$2"; shift 2 ;;
         --start|-s) RUN_ROBOT_LAUNCH=true; shift ;;
         --teleop|-t) RUN_TELEOP_LAUNCH=true; shift ;;
         --usb-cam|-u) RUN_USB_CAM_NODE=true; shift ;;
         --video-stream|-v) RUN_VIEW_CAMERA_LAUNCH=true; DISPLAY_ENABLED=true; shift ;;
         --mapping|-M) RUN_MAPPING_LAUNCH=true; shift ;;
         --view-map|-w) RUN_VIEW_MAP_LAUNCH=true DISPLAY_ENABLED=true; shift ;;
-        --motors|-g) RUN_MOTORS_LAUNCH=true; shift ;;  # NEW case for motors
+        --motors|-g) RUN_MOTORS_LAUNCH=true; shift ;;
         --command|-c) COMMAND_TO_RUN="$2"; shift 2 ;;
-        --roscore|-r) RUN_ROSCORE=true; shift ;;
         --rosbridge|-B) RUN_ROSBRIDGE=true; shift ;;
-        --port|-p) ROS_MASTER_PORT="$2"; shift 2 ;;
+        --copy|-C) 
+            if [[ -z "$2" || -z "$3" ]]; then
+                echo "Error: --copy requires two arguments: <from> <to>"
+                usage
+            fi
+            COPY_FROM="$2"
+            COPY_TO="$3"
+            shift 3 ;;
         --display|-d) DISPLAY_ENABLED=true; shift ;;
         --build|-b) BUILD_CONTAINER=true; shift ;;
         --stop|-x) STOP_CONTAINER=true; shift ;;
@@ -158,89 +179,6 @@ if [[ "$STOP_CONTAINER" = true || "$RESTART_CONTAINER" = true  || "$BUILD_CONTAI
     fi
 fi
 
-# Function to validate IP address
-validate_ip() {
-    local ip=$1
-    local stat=1
-
-    if [[ $ip =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
-        OIFS=$IFS
-        IFS='.'
-        ip=($ip)
-        IFS=$OIFS
-        [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
-        stat=$?
-    fi
-    return $stat
-}
-
-# Get the active IP address if not provided
-if [[ -z "$IP" ]]; then
-    IP=$(ip route get 8.8.8.8 | awk '{print $7; exit}')
-    if [[ -z "$IP" ]]; then
-        echo "Error: Unable to determine IP address"
-        exit 1
-    fi
-fi
-
-# Validate the IP address
-if ! validate_ip "$IP"
-then
-    echo "Error: Invalid IP address format: $IP"
-    exit 1
-fi
-
-echo "IP: $IP"
-
-# Determine the master IP if not provided
-if [[ -z "$MASTER_IP" && -z "$MASTER_HOSTNAME" ]]; then
-    echo "We are the master. You must all obey"
-    MASTER_IP=$IP
-fi
-
-if [[ -z "$MASTER_IP" || -n "$MASTER_HOSTNAME" ]]; then
-    if [[ -n "$MASTER_IP" ]]; then
-        OLD_MASTER_IP=$MASTER_IP
-    fi
-
-    if [[ "$(hostname)" == "$MASTER_HOSTNAME" ]]; then
-        MASTER_IP=$IP
-    else
-        MASTER_IP=$(ping -c 1 $MASTER_HOSTNAME | grep 'PING' | awk -F'[()]' '{print $2}')
-    fi
-
-    if [[ -n "$OLD_MASTER_IP" && "$MASTER_IP" != "$OLD_MASTER_IP" ]]; then
-        echo "Warning: IP address discrepancy. Given IP: ($OLD_MASTER_IP), Detected IP: ($MASTER_IP)"
-        MASTER_IP=$OLD_MASTER_IP
-    fi
-
-    if [[ -z "$MASTER_IP" ]]; then
-        echo "Warning: Unable to determine the master IP address from hostname."
-        if [[ -n "$OLD_MASTER_IP" ]]; then
-            MASTER_IP=$OLD_MASTER_IP
-        else
-            echo "Error: No master IP address."
-            exit 1
-        fi
-    fi
-fi
-
-# Validate the master IP address
-if ! validate_ip "$MASTER_IP"; then
-    echo "Error: Invalid master IP address format: $MASTER_IP"
-    exit 1
-fi
-
-echo "Master IP: $MASTER_IP"
-
-# Set ROS_IP and ROS_MASTER_URI
-ROS_IP="$IP"
-ROS_MASTER_URI="http://$MASTER_IP:$ROS_MASTER_PORT"
-
-# Write environment variables to file
-echo "ROS_IP=$ROS_IP" > $ENV_FILE
-echo "ROS_MASTER_URI=$ROS_MASTER_URI" >> $ENV_FILE
-
 # No longer part of the Bourgeois 
 DOCKER_RUN_FLAGS+=("--privileged")
 DOCKER_RUN_FLAGS+=("--net=host")
@@ -281,6 +219,17 @@ if [[ "$RUNNING" = false ]]; then
     docker run -dit --env-file $ENV_FILE "${DOCKER_RUN_FLAGS[@]}" $IMAGE_NAME bash
 fi
 
+# Handle file copying if requested
+if [[ -n "$COPY_FROM" && -n "$COPY_TO" ]]; then
+    echo "Copying files from container: $COPY_FROM -> $COPY_TO"
+    if ! docker cp "$CONTAINER_ID:$COPY_FROM" "$COPY_TO"; then
+        echo "Error: Failed to copy files from container."
+        exit 1
+    fi
+    echo "Files copied successfully."
+    exit 0
+fi
+
 CONTAINER_ID=$(docker ps -q -f ancestor=$IMAGE_NAME) # Get container ID
 CONTAINER_ID=$(echo "$CONTAINER_ID" | xargs) # Trim whitespace
 echo "Container ID: $CONTAINER_ID"
@@ -299,12 +248,6 @@ if [ "$QUIET_MODE" = true ]; then
 else
     DOCKER_EXEC_FLAGS="-it"
 fi
-
-# Attempt to run sudo pigpiod in the container
-# echo "Starting pigpiod..."
-# if ! docker exec $DOCKER_EXEC_FLAGS --env-file $ENV_FILE $CONTAINER_ID sudo pigpiod; then
-#     echo "Warning: Failed to start pigpiod. Continuing without it..."
-# fi
 
 # Run all selected actions
 if [ ${#SELECTED_CMDS[@]} -gt 0 ]; then
