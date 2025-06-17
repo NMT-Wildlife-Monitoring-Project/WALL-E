@@ -219,6 +219,17 @@ if [[ "$RUNNING" = false ]]; then
     docker run -dit --env-file $ENV_FILE "${DOCKER_RUN_FLAGS[@]}" $IMAGE_NAME bash
 fi
 
+# Get the container ID for operations
+CONTAINER_ID=$(docker ps -q -f ancestor=$IMAGE_NAME) # Get container ID
+CONTAINER_ID=$(echo "$CONTAINER_ID" | xargs) # Trim whitespace
+echo "Container ID: $CONTAINER_ID"
+
+# Check if the container ID is empty
+if [[ -z "$CONTAINER_ID" ]]; then
+    echo "Error: Failed to find the Docker container."
+    exit 1
+fi
+
 # Handle file copying if requested
 if [[ -n "$COPY_FROM" && -n "$COPY_TO" ]]; then
     echo "Copying files from container: $COPY_FROM -> $COPY_TO"
@@ -228,16 +239,6 @@ if [[ -n "$COPY_FROM" && -n "$COPY_TO" ]]; then
     fi
     echo "Files copied successfully."
     exit 0
-fi
-
-CONTAINER_ID=$(docker ps -q -f ancestor=$IMAGE_NAME) # Get container ID
-CONTAINER_ID=$(echo "$CONTAINER_ID" | xargs) # Trim whitespace
-echo "Container ID: $CONTAINER_ID"
-
-# Check if the container ID is empty
-if [[ -z "$CONTAINER_ID" ]]; then
-    echo "Error: Failed to start the Docker container."
-    exit 1
 fi
 
 # Run docker commands in detached mode if quiet mode is enabled

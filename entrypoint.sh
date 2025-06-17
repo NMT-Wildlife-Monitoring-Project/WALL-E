@@ -1,13 +1,8 @@
 #!/bin/bash
 
 source /opt/ros/$ROS_DISTRO/setup.bash
-
-source /home/$USER/ros2_roboclaw_driver/install/setup.bash
-
-# Source workspace if it exists
-if [ -f "/home/$USER/ros2_ws/install/local_setup.bash" ]; then
-    source /home/$USER/ros2_ws/install/local_setup.bash
-fi
+source $HOME/ros2_roboclaw_driver/install/setup.bash
+source $HOME/ros2_ws/install/setup.bash
 
 # Execute the passed command
 exec "$@"

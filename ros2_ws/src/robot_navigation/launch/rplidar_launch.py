@@ -1,53 +1,64 @@
+#!/usr/bin/env python3
+"""
+RPLidar Launch File
+Launches the RPLidar A1 sensor
+"""
+
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.substitutions import LaunchConfiguration
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from ament_index_python.packages import get_package_share_directory
+import os
+
 
 def generate_launch_description():
     # Launch arguments
-    serial_port_arg = DeclareLaunchArgument(
-        'serial_port',
+    device_port_arg = DeclareLaunchArgument(
+        'device_port',
         default_value='/dev/ttyUSB0',
-        description='Serial port for RPLidar'
+        description='RPLidar device port'
     )
     
-    lidar_model_arg = DeclareLaunchArgument(
-        'lidar_model',
-        default_value='A1M8',
-        description='RPLidar model (A1M8 or S1)'
+    scan_mode_arg = DeclareLaunchArgument(
+        'scan_mode',
+        default_value='Standard',
+        description='RPLidar scan mode'
     )
     
-    frame_id_arg = DeclareLaunchArgument(
-        'frame_id',
-        default_value='laser_link',
-        description='Frame ID for laser data'
-    )
-
     # Get launch configurations
-    serial_port = LaunchConfiguration('serial_port')
-    lidar_model = LaunchConfiguration('lidar_model')
-    frame_id = LaunchConfiguration('frame_id')
+    device_port = LaunchConfiguration('device_port')
+    scan_mode = LaunchConfiguration('scan_mode')
 
-    # RPLidar node
-    rplidar_node = Node(
-        package='rplidar_ros',
-        executable='rplidar_composition',
-        name='rplidar_node',
-        parameters=[{
-            'serial_port': serial_port,
-            'serial_baudrate': 115200,  # A1M8: 115200, S1: 256000
-            'frame_id': frame_id,
-            'inverted': False,
-            'angle_compensate': True,
-            'scan_mode': 'Standard',  # A1M8: Standard, S1: DenseBoost
-            'auto_standby': True,
-        }],
+    # Include the sllidar_a1_launch.py from sllidar_ros2 package
+    sllidar_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            os.path.join(
+                get_package_share_directory('sllidar_ros2'),
+                'launch',
+                'sllidar_a1_launch.py'
+            )
+        ]),
+        launch_arguments={
+            'serial_port': device_port,
+            'scan_mode': scan_mode,
+            'frame_id': 'laser'
+        }.items()
+    )
+
+    # Static transform from base_link to laser
+    laser_tf_node = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='base_to_laser_tf',
+        arguments=['0', '0', '0.1', '0', '0', '0', 'base_link', 'laser'],
         output='screen'
     )
 
     return LaunchDescription([
-        serial_port_arg,
-        lidar_model_arg,
-        frame_id_arg,
-        rplidar_node,
-    ]) 
+        device_port_arg,
+        scan_mode_arg,
+        sllidar_launch,
+        laser_tf_node,
+    ])

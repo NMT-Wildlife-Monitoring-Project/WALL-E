@@ -23,19 +23,38 @@ RUN apt-get update \
  && apt-get install -y software-properties-common
 
 # Install build tools and utilities
-RUN apt-get install -y build-essential cmake wget tar git
+RUN apt-get install -y \
+    build-essential \
+    cmake \
+    wget \
+    tar \
+    git
 
 # Install Python and serial support
-RUN apt-get install -y python3 python3-pip python3-serial
+RUN apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-serial
 
 # Install networking and mDNS
-RUN apt-get install -y iputils-ping avahi-daemon libnss-mdns avahi-utils dbus zip
+RUN apt-get install -y \
+    iputils-ping \
+    avahi-daemon \
+    libnss-mdns \
+    avahi-utils \
+    dbus \
+    zip
 
 # Install GPS tooling
-RUN apt-get install -y gpsd gpsd-clients gpsd-tools python3-gps
+RUN apt-get install -y \
+    gpsd \
+    gpsd-clients \
+    gpsd-tools \
+    python3-gps
 
 # Install python dependencies
 RUN apt-get install -y python3-numpy
+
 # Install ROS navigation packages
 RUN apt-get install -y \
     ros-$ROS_DISTRO-rviz2 \
@@ -51,10 +70,6 @@ RUN apt-get install -y \
     ros-$ROS_DISTRO-teleop-twist-keyboard \
     ros-$ROS_DISTRO-teleop-twist-joy \
     ros-$ROS_DISTRO-joy
-
-# Install ROS sensor packages
-RUN apt-get install -y \
-    ros-$ROS_DISTRO-rplidar-ros
 
 # Install ROS communication and transform packages
 RUN apt-get install -y \
@@ -75,8 +90,8 @@ RUN apt-get install -y \
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
-RUN cp /opt/ros/$ROS_DISTRO/include/tf2_geometry_msgs/tf2_geometry_msgs/tf2_geometry_msgs.hpp /opt/ros/$ROS_DISTRO/include/tf2_geometry_msgs/tf2_geometry_msgs/tf2_geometry_msgs.h
-
+RUN cp /opt/ros/$ROS_DISTRO/include/tf2_geometry_msgs/tf2_geometry_msgs/tf2_geometry_msgs.hpp \
+       /opt/ros/$ROS_DISTRO/include/tf2_geometry_msgs/tf2_geometry_msgs/tf2_geometry_msgs.h
 
 # Copy and build the roboclaw workspace
 COPY --chown=$USER:$USER ros2_roboclaw_driver /home/$USER/ros2_roboclaw_driver/
@@ -87,10 +102,8 @@ RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; colcon build --symlink-instal
 # Copy the workspace into the container
 COPY --chown=$USER:$USER ros2_ws /home/$USER/ros2_ws/
 WORKDIR /home/$USER/ros2_ws
-RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh && . /home/$USER/ros2_roboclaw_driver/install/setup.sh && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-ignore slamware_ros_sdk slamware_sdk' \
-   && rm -rf /home/$USER/ros2_ws/build/*
-RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release' \
-   && rm -rf /home/$USER/ros2_ws/build/*
+RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; \
+                  colcon build --symlink-install'
 
 WORKDIR /home/$USER
 # Copy the entrypoint script into the container
