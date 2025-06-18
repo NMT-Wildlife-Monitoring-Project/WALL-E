@@ -87,6 +87,11 @@ RUN apt-get install -y \
     ros-$ROS_DISTRO-std-msgs \
     ros-$ROS_DISTRO-visualization-msgs
 
+RUN apt-get install -y \
+    ros-$ROS_DISTRO-robot-localization \
+    ros-$ROS_DISTRO-gps-tools \
+    ros-$ROS_DISTRO-nav2-gps-waypoint-follower
+
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
