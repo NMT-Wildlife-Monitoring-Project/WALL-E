@@ -22,7 +22,7 @@ else
 fi
 
 # Actions
-# Map each “run” flag variable to the corresponding command to be run in docker
+# Map each "run" flag variable to the corresponding command to be run in docker
 declare -a ACTION_FLAGS=(
     RUN_ROBOT_LAUNCH
     RUN_TELEOP_LAUNCH
@@ -104,7 +104,7 @@ while [[ "$#" -gt 0 ]]; do
         --usb-cam|-u) RUN_USB_CAM_NODE=true; shift ;;
         --video-stream|-v) RUN_VIEW_CAMERA_LAUNCH=true; DISPLAY_ENABLED=true; shift ;;
         --mapping|-M) RUN_MAPPING_LAUNCH=true; shift ;;
-        --view-map|-w) RUN_VIEW_MAP_LAUNCH=true DISPLAY_ENABLED=true; shift ;;
+        --view-map|-w) RUN_VIEW_MAP_LAUNCH=true; DISPLAY_ENABLED=true; shift ;;
         --motors|-g) RUN_MOTORS_LAUNCH=true; shift ;;
         --command|-c) COMMAND_TO_RUN="$2"; shift 2 ;;
         --rosbridge|-B) RUN_ROSBRIDGE=true; shift ;;
@@ -210,7 +210,10 @@ fi
 # Build the container if requested
 if [[ "$BUILD_CONTAINER" = true ]]; then
     echo "Building the Docker container..."
-    docker build -t $IMAGE_NAME .
+    # Change to parent directory to access ros2_ws and ros2_roboclaw_driver
+    cd ..
+    docker build -t $IMAGE_NAME -f docker/Dockerfile .
+    cd docker
 fi
 
 # Start the container if it is not already running

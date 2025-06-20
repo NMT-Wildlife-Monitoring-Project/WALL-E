@@ -107,7 +107,7 @@ RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; \
 
 WORKDIR /home/$USER
 # Copy the entrypoint script into the container
-COPY entrypoint.sh /entrypoint.sh
+COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Set entrypoint to use the external script
