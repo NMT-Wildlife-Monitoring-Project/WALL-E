@@ -25,42 +25,83 @@ git clone https://github.com/NMT-Wildlife-Monitoring-Project/WALL-E.git
 ```
 
 Build the docker image  
-`./start_docker.sh`  
+This may take a while as several large packages are installed.  
+```
+cd docker
+./start_docker.sh -b
+```  
 
 # USAGE
 
-Run rtabmap and rvis
+## Docker start script -- start_docker.sh
+This script handles building and running the docker container, running commands inside the container, and setting up ros networking and environment.
+WARNING: The following options are not implemented yet.
 ```
-./rtabmap.sh
+--start (-s)
+--teleop (-t)
+--usb-cam (-u)
+--video-stream (-v)
+--mapping (-M)
+--view-map (-w)
+--motors (-g)
+--rosbridge (-B)
 ```
-open a new terminal window and run
-`./rvis.sh` 
+```
+Usage: ./start_docker.sh [ --start (-s) | --teleop (-t) | --usb-cam (-u)     | --video-stream (-v) | --mapping (-M) | --view-map (-w)     | --motors (-g) | --rosbridge (-B) --command (-c) <command>]      [ --ros-domain-id (-i) <id> | --copy (-C) <from> <to> | --display (-d)     | --build (-b) | --stop (-x) | --restart (-R) | --quiet (-q) | --help (-h) ]
+This script is used to start and manage a Docker container for WALL-E the wildlife monitoring robot.
+If no IP addresses are specified, the script will attempt to determine them from the hostname. If this fails, try setting the hostname or IP.
+If no action is specified, the script will open an interactive bash terminal in the container.
+Actions (pick ONE):
+  --start (-s)                Start all processes on the robot
+  --teleop (-t)               Run joystick control
+  --usb-cam (-u)              Run usb camera node
+  --video-stream (-v)         View the video stream
+  --mapping (-M)              Run mapping
+  --view-map (-w)             Run map view
+  --motors (-m)               Run motor control
+  --rosbridge (-B)            Run rosbridge server
+  --command (-c) <command>    Pass a command to be run in the container
+Options:
+  --ros-domain-id (-i) <id>   Set the ROS domain ID (default: 62)
+  --copy (-C) <from> <to>     Copy files from the container to the host
+  --display (-d)              Enable display support (forward X11 display)
+  --build (-b)                Build the Docker container (will stop the running container if any)
+  --stop (-x)                 Stop the running Docker container
+  --restart (-R)              Restart the Docker container if it is running
+  --quiet (-q)                Suppress output
+  --help (-h)                 Show this help message
+  ```
 
-To run teleop
-`./teleop.sh`
+# Ros Workspace
+TODO: Basically all of these
 
-To open another terminal in the same container run  
-`docker exec -it --privileged luna bash`  
-then:
-`source /opt/ros/humble/setup.bash && source ~/ros2_ws/install/setup.bash`
+## ros2_roboclaw_driver
+TODO: Configure this
+Separate ros workspace
 
+## robot_bringup
 
-Change parameters in the launch file
+## robot_description
 
-Run the motor control node
-`ros2 launch motor_control motor_launch.py'
-Parameters:
-- cmd_vel_topic: cmd_vel
-- wheel_base: 0.5
-- wheel_diameter: 0.1
-- max_rpm: 100
-- min_rpm: 10
-- motor_serial_device: /dev/serial0
+## robot_motors
+we might not need this one
 
+## robot_navigation
+
+## robot_teleop
 Run the teleop node
 'ros2 launch teleop teleop_launch.py'
 See <https://wiki.ros.org/joy> and <https://wiki.ros.org/teleop_twist_joy>. The documentation is for ros 1 but the parameters are the same for the most part. Use
 `ros2 param list` when running the node to see available parameters.
+
+## robot_web_interface
+
+## sllidar_ros2
+This package is for rplidar laserscan sensors.
+
+
+
+
 
 # Cellular
 <https://www.waveshare.com/wiki/SIM7600E-H_4G_HAT>
