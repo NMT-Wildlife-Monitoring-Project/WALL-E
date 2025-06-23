@@ -1,0 +1,27 @@
+from gy88_driver import GY88
+import time
+import json
+
+calibration_file = "/home/pi5-walle/WALL-E/ros2_ws/src/GY88_driver/config/gy88_calibration.json"
+with open(calibration_file, 'r') as f:
+    calibration_data = json.load(f)
+gy88 = GY88(calibration=calibration_data)
+try:
+    while True:
+        accel = gy88.get_accel_data()
+        gyro = gy88.get_gyro_data()
+        mag = gy88.get_mag_data()
+        heading = gy88.get_heading()
+        tmp_press = gy88.get_pressure_and_temp()
+
+        print("Accelerometer Data:", accel)
+        print("Gyroscope Data:", gyro)
+        print("Magnetometer Data:", mag)
+        print("Heading (degrees):", heading)
+        print("Temperature (°C):", tmp_press['temperature'])
+        print("Pressure (Pa):", tmp_press['pressure'])
+        print("-" * 40)
+        
+        time.sleep(0.1)
+except KeyboardInterrupt:
+    print("\nStopped by user")
