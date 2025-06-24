@@ -87,6 +87,8 @@ RUN apt-get install -y \
     ros-$ROS_DISTRO-std-msgs \
     ros-$ROS_DISTRO-visualization-msgs
 
+RUN apt-get update && apt-get install -y libudev-dev
+
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
