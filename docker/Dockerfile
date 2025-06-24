@@ -90,11 +90,8 @@ RUN apt-get install -y \
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
-RUN cp /opt/ros/$ROS_DISTRO/include/tf2_geometry_msgs/tf2_geometry_msgs/tf2_geometry_msgs.hpp \
-       /opt/ros/$ROS_DISTRO/include/tf2_geometry_msgs/tf2_geometry_msgs/tf2_geometry_msgs.h
-
 # Copy and build the roboclaw workspace
-COPY --chown=$USER:$USER ros2_roboclaw_driver /home/$USER/ros2_roboclaw_driver/
+COPY --chown=$USER:$USER ros2_roboclaw_driver/ /home/$USER/ros2_roboclaw_driver/
 WORKDIR /home/$USER/ros2_roboclaw_driver
 RUN rosdep install --from-paths src --ignore-src -r -y
 RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; colcon build --symlink-install'
