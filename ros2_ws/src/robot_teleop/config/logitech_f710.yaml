@@ -1,0 +1,53 @@
+# Configuration for teleop_twist_joy with Logitech F710 gamepad
+# This configures the joy_node and teleop_twist_joy for robot teleoperation
+
+# Joy node configuration
+joy_node:
+  ros__parameters:
+    device_id: 0
+    deadzone: 0.05
+    autorepeat_rate: 20.0
+
+# Teleop twist joy configuration  
+teleop_twist_joy:
+  ros__parameters:
+    # Axis mappings for Logitech F710 controller in X-input mode
+    # Left stick: axis 0 (horizontal), axis 1 (vertical)
+    # Right stick: axis 3 (horizontal), axis 4 (vertical)
+    # Triggers: axis 2 (left), axis 5 (right)
+    
+    axis_linear:
+      x: 1        # Left stick vertical for forward/backward
+    axis_angular:
+      yaw: 0      # Left stick horizontal for turning
+    
+    # Velocity scaling
+    scale_linear:
+      x: 0.3      # Maximum linear velocity (m/s) - matches motor driver config
+    scale_angular:
+      yaw: 0.07   # Maximum angular velocity (rad/s) - matches motor driver config
+    
+    # Button configuration (0-indexed)
+    # A: 0, B: 1, X: 2, Y: 3
+    # LB: 4, RB: 5  
+    # Back: 6, Start: 7
+    # Left stick: 9, Right stick: 10
+    
+    enable_button: 4      # Left bumper (LB) - must hold to enable movement
+    enable_turbo_button: 5  # Right bumper (RB) - turbo mode
+    
+    # Turbo mode scaling (multiplies the scale values above)
+    scale_linear_turbo:
+      x: 2.0      # 2x speed in turbo mode
+    scale_angular_turbo:
+      yaw: 2.0    # 2x turning speed in turbo mode
+    
+    # Invert axes if needed
+    inverted_reverse: false
+    
+    # Topic configuration
+    joy_topic: "joy"
+    cmd_vel_topic: "cmd_vel"
+    
+    # Update rate
+    publish_rate: 50.0
