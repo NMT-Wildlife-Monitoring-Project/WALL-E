@@ -1,9 +1,3 @@
-[submodule "dual-g2-high-power-motor-driver-rpi"]
-	path = dual-g2-high-power-motor-driver-rpi
-	url = https://github.com/pololu/dual-g2-high-power-motor-driver-rpi
-[submodule "catkin_ws/src/catkin_ws/src/rplidar_ros"]
-	path = catkin_ws/src/catkin_ws/src/rplidar_ros
-	url = https://github.com/Slamtec/rplidar_ros
 [submodule "ros2_roboclaw_driver/src/ros2_roboclaw_driver"]
 	path = ros2_roboclaw_driver/src/ros2_roboclaw_driver
 	url = https://github.com/wimblerobotics/ros2_roboclaw_driver.git
