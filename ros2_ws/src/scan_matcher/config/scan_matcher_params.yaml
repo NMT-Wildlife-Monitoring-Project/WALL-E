@@ -1,0 +1,23 @@
+scan_matcher_node:
+  ros__parameters:
+    # Topics
+    scan_topic: "/scan"
+    wheel_odom_topic: "/odom/wheels"
+    output_odom_topic: "/odom/matched"
+    
+    # Frame IDs
+    base_frame: "base_link"
+    odom_frame: "odom"
+    
+    # Processing options
+    use_wheel_odometry: true
+    
+    # ICP Parameters
+    max_iterations: 20
+    tolerance: 1e-4
+    max_correspondence_distance: 0.5
+    
+    # Scan filtering
+    min_scan_range: 0.1
+    max_scan_range: 10.0
+    downsample_factor: 2  # Keep every nth point (1 = no downsampling)
