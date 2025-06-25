@@ -23,7 +23,7 @@ teleop_twist_joy:
     scale_linear:
       x: 0.5      # Maximum linear velocity (m/s)
     scale_angular:
-      yaw: 1.0    # Maximum angular velocity (rad/s)
+      yaw: 0.2    # Maximum angular velocity (rad/s)
 
     # Button configuration for Logitech F710
     # A: 0, B: 1, X: 2, Y: 3
