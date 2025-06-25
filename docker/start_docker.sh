@@ -28,28 +28,23 @@ declare -a ACTION_FLAGS=(
     RUN_TELEOP_LAUNCH
     RUN_USB_CAM_NODE
     RUN_VIEW_CAMERA_LAUNCH
-    RUN_MAPPING_LAUNCH
-    RUN_VIEW_MAP_LAUNCH
     RUN_MOTORS_LAUNCH
     RUN_ROSBRIDGE
 )
 
 declare -a ACTION_CMDS=(
     "echo 'TODO: implement roslaunch control robot_start.launch'"
-    "echo 'TODO: implement roslaunch control teleop.launch'"
+    "ros2 launch robot_teleop robot_teleop_launch.py"
     "echo 'TODO: implement roslaunch control usb_cam.launch'"
     "echo 'TODO: implement roslaunch control view_camera.launch'"
-    "echo 'TODO: implement roslaunch control mapping.launch'"
-    "echo 'TODO: implement roslaunch slamware_ros_sdk view_slamware_ros_sdk_server_node.launch'"
-    "echo 'TODO: implement roslaunch control motor_teleop.launch'"
+    "ros2 launch ros2_roboclaw_driver ros2_roboclaw_driver.launch.py"
     "echo 'TODO: implement roslaunch rosbridge_server rosbridge_websocket.launch'"
 )
 
 # Function to show usage
 usage() {
     echo "Usage: $0 [ --start (-s) | --teleop (-t) | --usb-cam (-u) \
-    | --video-stream (-v) | --mapping (-M) | --view-map (-w) \
-    | --motors (-g) | --rosbridge (-B) --command (-c) <command>]  \
+    | --video-stream (-v) | --motors (-g) | --rosbridge (-B) --command (-c) <command>]  \
     [ --ros-domain-id (-i) <id> | --copy (-C) <from> <to> | --display (-d) \
     | --build (-b) | --stop (-x) | --restart (-R) | --quiet (-q) | --help (-h) ]"
     echo "This script is used to start and manage a Docker container for WALL-E the wildlife monitoring robot."
@@ -60,8 +55,6 @@ usage() {
     echo "  --teleop (-t)               Run joystick control"
     echo "  --usb-cam (-u)              Run usb camera node"
     echo "  --video-stream (-v)         View the video stream"
-    echo "  --mapping (-M)              Run mapping"
-    echo "  --view-map (-w)             Run map view"
     echo "  --motors (-m)               Run motor control"
     echo "  --rosbridge (-B)            Run rosbridge server"
     echo "  --command (-c) <command>    Pass a command to be run in the container"
@@ -81,8 +74,6 @@ RUN_ROBOT_LAUNCH=false
 RUN_TELEOP_LAUNCH=false
 RUN_USB_CAM_NODE=false
 RUN_VIEW_CAMERA_LAUNCH=false
-RUN_MAPPING_LAUNCH=false
-RUN_VIEW_MAP_LAUNCH=false
 RUN_MOTORS_LAUNCH=false
 RUN_ROSBRIDGE=false
 COMMAND_TO_RUN=""
@@ -103,9 +94,7 @@ while [[ "$#" -gt 0 ]]; do
         --teleop|-t) RUN_TELEOP_LAUNCH=true; shift ;;
         --usb-cam|-u) RUN_USB_CAM_NODE=true; shift ;;
         --video-stream|-v) RUN_VIEW_CAMERA_LAUNCH=true; DISPLAY_ENABLED=true; shift ;;
-        --mapping|-M) RUN_MAPPING_LAUNCH=true; shift ;;
-        --view-map|-w) RUN_VIEW_MAP_LAUNCH=true; DISPLAY_ENABLED=true; shift ;;
-        --motors|-g) RUN_MOTORS_LAUNCH=true; shift ;;
+        --motors|-m) RUN_MOTORS_LAUNCH=true; shift ;;
         --command|-c) COMMAND_TO_RUN="$2"; shift 2 ;;
         --rosbridge|-B) RUN_ROSBRIDGE=true; shift ;;
         --copy|-C) 

@@ -2,38 +2,37 @@
 
 import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction
-from launch.conditions import IfCondition, UnlessCondition
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node, SetParameter
+from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
-def generate_launch_description():   
+def generate_launch_description():
+    # Launch arguments
     joy_device_arg = DeclareLaunchArgument(
         'joy_device',
         default_value='/dev/input/js0',
         description='Joystick device path'
     )
     
-    # Package share directories
+    # Package share directory
     robot_teleop_share = FindPackageShare('robot_teleop')
     
-    # Config file based on controller type
-    teleop_config = PathJoinSubstitution([
+    # Config file path
+    config_file = PathJoinSubstitution([
         robot_teleop_share,
         'config',
-        'logitech_f710.yaml'
+        'joy_linux_f710.yaml'
     ])
     
-    # Joy node
-    joy_node = Node(
-        package='joy',
-        executable='joy_node',
-        name='joy_node',
+    # Joy Linux node - better Linux joystick support
+    joy_linux_node = Node(
+        package='joy_linux',
+        executable='joy_linux_node',
+        name='joy_linux_node',
         parameters=[
-            teleop_config,
+            config_file,
             {
                 'device_name': LaunchConfiguration('joy_device'),
             }
@@ -41,24 +40,19 @@ def generate_launch_description():
         output='screen'
     )
     
-    # Teleop twist joy node
-    teleop_node = Node(
+    # Teleop twist joy node - converts joystick input to cmd_vel
+    teleop_twist_joy_node = Node(
         package='teleop_twist_joy',
         executable='teleop_node',
         name='teleop_twist_joy',
         parameters=[
-            teleop_config,
+            config_file,
         ],
         output='screen'
     )
-    
-    # Group teleop nodes
-    teleop_group = GroupAction([
-        joy_node,
-        teleop_node
-    ])
-    
+
     return LaunchDescription([
         joy_device_arg,
-        teleop_group,
+        joy_linux_node,
+        teleop_twist_joy_node
     ])

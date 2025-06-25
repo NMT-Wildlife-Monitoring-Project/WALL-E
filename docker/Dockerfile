@@ -69,7 +69,8 @@ RUN apt-get install -y \
 RUN apt-get install -y \
     ros-$ROS_DISTRO-teleop-twist-keyboard \
     ros-$ROS_DISTRO-teleop-twist-joy \
-    ros-$ROS_DISTRO-joy
+    ros-$ROS_DISTRO-joy \
+    ros-$ROS_DISTRO-joy-linux
 
 # Install ROS communication and transform packages
 RUN apt-get install -y \
