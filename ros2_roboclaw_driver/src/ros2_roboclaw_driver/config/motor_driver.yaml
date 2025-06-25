@@ -28,16 +28,16 @@ motor_driver_node:
     m1_p: 4.25
     m1_i: 0.21
     m1_d: 0.0
-    m1_qpps: 10888
+    m1_qpps: 10000
     m2_p: 4.25
     m2_i: 0.21
     m2_d: 0.0
-    m2_qpps: 10888
+    m2_qpps: 10000
 
     # The maximum expected current (in amps) for both motors.
     # Used just to signal warnings.
-    m1_max_current: 6.0
-    m2_max_current: 6.0
+    m1_max_current: 8.0
+    m2_max_current: 8.0
 
     # Rate limiting commands. The driver will clip any value
     # exceeding these limits.
@@ -60,7 +60,7 @@ motor_driver_node:
     # Based upon y our particular robot model.
     # The wheel separation and radius, in meters.
     wheel_radius: 0.05
-    wheel_separation: 0.212
+    wheel_separation: 0.225
 
     # Topic name to be used to publish the RoboClaw status messages.
     roboclaw_status_topic: "roboclaw_status"

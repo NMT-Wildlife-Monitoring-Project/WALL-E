@@ -27,13 +27,13 @@ def generate_launch_description():
     
     wheel_odom_topic_arg = DeclareLaunchArgument(
         'wheel_odom_topic',
-        default_value='/odom/wheels',
+        default_value='/odom',
         description='Topic for input wheel odometry'
     )
     
     output_odom_topic_arg = DeclareLaunchArgument(
-        'output_odom_topic', 
-        default_value='/odom/matched',
+        'output_odom_topic',
+        default_value='/odom_matched',
         description='Topic for output scan-matched odometry'
     )
     

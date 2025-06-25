@@ -15,8 +15,8 @@ class ScanMatcherNode(Node):
 
         # Declare parameters
         self.declare_parameter('scan_topic', '/scan')
-        self.declare_parameter('wheel_odom_topic', '/odom/wheels')
-        self.declare_parameter('output_odom_topic', '/odom/matched')
+        self.declare_parameter('wheel_odom_topic', '/odom')
+        self.declare_parameter('output_odom_topic', '/odom_matched')
         self.declare_parameter('use_wheel_odometry', True)
         self.declare_parameter('max_iterations', 20)
         self.declare_parameter('tolerance', 1e-4)

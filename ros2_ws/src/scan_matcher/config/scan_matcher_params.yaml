@@ -2,8 +2,8 @@ scan_matcher_node:
   ros__parameters:
     # Topics
     scan_topic: "/scan"
-    wheel_odom_topic: "/odom/wheels"
-    output_odom_topic: "/odom/matched"
+    wheel_odom_topic: "/odom"
+    output_odom_topic: "/odom_matched"
     
     # Frame IDs
     base_frame: "base_link"
