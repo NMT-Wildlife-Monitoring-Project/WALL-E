@@ -27,18 +27,24 @@
             display: none !important;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
-    <script src="{{ url_for('static', filename='JoyStick/joy.min.js') }}"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script> -->
+    <!-- <script src="{{ url_for('static', filename='JoyStick/joy.min.js') }}"></script> -->
 </head>
 <body>
     <h1>WALLE Control Panel</h1>
+    
+    <!-- GPS Data Section - Temporarily Disabled -->
+    <!-- 
     <h2>GPS Data</h2>
     <p>Latitude: {{ gps.latitude }}</p>
     <p>Longitude: {{ gps.longitude }}</p>
     <p>Fix: {{ gps.fix }}</p>
     <p>Satellites: {{ gps.satellites }}</p>
     <p>Timestamp: {{ gps.timestamp }}</p>
+    -->
 
+    <!-- Map View Section - Removed -->
+    <!-- 
     <h2>Map View</h2>
     <button class="toggle-button" id="toggle-map-view">Hide Map View</button>
     <div id="map-view">
@@ -51,6 +57,7 @@
             src="https://maps.google.com/maps?q={{ gps.latitude }},{{ gps.longitude }}&z=15&output=embed">
         </iframe>
     </div>
+    -->
 
     <h2>Live Camera Feed</h2>
     <button class="toggle-button" id="toggle-video-feed">Hide Video Feed</button>
@@ -58,12 +65,17 @@
         <img src="{{ url_for('video_feed') }}" width="640" height="480" alt="Live Camera Feed">
     </div>
 
+    <!-- Generated Map Section - Removed -->
+    <!-- 
     <h2>Generated Map</h2>
     <button class="toggle-button" id="toggle-generated-map">Hide Generated Map</button>
     <div id="generated-map">
         <img src="{{ url_for('map_feed') }}" width="640" height="480" alt="Generated Map">
     </div>
+    -->
 
+    <!-- Joystick Control Section - Temporarily Disabled -->
+    <!-- 
     <h2>Joystick Control</h2>
     <button class="toggle-button" id="joystick-control">Enable Manual Control</button>
     <div id="joystick-container"></div>
@@ -73,16 +85,19 @@
         <p>Angular velocity (rad/s): <span id="angular-velocity">0.0</span></p>
         <p>Manual Control: <span id="control-status">Disabled</span></p>
     </div>
+    -->
 
     <script>
+        console.log("Script starting - Video feed only mode");
+
+        // All ROS and joystick functionality temporarily disabled
+        /*
         let linear_max_vel = 1.0;
         let angular_max_vel = 1.0;
 
-        console.log("Script starting");
-
         // Connect to ROSBridge
         const ros = new ROSLIB.Ros({
-            url: 'ws://172.27.32.111:9090' // Update if rosbridge is on a different host/port
+            url: 'ws://172.27.32.111:9090'
         });
 
         ros.on('connection', function() {
@@ -104,8 +119,9 @@
             name: '/cmd_vel',
             messageType: 'geometry_msgs/Twist'
         });
+        */
 
-        // Self-executing function to initialize everything
+        // Self-executing function to initialize video feed toggle
         (function() {
             // Check if DOM is already loaded
             if (document.readyState === 'loading') {
@@ -116,6 +132,37 @@
             }
             
             function initializeApp() {
+                console.log("Initializing video feed controls");
+
+                // Toggle visibility of video feed
+                const toggleVideoFeedButton = document.getElementById('toggle-video-feed');
+                const videoFeed = document.getElementById('video-feed');
+                
+                if (toggleVideoFeedButton && videoFeed) {
+                    let videoFeedContent = videoFeed.innerHTML; // Store the original content
+                    
+                    toggleVideoFeedButton.addEventListener('click', function() {
+                        if (videoFeed.classList.contains('hidden')) {
+                            // Restore the content when showing
+                            videoFeed.innerHTML = videoFeedContent;
+                            videoFeed.classList.remove('hidden');
+                            toggleVideoFeedButton.textContent = 'Hide Video Feed';
+                            toggleVideoFeedButton.classList.remove('active');
+                        } else {
+                            // Remove the content when hiding
+                            videoFeedContent = videoFeed.innerHTML; // Save current state
+                            videoFeed.innerHTML = '';
+                            videoFeed.classList.add('hidden');
+                            toggleVideoFeedButton.textContent = 'Show Video Feed';
+                            toggleVideoFeedButton.classList.add('active');
+                        }
+                    });
+                    console.log("Video feed toggle initialized");
+                } else {
+                    console.log("Video feed elements not found");
+                }
+
+                /* All joystick functionality temporarily disabled
                 // Initialize the joystick
                 const joystick = new JoyStick('joystick-container', {
                     title: "joystick",
@@ -157,72 +204,6 @@
                     }
                 }, 100);
 
-                // Toggle visibility of map view
-                const toggleMapViewButton = document.getElementById('toggle-map-view');
-                const mapView = document.getElementById('map-view');
-                let mapViewContent = mapView.innerHTML; // Store the original content
-                
-                toggleMapViewButton.addEventListener('click', function() {
-                    if (mapView.classList.contains('hidden')) {
-                        // Restore the content when showing
-                        mapView.innerHTML = mapViewContent;
-                        mapView.classList.remove('hidden');
-                        toggleMapViewButton.textContent = 'Hide Map View';
-                        toggleMapViewButton.classList.remove('active');
-                    } else {
-                        // Remove the content when hiding
-                        mapViewContent = mapView.innerHTML; // Save current state
-                        mapView.innerHTML = '';
-                        mapView.classList.add('hidden');
-                        toggleMapViewButton.textContent = 'Show Map View';
-                        toggleMapViewButton.classList.add('active');
-                    }
-                });
-
-                // Toggle visibility of video feed
-                const toggleVideoFeedButton = document.getElementById('toggle-video-feed');
-                const videoFeed = document.getElementById('video-feed');
-                let videoFeedContent = videoFeed.innerHTML; // Store the original content
-                
-                toggleVideoFeedButton.addEventListener('click', function() {
-                    if (videoFeed.classList.contains('hidden')) {
-                        // Restore the content when showing
-                        videoFeed.innerHTML = videoFeedContent;
-                        videoFeed.classList.remove('hidden');
-                        toggleVideoFeedButton.textContent = 'Hide Video Feed';
-                        toggleVideoFeedButton.classList.remove('active');
-                    } else {
-                        // Remove the content when hiding
-                        videoFeedContent = videoFeed.innerHTML; // Save current state
-                        videoFeed.innerHTML = '';
-                        videoFeed.classList.add('hidden');
-                        toggleVideoFeedButton.textContent = 'Show Video Feed';
-                        toggleVideoFeedButton.classList.add('active');
-                    }
-                });
-
-                // Toggle visibility of generated map
-                const toggleGeneratedMapButton = document.getElementById('toggle-generated-map');
-                const generatedMap = document.getElementById('generated-map');
-                let generatedMapContent = generatedMap.innerHTML; // Store the original content
-                
-                toggleGeneratedMapButton.addEventListener('click', function() {
-                    if (generatedMap.classList.contains('hidden')) {
-                        // Restore the content when showing
-                        generatedMap.innerHTML = generatedMapContent;
-                        generatedMap.classList.remove('hidden');
-                        toggleGeneratedMapButton.textContent = 'Hide Generated Map';
-                        toggleGeneratedMapButton.classList.remove('active');
-                    } else {
-                        // Remove the content when hiding
-                        generatedMapContent = generatedMap.innerHTML; // Save current state
-                        generatedMap.innerHTML = '';
-                        generatedMap.classList.add('hidden');
-                        toggleGeneratedMapButton.textContent = 'Show Generated Map';
-                        toggleGeneratedMapButton.classList.add('active');
-                    }
-                });
-
                 // Toggle joystick control
                 const joystickControlButton = document.getElementById('joystick-control');
                 joystickControlButton.addEventListener('click', function() {
@@ -241,14 +222,12 @@
                         cmdVelTopic.publish(stopTwist);
                     }
                 });
+                */
             }
         })();
 
-        // Check if elements exist
-        console.log("Toggle map button exists:", !!document.getElementById('toggle-map-view'));
+        // Debug logging
         console.log("Toggle video button exists:", !!document.getElementById('toggle-video-feed'));
-        console.log("Toggle map button exists:", !!document.getElementById('toggle-generated-map'));
-        console.log("Joystick control button exists:", !!document.getElementById('joystick-control'));
     </script>
 </body>
 </html>

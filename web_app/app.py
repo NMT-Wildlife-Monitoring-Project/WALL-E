@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 from flask import Flask, render_template, Response, jsonify
-import gps
+# import gps
 import cv2
 import time
 import netifaces
@@ -33,40 +33,49 @@ camera = init_camera()
 # === GPS Data ===
 
 def get_gps_data(timeout=2.0):
-    print("Getting GPS data...")
-    data = {
+    # GPS temporarily disabled
+    return {
         'latitude': None,
         'longitude': None,
         'fix': False,
         'satellites': None,
         'timestamp': None
     }
-    start_time = time.time()
-    try:
-        session = gps.gps(mode=gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE)
-        for report in session:
-            # Check for timeout
-            if time.time() - start_time > timeout:
-                print("GPS timeout reached.")
-                break
+    
+    # print("Getting GPS data...")
+    # data = {
+    #     'latitude': None,
+    #     'longitude': None,
+    #     'fix': False,
+    #     'satellites': None,
+    #     'timestamp': None
+    # }
+    # start_time = time.time()
+    # try:
+    #     session = gps.gps(mode=gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE)
+    #     for report in session:
+    #         # Check for timeout
+    #         if time.time() - start_time > timeout:
+    #             print("GPS timeout reached.")
+    #             break
 
-            if report.get('class') == 'TPV':
-                data['latitude'] = getattr(report, 'lat', None)
-                data['longitude'] = getattr(report, 'lon', None)
-                data['timestamp'] = getattr(report, 'time', None)
-                data['fix'] = True if getattr(report, 'mode', 0) >= 2 else False
+    #         if report.get('class') == 'TPV':
+    #             data['latitude'] = getattr(report, 'lat', None)
+    #             data['longitude'] = getattr(report, 'lon', None)
+    #             data['timestamp'] = getattr(report, 'time', None)
+    #             data['fix'] = True if getattr(report, 'mode', 0) >= 2 else False
 
-            elif report.get('class') == 'SKY':
-                data['satellites'] = len(report.get('satellites', []))
+    #         elif report.get('class') == 'SKY':
+    #             data['satellites'] = len(report.get('satellites', []))
 
-            # Stop early if we have a valid fix
-            if data['fix'] and data['latitude'] is not None and data['longitude'] is not None:
-                break
+    #         # Stop early if we have a valid fix
+    #         if data['fix'] and data['latitude'] is not None and data['longitude'] is not None:
+    #             break
 
-    except Exception as e:
-        print(f"GPS error: {e}")
+    # except Exception as e:
+    #     print(f"GPS error: {e}")
 
-    return data
+    # return data
 
 # === Video Stream Generator ===
 def generate_camera_frames(framerate=15):
@@ -88,18 +97,18 @@ def generate_camera_frames(framerate=15):
         yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
         time.sleep(1.0 / framerate)
 
-# === Map Stream Generator ===
-def generate_map_frames(framerate=5):
-    while True:
-        map_image = cv2.imread('/tmp/shared/map_stream.jpg')
-        if map_image is None:
-            print("Map image not found.")
-            time.sleep(1.0 / framerate)
-            continue
+# === Map Stream Generator - DISABLED ===
+# def generate_map_frames(framerate=5):
+#     while True:
+#         map_image = cv2.imread('/tmp/shared/map_stream.jpg')
+#         if map_image is None:
+#             print("Map image not found.")
+#             time.sleep(1.0 / framerate)
+#             continue
 
-        _, buffer = cv2.imencode('.jpg', map_image, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
-        yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
-        time.sleep(1.0 / framerate)
+#         _, buffer = cv2.imencode('.jpg', map_image, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
+#         yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+#         time.sleep(1.0 / framerate)
 
 # === Flask Routes ===
 @app.route('/')
@@ -111,9 +120,9 @@ def index():
 def video_feed():
     return Response(generate_camera_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route('/map_feed')
-def map_feed():
-    return Response(generate_map_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+# @app.route('/map_feed')
+# def map_feed():
+#     return Response(generate_map_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/api/gps_status')
 def gps_status():
