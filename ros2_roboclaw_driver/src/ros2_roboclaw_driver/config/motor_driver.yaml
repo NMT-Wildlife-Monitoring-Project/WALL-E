@@ -11,7 +11,7 @@
 motor_driver_node:
   ros__parameters:
     # Incremental acceleration to use in quadrature pulses per second.
-    accel_quad_pulses_per_second: 10000
+    accel_quad_pulses_per_second: 20000
 
     # The device name to be opened. Change this to your actual device you are using.
     # Both USB and UART devices are supported. The device name is the
