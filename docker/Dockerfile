@@ -94,13 +94,8 @@ RUN apt-get install -y ros-$ROS_DISTRO-tf-transformations
 RUN apt-get install -y \
     python3-numpy
 
-# Create Python virtual environment with system site packages access
-RUN python3 -m venv --system-site-packages /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-# Install only custom packages in virtual environment
-RUN /opt/venv/bin/pip install adafruit-circuitpython-bno08x \
-    gps
+# Install Adafruit libraries into the system Python
+RUN pip3 install --break-system-packages adafruit-blinka adafruit-circuitpython-bno08x gps
 
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
