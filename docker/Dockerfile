@@ -34,7 +34,9 @@ RUN apt-get install -y \
 RUN apt-get install -y \
     python3 \
     python3-pip \
-    python3-serial
+    python3-serial \
+    python3-venv \
+    python3-full
 
 # Install networking and mDNS
 RUN apt-get install -y \
@@ -49,11 +51,7 @@ RUN apt-get install -y \
 RUN apt-get install -y \
     gpsd \
     gpsd-clients \
-    gpsd-tools \
-    python3-gps
-
-# Install python dependencies
-RUN apt-get install -y python3-numpy
+    gpsd-tools
 
 # Install ROS navigation packages
 RUN apt-get install -y \
@@ -90,6 +88,20 @@ RUN apt-get install -y \
 
 RUN apt-get update && apt-get install -y libudev-dev libsdl2-dev joystick
 
+RUN apt-get install -y ros-$ROS_DISTRO-tf-transformations
+
+# Install Python build dependencies for ROS
+RUN apt-get install -y \
+    python3-numpy
+
+# Create Python virtual environment with system site packages access
+RUN python3 -m venv --system-site-packages /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install only custom packages in virtual environment
+RUN /opt/venv/bin/pip install adafruit-circuitpython-bno08x \
+    gps
+
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -97,12 +109,15 @@ RUN rm -rf /var/lib/apt/lists/*
 COPY --chown=$USER:$USER ros2_roboclaw_driver/ /home/$USER/ros2_roboclaw_driver/
 WORKDIR /home/$USER/ros2_roboclaw_driver
 RUN rosdep install --from-paths src --ignore-src -r -y
-RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; colcon build --symlink-install'
+RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; \
+                  export PATH="/opt/venv/bin:$PATH"; \
+                  colcon build --symlink-install'
 
 # Copy the workspace into the container
 COPY --chown=$USER:$USER ros2_ws /home/$USER/ros2_ws/
 WORKDIR /home/$USER/ros2_ws
 RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; \
+                  export PATH="/opt/venv/bin:$PATH"; \
                   colcon build --symlink-install'
 
 WORKDIR /home/$USER
