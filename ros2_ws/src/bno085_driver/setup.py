@@ -1,13 +1,14 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 import os
 from glob import glob
+from setuptools import find_packages
 
 package_name = 'bno085_driver'
 
 setup(
     name=package_name,
     version='0.0.1',
-    packages=find_packages(include=['bno085_driver', 'bno085_driver.*']),  # Explicitly include the package
+    packages=find_packages(),
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
