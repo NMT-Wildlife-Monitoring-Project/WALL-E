@@ -92,7 +92,9 @@ RUN apt-get install -y ros-$ROS_DISTRO-tf-transformations
 
 # Install Python build dependencies for ROS
 RUN apt-get install -y \
-    python3-numpy
+    python3-numpy \
+    python3-rpi.gpio
+
 
 # Install Adafruit libraries into the system Python
 RUN pip3 install --break-system-packages adafruit-blinka adafruit-circuitpython-bno08x gps
