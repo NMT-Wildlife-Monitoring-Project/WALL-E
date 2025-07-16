@@ -7,6 +7,7 @@ import board
 import busio
 from adafruit_bno08x.i2c import BNO08X_I2C
 import time
+import os
 
 from adafruit_bno08x import (
     BNO_REPORT_ACCELEROMETER,
@@ -27,8 +28,15 @@ class BNO085Node(Node):
         self.imu_pub = self.create_publisher(Imu, 'imu/data', 10)
         self.mag_pub = self.create_publisher(MagneticField, 'imu/mag', 10)
         
-        # Initialize I2C and BNO085
-        self.i2c = busio.I2C(board.SCL, board.SDA)
+        try:
+            # Initialize I2C and BNO085 using board library
+            self.i2c = busio.I2C(board.SCL, board.SDA)
+        except RuntimeError as e:
+            self.get_logger().warning(f"Failed to initialize I2C using board library: {e}")
+            self.get_logger().info("Falling back to direct I2C bus access.")
+            # Fallback to direct I2C bus access
+            self.i2c = busio.I2C(3, 2)  # Default I2C bus pins for Raspberry Pi
+        
         self.bno = BNO08X_I2C(self.i2c, address=i2c_address)
         
         self.get_logger().info(f'Using I2C address: 0x{i2c_address:02X}')
