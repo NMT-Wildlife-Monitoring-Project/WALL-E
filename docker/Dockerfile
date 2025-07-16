@@ -11,8 +11,8 @@ ENV USER=$USER
 RUN useradd -m $USER && \
     echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Add user to groups for hardware access
-RUN usermod -a -G dialout,tty,audio,video $USER
+# Add user to groups for hardware access, including sgx for GPIO
+RUN usermod -a -G dialout,tty,audio,video,sgx $USER
 
 # Switch to root for installations
 USER root
