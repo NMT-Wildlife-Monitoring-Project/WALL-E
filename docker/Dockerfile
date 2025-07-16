@@ -11,6 +11,9 @@ ENV USER=$USER
 RUN useradd -m $USER && \
     echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
+# Create the sgx group for GPIO access
+RUN groupadd sgx
+
 # Add user to groups for hardware access, including sgx for GPIO
 RUN usermod -a -G dialout,tty,audio,video,sgx $USER
 
