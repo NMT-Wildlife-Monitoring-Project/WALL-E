@@ -83,6 +83,7 @@ BUILD_CONTAINER=false
 STOP_CONTAINER=false
 RESTART_CONTAINER=false
 QUIET_MODE=false
+CLEAN_DOCKER=false
 
 COPY_TO=""
 COPY_FROM=""
@@ -110,10 +111,19 @@ while [[ "$#" -gt 0 ]]; do
         --stop|-x) STOP_CONTAINER=true; shift ;;
         --restart|-R) RESTART_CONTAINER=true; shift ;;
         --quiet|-q) QUIET_MODE=true; shift ;;
+        --clean|-k) CLEAN_DOCKER=true; shift ;;
         --help|-h) usage; shift ;;
         *) usage; shift ;;
     esac
 done
+
+# Handle the clean option
+if [[ "$CLEAN_DOCKER" = true ]]; then
+    echo "Cleaning up Docker system..."
+    docker system prune -af --volumes
+    echo "Docker cleanup complete."
+    exit 0
+fi
 
 # Build a list of selected commands
 SELECTED_CMDS=()
