@@ -180,6 +180,9 @@ DOCKER_RUN_FLAGS+=("--device=/dev/mem")
 # Add Docker flag to mount /dev with correct permissions
 DOCKER_RUN_FLAGS+=("--volume=/dev:/dev:rw")
 
+# Add BLINKA_FORCEBOARD environment variable for Adafruit Blinka
+DOCKER_RUN_FLAGS+=("--env=BLINKA_FORCEBOARD=RaspberryPi5")
+
 if [ "$RUN_USB_CAM_NODE" = true ]; then
     if [ -e /dev/video0 ]; then
         DOCKER_RUN_FLAGS+=("--device=/dev/video0")

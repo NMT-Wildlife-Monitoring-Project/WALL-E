@@ -12,10 +12,10 @@ RUN useradd -m $USER && \
     echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Create the sgx group for GPIO access
-RUN groupadd sgx
+RUN groupadd -g 993 gpio
 
 # Add user to groups for hardware access, including sgx for GPIO
-RUN usermod -a -G dialout,tty,audio,video,sgx $USER
+RUN usermod -a -G dialout,tty,audio,video,gpio $USER
 
 # Switch to root for installations
 USER root
@@ -128,6 +128,9 @@ RUN chmod +x /entrypoint.sh
 
 # Set entrypoint to use the external script
 ENTRYPOINT ["/entrypoint.sh"]
+
+# Ensure /dev/gpiochip* devices have correct permissions
+RUN echo 'SUBSYSTEM=="gpio", KERNEL=="gpiochip*", MODE="0660", GROUP="sgx"' > /etc/udev/rules.d/99-gpio.rules
 
 # Switch back to non-root user 'walle'
 USER $USER
