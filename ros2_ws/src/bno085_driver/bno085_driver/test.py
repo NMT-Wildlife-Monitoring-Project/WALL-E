@@ -20,13 +20,8 @@ bno.enable_feature(BNO_REPORT_GYROSCOPE)
 bno.enable_feature(BNO_REPORT_MAGNETOMETER)
 bno.enable_feature(BNO_REPORT_ROTATION_VECTOR)
 
-bno.begin_calibration()
-
 while True:
     time.sleep(0.5)
-    print("Calibration: ")
-    print(bno.calibration_status)
-    print("")
     print("Acceleration:")
     accel_x, accel_y, accel_z = bno.acceleration
     print("X: %0.6f  Y: %0.6f Z: %0.6f  m/s^2" % (accel_x, accel_y, accel_z))

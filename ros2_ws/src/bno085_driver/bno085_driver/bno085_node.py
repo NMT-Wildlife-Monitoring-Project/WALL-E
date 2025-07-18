@@ -46,36 +46,10 @@ class BNO085Node(Node):
         self.bno.enable_feature(BNO_REPORT_MAGNETOMETER)
         self.bno.enable_feature(BNO_REPORT_ROTATION_VECTOR)
         
-        # Wait for calibration
-        self.wait_for_calibration()
-        
         # Create timer for publishing
         self.timer = self.create_timer(0.01, self.publish_imu_data)  # 100Hz
         
-        self.get_logger().info('BNO085 Node initialized and calibrated')
-    
-    def wait_for_calibration(self):
-        self.get_logger().info('Waiting for BNO085 calibration...')
-
-        self.bno.begin_calibration()
-        
-        start_time = time.time()
-        timeout = 10.0  # 10 seconds timeout
-        
-        while rclpy.ok():
-            # Check timeout
-            if time.time() - start_time > timeout:
-                self.get_logger().error('BNO085 calibration timeout after 10 seconds')
-                raise RuntimeError('BNO085 calibration failed - timeout')
-            
-            # Check if we have valid quaternion data (indicates calibration)
-            status = self.bno.calibration_status
-            if status is not None:
-                self.get_logger().info(f'Calibration status: {status}')
-                self.get_logger().info('BNO085 calibration complete')
-                break
-            
-            time.sleep(0.1)
+        self.get_logger().info('BNO085 Node initialized')
     
     def publish_imu_data(self):
         try:
