@@ -115,9 +115,6 @@ class BNO085Node(Node):
 
         except Exception as e:
             self.get_logger().error(f"Error reading BNO085 data: {e}")
-            self.get_logger().debug("Attempting to log raw sensor data for debugging purposes.")
-            raw_data = self.bno.raw_data
-            self.get_logger().debug(f"Raw sensor data: {raw_data}")
 
 def main(args=None):
     rclpy.init(args=args)
