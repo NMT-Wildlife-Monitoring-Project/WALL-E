@@ -84,62 +84,66 @@ class BNO085Node(Node):
             gyro = self.bno.gyro
             quat = self.bno.quaternion
             mag = self.bno.magnetic
-            
+
             # Check if data is valid
             if accel is None or gyro is None or quat is None:
+                self.get_logger().warning("Received invalid data from BNO085 sensor.")
                 return
-            
+
             # Create IMU message
             imu_msg = Imu()
-            
+
             # Header
             imu_msg.header = Header()
             imu_msg.header.stamp = self.get_clock().now().to_msg()
             imu_msg.header.frame_id = 'imu_link'
-            
+
             # Orientation (quaternion)
             imu_msg.orientation.x = quat[0]
             imu_msg.orientation.y = quat[1]
             imu_msg.orientation.z = quat[2]
             imu_msg.orientation.w = quat[3]
-            
+
             # Angular velocity (rad/s)
             imu_msg.angular_velocity.x = gyro[0]
             imu_msg.angular_velocity.y = gyro[1]
             imu_msg.angular_velocity.z = gyro[2]
-            
+
             # Linear acceleration (m/s²)
             imu_msg.linear_acceleration.x = accel[0]
             imu_msg.linear_acceleration.y = accel[1]
             imu_msg.linear_acceleration.z = accel[2]
-            
+
             # Covariance matrices (set to unknown)
             imu_msg.orientation_covariance = [-1.0] * 9
             imu_msg.angular_velocity_covariance = [-1.0] * 9
             imu_msg.linear_acceleration_covariance = [-1.0] * 9
-            
+
             # Publish IMU message
             self.imu_pub.publish(imu_msg)
-            
+
             # Publish magnetometer data if available
             if mag is not None:
                 mag_msg = MagneticField()
                 mag_msg.header = Header()
                 mag_msg.header.stamp = self.get_clock().now().to_msg()
                 mag_msg.header.frame_id = 'imu_link'
-                
+
                 # Magnetic field (Tesla)
                 mag_msg.magnetic_field.x = mag[0] * 1e-6  # Convert µT to T
                 mag_msg.magnetic_field.y = mag[1] * 1e-6
                 mag_msg.magnetic_field.z = mag[2] * 1e-6
-                
+
                 # Covariance (set to unknown)
                 mag_msg.magnetic_field_covariance = [-1.0] * 9
-                
+
                 self.mag_pub.publish(mag_msg)
-            
+
         except Exception as e:
-            self.get_logger().error(f'Error reading BNO085 data: {e}')
+            self.get_logger().error(f"Error reading BNO085 data: {e}")
+            self.get_logger().debug("Attempting to log raw sensor data for debugging purposes.")
+            raw_data = self.bno.raw_data
+            self.get_logger().debug(f"Raw sensor data: {raw_data}")
 
 def main(args=None):
     rclpy.init(args=args)
