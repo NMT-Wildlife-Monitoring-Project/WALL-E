@@ -106,6 +106,8 @@ RUN pip3 install --break-system-packages adafruit-blinka adafruit-circuitpython-
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
+RUN usermod -a -G input $USER
+
 # Copy and build the roboclaw workspace
 COPY --chown=$USER:$USER ros2_roboclaw_driver/ /home/$USER/ros2_roboclaw_driver/
 WORKDIR /home/$USER/ros2_roboclaw_driver
