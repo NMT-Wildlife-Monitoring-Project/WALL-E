@@ -1,4 +1,3 @@
-<!-- robot_bringup/package.xml -->
 <?xml version="1.0"?>
 <package format="3">
   <name>robot_bringup</name>
