@@ -99,9 +99,15 @@ RUN apt-get install -y \
     python3-rpi.gpio \
     python3-lgpio
 
-
 # Install Adafruit libraries into the system Python
 RUN pip3 install --break-system-packages adafruit-blinka adafruit-circuitpython-bno08x gps
+
+# Install ROS robot localization and mapviz packages
+RUN apt-get install -y \
+    ros-$ROS_DISTRO-robot-localization \
+    ros-$ROS_DISTRO-mapviz \
+    ros-$ROS_DISTRO-mapviz-plugins \
+    ros-$ROS_DISTRO-tile-map
 
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
