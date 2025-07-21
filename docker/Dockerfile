@@ -104,10 +104,13 @@ RUN pip3 install --break-system-packages adafruit-blinka adafruit-circuitpython-
 
 # Install ROS robot localization and mapviz packages
 RUN apt-get install -y \
-    ros-$ROS_DISTRO-robot-localization \
+    ros-$ROS_DISTRO-robot-localization
+
+RUN apt-get install -y \
     ros-$ROS_DISTRO-mapviz \
     ros-$ROS_DISTRO-mapviz-plugins \
-    ros-$ROS_DISTRO-tile-map
+    ros-$ROS_DISTRO-tile-map \
+    ros-$ROS_DISTRO-multires-image
 
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
