@@ -10,7 +10,7 @@ def generate_launch_description():
             parameters=[{
                 'port': '/dev/ttyACM0',
                 'baud': 4800,
-                'frame_id': 'gps'
+                'frame_id': 'gps_link'
             }],
             output='screen'
         )

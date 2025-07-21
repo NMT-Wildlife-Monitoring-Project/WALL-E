@@ -23,6 +23,10 @@ class BNO085Node(Node):
         self.declare_parameter('i2c_address', 0x4B)  # Default BNO085 address
         i2c_address = self.get_parameter('i2c_address').value
         
+        # Declare parameter for frame ID
+        self.declare_parameter('frame_id', 'imu_link')  # Default frame ID
+        self.frame_id = self.get_parameter('frame_id').value
+        
         # Publishers
         self.imu_pub = self.create_publisher(Imu, 'imu/data', 10)
         self.mag_pub = self.create_publisher(MagneticField, 'imu/mag', 10)
@@ -40,11 +44,30 @@ class BNO085Node(Node):
         
         self.get_logger().info(f'Using I2C address: 0x{i2c_address:02X}')
         
-        # Enable required reports
-        self.bno.enable_feature(BNO_REPORT_ACCELEROMETER)
-        self.bno.enable_feature(BNO_REPORT_GYROSCOPE)
-        self.bno.enable_feature(BNO_REPORT_MAGNETOMETER)
-        self.bno.enable_feature(BNO_REPORT_ROTATION_VECTOR)
+        # Enable required reports with retry logic
+        features = [
+            BNO_REPORT_ACCELEROMETER,
+            BNO_REPORT_GYROSCOPE,
+            BNO_REPORT_MAGNETOMETER,
+            BNO_REPORT_ROTATION_VECTOR
+        ]
+        feature_names = [
+            "ACCELEROMETER",
+            "GYROSCOPE",
+            "MAGNETOMETER",
+            "ROTATION_VECTOR"
+        ]
+        for feature, name in zip(features, feature_names):
+            for attempt in range(1, 4):
+                try:
+                    self.bno.enable_feature(feature)
+                    break
+                except Exception as e:
+                    self.get_logger().warning(f"Attempt {attempt} to enable {name} failed: {e}")
+                    time.sleep(0.5)
+            else:
+                self.get_logger().error(f"Failed to enable {name} after 3 attempts. Exiting.")
+                raise RuntimeError(f"Failed to enable {name} after 3 attempts.")
         
         # Create timer for publishing
         self.timer = self.create_timer(0.01, self.publish_imu_data)  # 100Hz
@@ -70,7 +93,7 @@ class BNO085Node(Node):
             # Header
             imu_msg.header = Header()
             imu_msg.header.stamp = self.get_clock().now().to_msg()
-            imu_msg.header.frame_id = 'imu_link'
+            imu_msg.header.frame_id = self.frame_id
 
             # Orientation (quaternion)
             imu_msg.orientation.x = quat[0]
