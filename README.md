@@ -22,6 +22,15 @@ Ensure you have an SSH key set up with Github (optional)
 Clone this repository. To commit to the repository, clone with the ssh address. Don't push to main unless you helped write this README (make your own branch).
 ```
 git clone https://github.com/NMT-Wildlife-Monitoring-Project/WALL-E.git
+cd WALL-E
+```
+
+Install udev rules
+```
+cd scripts
+sudo cp 99-walle-devices.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules
+sudo udevadm trigger
 ```
 
 Build the docker image  
