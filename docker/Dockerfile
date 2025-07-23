@@ -106,6 +106,14 @@ RUN pip3 install --break-system-packages adafruit-blinka adafruit-circuitpython-
 RUN apt-get install -y \
     ros-$ROS_DISTRO-robot-localization
 
+RUN apt-get install -y python3-rosdep
+
+RUN apt-get install -y ros-$ROS_DISTRO-ros2-controllers
+RUN apt-get install -y \
+    ros-$ROS_DISTRO-robot-state-publisher \
+    ros-$ROS_DISTRO-xacro
+RUN apt-get install -y ros-$ROS_DISTRO-ros2-control
+
 # RUN apt-get install -y \
 #     ros-$ROS_DISTRO-mapviz \
 #     ros-$ROS_DISTRO-mapviz-plugins \
@@ -117,23 +125,27 @@ RUN rm -rf /var/lib/apt/lists/*
 
 RUN usermod -a -G input $USER
 
-# Copy and build the roboclaw workspace
-COPY --chown=$USER:$USER ros2_roboclaw_driver/ /home/$USER/ros2_roboclaw_driver/
-WORKDIR /home/$USER/ros2_roboclaw_driver
-RUN rosdep install --from-paths src --ignore-src -r -y
-RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; \
-                  export PATH="/opt/venv/bin:$PATH"; \
-                  colcon build --symlink-install'
-
 # Copy the workspace into the container
 COPY --chown=$USER:$USER ros2_ws /home/$USER/ros2_ws/
 WORKDIR /home/$USER/ros2_ws
+
+# Switch back to non-root user 'walle'
+USER $USER
+WORKDIR /home/$USER/ros2_ws
+
+# Install rosdep dependencies as non-root user
+RUN rosdep update && \
+    rosdep install --from-paths /home/$USER/ros2_ws/src --ignore-src -r -y \
+    --skip-keys "mapviz mapviz_plugins tile_map nmea_msgs" || true
+
+# Build the workspace
 RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; \
                   export PATH="/opt/venv/bin:$PATH"; \
                   colcon build --symlink-install'
 
-WORKDIR /home/$USER
 # Copy the entrypoint script into the container
+USER root
+WORKDIR /home/$USER
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 

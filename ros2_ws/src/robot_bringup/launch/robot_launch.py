@@ -15,16 +15,16 @@ def generate_launch_description():
     bringup_dir = FindPackageShare('robot_bringup')
 
     return LaunchDescription([
-        DeclareLaunchArgument('use_roboclaw', default_value='true'),
+        # DeclareLaunchArgument('use_roboclaw', default_value='true'),
         DeclareLaunchArgument('use_rplidar', default_value='false'),
         DeclareLaunchArgument('use_bno085', default_value='false'),
         DeclareLaunchArgument('use_gps', default_value='false'),
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([
-                FindPackageShare('ros2_roboclaw_driver'), '/launch/ros2_roboclaw_driver.launch.py'
-            ]),
-            condition=IfCondition(use_roboclaw)
-        ),
+        # IncludeLaunchDescription(
+        #     PythonLaunchDescriptionSource([
+        #         FindPackageShare('ros2_roboclaw_driver'), '/launch/ros2_roboclaw_driver.launch.py'
+        #     ]),
+        #     condition=IfCondition(use_roboclaw)
+        # ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
                 FindPackageShare('sllidar_ros2'), '/launch/sllidar_s3_launch.py'
@@ -43,5 +43,9 @@ def generate_launch_description():
             ]),
             condition=IfCondition(use_gps)
         ),
-
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([
+                bringup_dir, '/launch/diff_drive_controller.launch.py'
+            ])
+        ),
     ])
