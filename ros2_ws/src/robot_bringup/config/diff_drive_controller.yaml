@@ -16,7 +16,7 @@ diff_drive_controller:
     right_wheel_names: ["right_wheel_joint"]
 
     # These are the nominal odometry parameters for the differential drive robot
-    wheel_separation: 0.35  # The distance between the wheels
+    wheel_separation: 0.24  # The distance between the wheels
     wheel_radius: 0.095  # The radius of each wheel
 
     # Corrections to nominal odometry parameters
