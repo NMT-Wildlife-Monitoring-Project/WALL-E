@@ -57,7 +57,7 @@
   <ros2_control name="RoboClawSystem" type="system">
     <hardware>
       <plugin>roboclaw_hardware_interface/RoboClawHardwareInterface</plugin>
-      <param name="serial_port">/dev/ttyACM0</param>
+      <param name="serial_port">/dev/roboclaw</param>
     </hardware>
 
     <joint name="left_wheel_joint">

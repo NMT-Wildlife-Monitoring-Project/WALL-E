@@ -8,7 +8,7 @@ def generate_launch_description():
             executable='nmea_serial_driver',
             name='nmea_navsat_driver',
             parameters=[{
-                'port': '/dev/ttyACM0',
+                'port': '/dev/gps',
                 'baud': 4800,
                 'frame_id': 'gps_link'
             }],
