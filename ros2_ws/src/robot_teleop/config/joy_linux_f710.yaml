@@ -42,6 +42,3 @@ teleop_twist_joy:
     # Require enable button to be held for safety
     require_enable_button: true
     
-    # Topic remapping
-    joy_topic: "joy"
-    cmd_vel_topic: "diff_drive_controller/cmd_vel"

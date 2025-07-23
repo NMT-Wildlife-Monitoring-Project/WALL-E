@@ -37,7 +37,7 @@ diff_drive_controller:
     # This should be larger than the twist publisher's period
     cmd_vel_timeout: 0.1
     #publish_limited_velocity: true
-    use_stamped_vel: false
+    use_stamped_vel: true
     #velocity_rolling_window_size: 10
 
     # Velocity and acceleration limits
