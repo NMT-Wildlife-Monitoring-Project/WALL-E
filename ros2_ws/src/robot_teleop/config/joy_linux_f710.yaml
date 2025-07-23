@@ -44,4 +44,4 @@ teleop_twist_joy:
     
     # Topic remapping
     joy_topic: "joy"
-    cmd_vel_topic: "cmd_vel"
+    cmd_vel_topic: "diff_drive_controller/cmd_vel"
