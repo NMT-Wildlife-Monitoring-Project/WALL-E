@@ -7,7 +7,7 @@ from launch_ros.substitutions import FindPackageShare
 import os
 
 def generate_launch_description():
-    use_roboclaw = LaunchConfiguration('use_roboclaw')
+    # use_roboclaw = LaunchConfiguration('use_roboclaw')
     use_rplidar = LaunchConfiguration('use_rplidar')
     use_bno085 = LaunchConfiguration('use_bno085')
     use_gps = LaunchConfiguration('use_gps')
