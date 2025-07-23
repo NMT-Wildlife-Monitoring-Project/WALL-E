@@ -30,14 +30,14 @@ diff_drive_controller:
     odom_frame_id: odom
     base_frame_id: base_link
 
-    open_loop: false  # Calculate odometry (instead of integrating velocity commands)
+    open_loop: true  # Calculate odometry (instead of integrating velocity commands)
     enable_odom_tf: true  # Publish odometry transform from odom_frame_id to base_frame_id
 
     # If the controller doesn't get a velocity request within this time period, stop.
     # This should be larger than the twist publisher's period
-    cmd_vel_timeout: 0.1
+    cmd_vel_timeout: 0.5
     #publish_limited_velocity: true
-    use_stamped_vel: true
+    use_stamped_vel: false
     #velocity_rolling_window_size: 10
 
     # Velocity and acceleration limits

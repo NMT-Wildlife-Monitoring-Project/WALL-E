@@ -41,4 +41,5 @@ teleop_twist_joy:
     
     # Require enable button to be held for safety
     require_enable_button: true
+    publish_stamped_twist: true  # Use StampedTwist messages
     
