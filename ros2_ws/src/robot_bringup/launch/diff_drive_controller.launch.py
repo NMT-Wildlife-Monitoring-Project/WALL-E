@@ -16,7 +16,7 @@ def generate_launch_description():
 
     robot_controllers_path = PathJoinSubstitution([
         FindPackageShare("robot_bringup"),
-        "params",
+        "config",
         "diff_drive_controller.yaml"
     ])
 
