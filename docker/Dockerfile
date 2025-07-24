@@ -134,9 +134,9 @@ USER $USER
 WORKDIR /home/$USER/ros2_ws
 
 # Install rosdep dependencies as non-root user
-RUN rosdep update && \
-    rosdep install --from-paths /home/$USER/ros2_ws/src --ignore-src -r -y \
-    --skip-keys "mapviz mapviz_plugins tile_map nmea_msgs" || true
+# RUN rosdep update && \
+#     rosdep install --from-paths /home/$USER/ros2_ws/src --ignore-src -r -y \
+#     --skip-keys "mapviz mapviz_plugins tile_map nmea_msgs" || true
 
 # Build the workspace
 RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; \

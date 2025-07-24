@@ -21,9 +21,9 @@ teleop_twist_joy:
     
     # Velocity scaling - matches motor driver limits
     scale_linear:
-      x: 0.5      # Maximum linear velocity (m/s)
+      x: 1.0      # Maximum linear velocity (m/s)
     scale_angular:
-      yaw: 0.2    # Maximum angular velocity (rad/s)
+      yaw: 1.0    # Maximum angular velocity (rad/s)
 
     # Button configuration for Logitech F710
     # A: 0, B: 1, X: 2, Y: 3
@@ -41,5 +41,5 @@ teleop_twist_joy:
     
     # Require enable button to be held for safety
     require_enable_button: true
-    publish_stamped_twist: true  # Use StampedTwist messages
+    publish_stamped_twist: false  # Use StampedTwist messages
     

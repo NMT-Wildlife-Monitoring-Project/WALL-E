@@ -45,7 +45,7 @@ def generate_launch_description():
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
-                bringup_dir, '/launch/diff_drive_controller.launch.py'
+            FindPackageShare('robot_bringup'), '/launch/diff_drive_controller.launch.py'
             ])
         ),
     ])
