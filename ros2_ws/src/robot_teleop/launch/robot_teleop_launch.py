@@ -48,9 +48,6 @@ def generate_launch_description():
         parameters=[
             config_file,
         ],
-        remappings=[
-            ('/cmd_vel', '/diff_drive_controller/cmd_vel')
-        ],
         output='screen'
     )
 

@@ -45,7 +45,7 @@ def generate_launch_description():
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
-            FindPackageShare('robot_bringup'), '/launch/diff_drive_controller.launch.py'
+            FindPackageShare('roboclaw_driver'), '/launch/roboclaw_launch.py'
             ])
         ),
     ])
