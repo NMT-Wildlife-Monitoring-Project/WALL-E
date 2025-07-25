@@ -47,10 +47,10 @@ class RoboclawNode(Node):
         self.declare_parameter('max_speed', 1.0) # m/s
         self.declare_parameter('max_speed_qpps', 10560)  # Max speed in quadrature pulses per second
         self.declare_parameter('accel_qpps', 10560)      # Max accel in quadrature pulses per second^2
-        self.declare_parameter('battery_min_voltage', 20.0)  # volts
-        self.declare_parameter('battery_max_voltage', 27.0)  # volts
         self.declare_parameter('wheel_separation', 0.24) # meters
         self.declare_parameter('wheel_diameter', 0.095)    # meters
+        self.declare_parameter('m1_reverse', True)  # Reverse motor 1 direction
+        self.declare_parameter('m2_reverse', True)  # Reverse motor 2 direction
         self.declare_parameter('odom_publish_rate', 50)  # Hz
         self.declare_parameter('status_publish_rate', 5)
         self.declare_parameter('status_topic', 'roboclaw/status')
@@ -69,6 +69,8 @@ class RoboclawNode(Node):
         self.max_speed = self.get_parameter('max_speed').get_parameter_value().double_value
         self.wheel_separation = self.get_parameter('wheel_separation').get_parameter_value().double_value
         self.wheel_diameter = self.get_parameter('wheel_diameter').get_parameter_value().double_value
+        self.m1_reverse = self.get_parameter('m1_reverse').get_parameter_value().bool_value
+        self.m2_reverse = self.get_parameter('m2_reverse').get_parameter_value().bool_value
         self.odom_publish_rate = self.get_parameter('odom_publish_rate').get_parameter_value().integer_value
         self.status_publish_rate = self.get_parameter('status_publish_rate').get_parameter_value().integer_value
         self.status_topic = self.get_parameter('status_topic').get_parameter_value().string_value
@@ -77,11 +79,8 @@ class RoboclawNode(Node):
         self.odom_frame_id = self.get_parameter('odom_frame_id').get_parameter_value().string_value
         self.base_frame_id = self.get_parameter('base_frame_id').get_parameter_value().string_value
         self.cmd_vel_timeout = self.get_parameter('cmd_vel_timeout').get_parameter_value().double_value
-
         self.max_speed_qpps_param = self.get_parameter('max_speed_qpps').get_parameter_value().integer_value
         self.accel_qpps_param = self.get_parameter('accel_qpps').get_parameter_value().integer_value
-        self.battery_min_voltage = self.get_parameter('battery_min_voltage').get_parameter_value().double_value
-        self.battery_max_voltage = self.get_parameter('battery_max_voltage').get_parameter_value().double_value
 
         # Calculate max speed and accel qpps using the minimum of the calculated and parameter values
         self.max_speed_qpps = min(self.meters_to_pulses(self.max_speed), self.max_speed_qpps_param)
@@ -93,12 +92,6 @@ class RoboclawNode(Node):
             self.get_logger().error(f'Failed to open Roboclaw on {self.serial_port}')
         else:
             self.get_logger().info('Roboclaw connected')
-        
-        # Configure Roboclaw
-        min_v = int(self.battery_min_voltage * 10)
-        max_v = int(self.battery_max_voltage * 10)
-        # self.roboclaw.SetMainVoltages(self.address, min_v, max_v)
-        # self.roboclaw.WriteNVM(self.address)  # Save settings to NVM
         
         # ROS2 interfaces
         qos = QoSProfile(depth=10)
@@ -143,6 +136,11 @@ class RoboclawNode(Node):
         qpps_right = self.meters_to_pulses(v_right)        # Clamp speeds
         qpps_left = max(-self.max_speed_qpps, min(self.max_speed_qpps, qpps_left))
         qpps_right = max(-self.max_speed_qpps, min(self.max_speed_qpps, qpps_right))
+        # Reverse direction if configured
+        if self.m1_reverse:
+            qpps_left = -qpps_left
+        if self.m2_reverse:
+            qpps_right = -qpps_right
         # Send to roboclaw
         self.roboclaw.SpeedAccelM1M2(self.address, self.accel_qpps, qpps_left, qpps_right)
         # Update last command time
