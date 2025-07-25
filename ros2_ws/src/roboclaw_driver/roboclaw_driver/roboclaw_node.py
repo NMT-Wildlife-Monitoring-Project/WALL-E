@@ -97,8 +97,8 @@ class RoboclawNode(Node):
         # Configure Roboclaw
         min_v = int(self.battery_min_voltage * 10)
         max_v = int(self.battery_max_voltage * 10)
-        self.roboclaw.SetMainVoltages(self.address, min_v, max_v)
-        self.roboclaw.WriteNVM(self.address)  # Save settings to NVM
+        # self.roboclaw.SetMainVoltages(self.address, min_v, max_v)
+        # self.roboclaw.WriteNVM(self.address)  # Save settings to NVM
         
         # ROS2 interfaces
         qos = QoSProfile(depth=10)
