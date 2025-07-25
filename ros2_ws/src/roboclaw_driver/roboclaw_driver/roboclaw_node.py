@@ -57,7 +57,11 @@ class RoboclawNode(Node):
             self.get_logger().error(f'Failed to open Roboclaw on {self.serial_port}')
         else:
             self.get_logger().info('Roboclaw connected')
-
+        
+        # Configure Roboclaw
+        self.roboclaw.SetMinVoltageMainBattery(self.address, 70)
+        self.roboclaw.SetMaxVoltageMainBattery(self.address, 133)
+        
         # ROS2 interfaces
         qos = QoSProfile(depth=10)
         self.odom_pub = self.create_publisher(Odometry, self.odom_topic, qos)
