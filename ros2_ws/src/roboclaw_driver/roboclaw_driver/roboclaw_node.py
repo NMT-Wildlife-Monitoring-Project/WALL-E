@@ -46,6 +46,9 @@ class RoboclawNode(Node):
         self.declare_parameter('accel', 1.0)    # m/s^2
         self.declare_parameter('max_speed', 1.0) # m/s
         self.declare_parameter('max_speed_qpps', 10560)  # Max speed in quadrature pulses per second
+        self.declare_parameter('accel_qpps', 10560)      # Max accel in quadrature pulses per second^2
+        self.declare_parameter('battery_min_voltage', 20.0)  # volts
+        self.declare_parameter('battery_max_voltage', 27.0)  # volts
         self.declare_parameter('wheel_separation', 0.24) # meters
         self.declare_parameter('wheel_diameter', 0.095)    # meters
         self.declare_parameter('odom_publish_rate', 50)  # Hz
@@ -75,8 +78,14 @@ class RoboclawNode(Node):
         self.base_frame_id = self.get_parameter('base_frame_id').get_parameter_value().string_value
         self.cmd_vel_timeout = self.get_parameter('cmd_vel_timeout').get_parameter_value().double_value
 
-        self.max_speed_qpps = self.meters_to_pulses(self.max_speed)
-        self.accel_qpps = self.meters_to_pulses(self.accel)                                                
+        self.max_speed_qpps_param = self.get_parameter('max_speed_qpps').get_parameter_value().integer_value
+        self.accel_qpps_param = self.get_parameter('accel_qpps').get_parameter_value().integer_value
+        self.battery_min_voltage = self.get_parameter('battery_min_voltage').get_parameter_value().double_value
+        self.battery_max_voltage = self.get_parameter('battery_max_voltage').get_parameter_value().double_value
+
+        # Calculate max speed and accel qpps using the minimum of the calculated and parameter values
+        self.max_speed_qpps = min(self.meters_to_pulses(self.max_speed), self.max_speed_qpps_param)
+        self.accel_qpps = min(self.meters_to_pulses(self.accel), self.accel_qpps_param)
 
         # Roboclaw setup
         self.roboclaw = Roboclaw(self.serial_port, self.baudrate)
@@ -86,7 +95,10 @@ class RoboclawNode(Node):
             self.get_logger().info('Roboclaw connected')
         
         # Configure Roboclaw
-        self.roboclaw.SetMainVoltages(self.address, 200, 270)
+        min_v = int(self.battery_min_voltage * 10)
+        max_v = int(self.battery_max_voltage * 10)
+        self.roboclaw.SetMainVoltages(self.address, min_v, max_v)
+        self.roboclaw.WriteNVM(self.address)  # Save settings to NVM
         
         # ROS2 interfaces
         qos = QoSProfile(depth=10)
