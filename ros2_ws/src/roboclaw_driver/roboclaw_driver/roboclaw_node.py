@@ -43,10 +43,10 @@ class RoboclawNode(Node):
         self.declare_parameter('baudrate', 9600)
         self.declare_parameter('address', 128)
         self.declare_parameter('qppr', 6533)  # Quadrature pulses per revolution
-        self.declare_parameter('accel', 1.0)    # m/s^2
+        self.declare_parameter('accel', 3.0)    # m/s^2
         self.declare_parameter('max_speed', 1.0) # m/s
-        self.declare_parameter('max_speed_qpps', 10560)  # Max speed in quadrature pulses per second
-        self.declare_parameter('accel_qpps', 10560)      # Max accel in quadrature pulses per second^2
+        self.declare_parameter('max_speed_qpps', 10560)  # Max speed in quadrature pulses per second, -1 means use max_speed
+        self.declare_parameter('accel_qpps', -1)      # Max accel in quadrature pulses per second^2, -1 means use accel
         self.declare_parameter('wheel_separation', 0.24) # meters
         self.declare_parameter('wheel_diameter', 0.095)    # meters
         self.declare_parameter('m1_reverse', True)  # Reverse motor 1 direction
@@ -82,9 +82,17 @@ class RoboclawNode(Node):
         self.max_speed_qpps_param = self.get_parameter('max_speed_qpps').get_parameter_value().integer_value
         self.accel_qpps_param = self.get_parameter('accel_qpps').get_parameter_value().integer_value
 
-        # Calculate max speed and accel qpps using the minimum of the calculated and parameter values
-        self.max_speed_qpps = min(self.meters_to_pulses(self.max_speed), self.max_speed_qpps_param)
-        self.accel_qpps = min(self.meters_to_pulses(self.accel), self.accel_qpps_param)
+        # Calculate max speed qpps
+        if (self.max_speed_qpps_param is not None and self.max_speed_qpps_param >= 0):
+            self.max_speed_qpps = self.max_speed_qpps_param
+        else:
+            self.max_speed_qpps = self.meters_to_pulses(self.max_speed) if self.max_speed is not None and self.max_speed >= 0 else 0
+
+        # Calculate accel qpps
+        if (self.accel_qpps_param is not None and self.accel_qpps_param >= 0):
+            self.accel_qpps = self.accel_qpps_param
+        else:
+            self.accel_qpps = self.meters_to_pulses(self.accel) if self.accel is not None and self.accel >= 0 else 0
 
         # Roboclaw setup
         self.roboclaw = Roboclaw(self.serial_port, self.baudrate)
