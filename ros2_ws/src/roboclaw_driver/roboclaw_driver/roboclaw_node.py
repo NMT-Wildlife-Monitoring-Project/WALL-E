@@ -86,8 +86,7 @@ class RoboclawNode(Node):
             self.get_logger().info('Roboclaw connected')
         
         # Configure Roboclaw
-        self.roboclaw.SetMinVoltageMainBattery(self.address, 70)
-        self.roboclaw.SetMaxVoltageMainBattery(self.address, 133)
+        self.roboclaw.SetMainVoltages(self.address, 200, 270)
         
         # ROS2 interfaces
         qos = QoSProfile(depth=10)
