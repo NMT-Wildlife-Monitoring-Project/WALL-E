@@ -217,10 +217,13 @@ class RoboclawNode(Node):
         main_batt = self.roboclaw.ReadMainBatteryVoltage(self.address)
         logic_batt = self.roboclaw.ReadLogicBatteryVoltage(self.address)
         temp = self.roboclaw.ReadTemp(self.address)
+        err = self.roboclaw.ReadError(self.address)
+        err_code = err[1] if err[0] else 0
+
         status.main_battery_voltage = max(0.0, float(main_batt[1])/10.0 if main_batt[0] else 0.0)
         status.logic_battery_voltage = max(0.0, float(logic_batt[1])/10.0 if logic_batt[0] else 0.0)
         status.temperature = float(temp[1])/10.0 if temp[0] else 0.0
-        status.error_string = ""
+        status.error_string = f"{err_code}"
         self.status_pub.publish(status)
 
 def main(args=None):
