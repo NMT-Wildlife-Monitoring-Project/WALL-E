@@ -9,6 +9,33 @@ from .roboclaw_3 import Roboclaw
 from robot_messages.msg import RoboclawStatus
 
 class RoboclawNode(Node):
+    ERROR_CODES = [
+        (0x000001, "E-Stop"),
+        (0x000002, "Temperature Error"),
+        (0x000004, "Temperature 2 Error"),
+        (0x000008, "Main Voltage High Error"),
+        (0x000010, "Logic Voltage High Error"),
+        (0x000020, "Logic Voltage Low Error"),
+        (0x000040, "M1 Driver Fault Error"),
+        (0x000080, "M2 Driver Fault Error"),
+        (0x000100, "M1 Speed Error"),
+        (0x000200, "M2 Speed Error"),
+        (0x000400, "M1 Position Error"),
+        (0x000800, "M2 Position Error"),
+        (0x001000, "M1 Current Error"),
+        (0x002000, "M2 Current Error"),
+        (0x010000, "M1 Over Current Warning"),
+        (0x020000, "M2 Over Current Warning"),
+        (0x040000, "Main Voltage High Warning"),
+        (0x080000, "Main Voltage Low Warning"),
+        (0x100000, "Temperature Warning"),
+        (0x200000, "Temperature 2 Warning"),
+        (0x400000, "S4 Signal Triggered"),
+        (0x800000, "S5 Signal Triggered"),
+        (0x01000000, "Speed Error Limit Warning"),
+        (0x02000000, "Position Error Limit Warning"),
+    ]
+
     def __init__(self):
         super().__init__('roboclaw_node')
         # Declare parameters
@@ -168,6 +195,17 @@ class RoboclawNode(Node):
         self.last_enc_right = enc_right
         self.last_time = now
 
+    def error_code_to_string(self, code):
+        if code == 0:
+            return "Normal 0x000000"
+        msgs = []
+        for val, name in self.ERROR_CODES:
+            if code & val:
+                msgs.append(name + f" 0x{val:06x}")
+        if not msgs:
+            return f"Unknown error 0x{code:06x}"
+        return "; ".join(msgs)
+
     def publish_status(self):
         status = RoboclawStatus()
         # Read motor 1 data
@@ -227,7 +265,7 @@ class RoboclawNode(Node):
         status.main_battery_voltage = max(0.0, float(main_batt[1])/10.0 if main_batt[0] else 0.0)
         status.logic_battery_voltage = max(0.0, float(logic_batt[1])/10.0 if logic_batt[0] else 0.0)
         status.temperature = float(temp[1])/10.0 if temp[0] else 0.0
-        status.error_string = f"{err_code}"
+        status.error_string = self.error_code_to_string(err_code)
         self.status_pub.publish(status)
 
 def main(args=None):
