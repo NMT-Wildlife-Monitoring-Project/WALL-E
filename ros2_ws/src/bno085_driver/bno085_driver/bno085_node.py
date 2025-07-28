@@ -50,13 +50,15 @@ class BNO085Node(Node):
             BNO_REPORT_ACCELEROMETER,
             BNO_REPORT_GYROSCOPE,
             BNO_REPORT_MAGNETOMETER,
+            BNO_REPORT_ROTATION_VECTOR,
             BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR
         ]
         feature_names = [
             "ACCELEROMETER",
             "GYROSCOPE",
             "MAGNETOMETER",
-            "ROTATION_VECTOR"
+            "ROTATION_VECTOR",
+            "GEOMAGNETIC_ROTATION_VECTOR"
         ]
         for feature, name in zip(features, feature_names):
             for attempt in range(1, 4):
