@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -59,13 +59,18 @@ def generate_launch_description():
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
-                FindPackageShare('robot_navigation'), '/launch/gps_waypoint_follower.launch.py'
-            ]),
-            condition=IfCondition(launch_nav)
-        ),
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([
                 FindPackageShare('roboclaw_driver'), '/launch/roboclaw_launch.py'
             ])
+        ),
+        TimerAction(
+            period=5.0,
+            actions=[
+                IncludeLaunchDescription(
+                    PythonLaunchDescriptionSource([
+                        FindPackageShare('robot_navigation'), '/launch/gps_waypoint_follower.launch.py'
+                    ]),
+                    condition=IfCondition(launch_nav)
+                )
+            ]
         ),
     ])
