@@ -84,7 +84,7 @@ class BNO085Node(Node):
             # Get sensor data
             accel = self.bno.acceleration
             gyro = self.bno.gyro
-            quat = self.bno.quaternion
+            quat = self.bno.geomagnetic_quaternion
             mag = self.bno.magnetic
 
             # Check if data is valid
