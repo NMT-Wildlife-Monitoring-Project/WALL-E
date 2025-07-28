@@ -1,7 +1,7 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration, Command
+from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
 import os
@@ -15,11 +15,11 @@ def generate_launch_description():
 
     bringup_dir = FindPackageShare('robot_bringup')
 
-    robot_description_path = os.path.join(
+    robot_description_path = PathJoinSubstitution([
         FindPackageShare('robot_bringup'),
         'urdf',
         'robot.urdf.xacro'
-    )
+    ])
 
     return LaunchDescription([
         DeclareLaunchArgument('use_rplidar', default_value='true'),
