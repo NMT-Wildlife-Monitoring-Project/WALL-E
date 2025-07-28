@@ -120,6 +120,13 @@ RUN apt-get install -y ros-$ROS_DISTRO-ros2-control
 #     ros-$ROS_DISTRO-tile-map \
 #     ros-$ROS_DISTRO-multires-image
 
+# Install rviz_imu_plugin for IMU visualization in RViz
+RUN apt-get update && apt-get install -y ros-$ROS_DISTRO-rviz-imu-plugin
+
+# Install ROS 2 command-line autocomplete
+RUN apt-get update && apt-get install -y python3-argcomplete
+RUN /bin/bash -c 'eval "$(register-python-argcomplete3 ros2)" >> /etc/bash.bashrc'
+
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 

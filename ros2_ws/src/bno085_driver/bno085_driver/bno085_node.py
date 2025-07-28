@@ -7,6 +7,8 @@ import busio
 from adafruit_bno08x.i2c import BNO08X_I2C
 import time
 import os
+from tf_transformations import euler_from_quaternion
+
 
 from adafruit_bno08x import (
     BNO_REPORT_ACCELEROMETER,
@@ -103,6 +105,9 @@ class BNO085Node(Node):
             imu_msg.orientation.y = quat[1]
             imu_msg.orientation.z = quat[2]
             imu_msg.orientation.w = quat[3]
+
+            roll, pitch, yaw = euler_from_quaternion([quat[0], quat[1], quat[2], quat[3]])
+            self.get_logger().info(f"Orientation: Roll={roll}, Pitch={pitch}, Yaw={yaw}")
 
             # Angular velocity (rad/s)
             imu_msg.angular_velocity.x = gyro[0]
