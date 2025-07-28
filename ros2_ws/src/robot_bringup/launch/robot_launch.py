@@ -8,10 +8,11 @@ import os
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    # use_roboclaw = LaunchConfiguration('use_roboclaw')
-    use_rplidar = LaunchConfiguration('use_rplidar')
-    use_bno085 = LaunchConfiguration('use_bno085')
-    use_gps = LaunchConfiguration('use_gps')
+    launch_rplidar = LaunchConfiguration('launch_rplidar')
+    launch_bno085 = LaunchConfiguration('launch_bno085')
+    launch_gps = LaunchConfiguration('launch_gps')
+    launch_urdf = LaunchConfiguration('launch_urdf')
+    launch_nav = LaunchConfiguration('launch_nav')
 
     bringup_dir = FindPackageShare('robot_bringup')
 
@@ -22,28 +23,29 @@ def generate_launch_description():
     ])
 
     return LaunchDescription([
-        DeclareLaunchArgument('use_rplidar', default_value='true'),
-        DeclareLaunchArgument('use_bno085', default_value='true'),
-        DeclareLaunchArgument('use_gps', default_value='true'),
-        DeclareLaunchArgument('use_urdf', default_value='true'),
+        DeclareLaunchArgument('launch_rplidar', default_value='true'),
+        DeclareLaunchArgument('launch_bno085', default_value='true'),
+        DeclareLaunchArgument('launch_gps', default_value='true'),
+        DeclareLaunchArgument('launch_urdf', default_value='true'),
+        DeclareLaunchArgument('launch_nav', default_value='true'),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
                 FindPackageShare('sllidar_ros2'), '/launch/sllidar_s3_launch.py'
             ]),
-            condition=IfCondition(use_rplidar)
+            condition=IfCondition(launch_rplidar)
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
                 FindPackageShare('bno085_driver'), '/launch/bno085_launch.py'
             ]),
-            condition=IfCondition(use_bno085)
+            condition=IfCondition(launch_bno085)
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
                 bringup_dir, '/launch/gps_launch.py'
             ]),
-            condition=IfCondition(use_gps)
+            condition=IfCondition(launch_gps)
         ),
         Node(
             package='robot_state_publisher',
@@ -53,7 +55,13 @@ def generate_launch_description():
             parameters=[{
                 'robot_description': Command(['xacro ', robot_description_path])
             }],
-            condition=IfCondition(LaunchConfiguration('use_urdf'))
+            condition=IfCondition(LaunchConfiguration('launch_urdf'))
+        ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([
+                FindPackageShare('robot_navigation'), '/launch/gps_waypoint_follower.launch.py'
+            ]),
+            condition=IfCondition(launch_nav)
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
