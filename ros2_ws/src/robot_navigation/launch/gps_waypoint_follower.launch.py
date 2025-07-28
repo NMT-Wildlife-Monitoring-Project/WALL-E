@@ -27,10 +27,10 @@ from nav2_common.launch import RewrittenYaml
 def generate_launch_description():
     # Get the launch directory
     bringup_dir = get_package_share_directory('nav2_bringup')
-    gps_wpf_dir = get_package_share_directory(
+    package_dir = get_package_share_directory(
         "robot_navigation")
-    launch_dir = os.path.join(gps_wpf_dir, 'launch')
-    params_dir = os.path.join(gps_wpf_dir, "config")
+    launch_dir = os.path.join(package_dir, 'launch')
+    params_dir = os.path.join(package_dir, "config")
     nav2_params = os.path.join(params_dir, "nav2_no_map_params.yaml")
     configured_params = RewrittenYaml(
         source_file=nav2_params, root_key="", param_rewrites="", convert_types=True
