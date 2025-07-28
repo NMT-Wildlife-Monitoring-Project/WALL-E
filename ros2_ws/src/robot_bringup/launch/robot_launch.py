@@ -16,9 +16,9 @@ def generate_launch_description():
 
     return LaunchDescription([
         # DeclareLaunchArgument('use_roboclaw', default_value='true'),
-        DeclareLaunchArgument('use_rplidar', default_value='false'),
-        DeclareLaunchArgument('use_bno085', default_value='false'),
-        DeclareLaunchArgument('use_gps', default_value='false'),
+        DeclareLaunchArgument('use_rplidar', default_value='true'),
+        DeclareLaunchArgument('use_bno085', default_value='true'),
+        DeclareLaunchArgument('use_gps', default_value='true'),
         # IncludeLaunchDescription(
         #     PythonLaunchDescriptionSource([
         #         FindPackageShare('ros2_roboclaw_driver'), '/launch/ros2_roboclaw_driver.launch.py'
