@@ -14,7 +14,7 @@ from adafruit_bno08x import (
     BNO_REPORT_ACCELEROMETER,
     BNO_REPORT_GYROSCOPE,
     BNO_REPORT_MAGNETOMETER,
-    BNO_REPORT_ROTATION_VECTOR,
+    # BNO_REPORT_ROTATION_VECTOR,
     BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR,
 )
 
@@ -43,42 +43,33 @@ class BNO085Node(Node):
         #     # Fallback to direct I2C bus access
         self.i2c = busio.I2C(3, 2)  # Default I2C bus pins for Raspberry Pi
         
-        self.bno = BNO08X_I2C(self.i2c, address=i2c_address)
-        
+        self.initialize_bno085()
         self.get_logger().info(f'Using I2C address: 0x{i2c_address:02X}')
         
-        # Enable required reports with retry logic
+        # Create timer for publishing
+        self.timer = self.create_timer(0.05, self.publish_imu_data)  # 100Hz
+        
+        self.get_logger().info('BNO085 Node initialized')
+    
+    def initialize_bno085(self):
+        self.bno = BNO08X_I2C(self.i2c, address=self.get_parameter('i2c_address').value)
         features = [
             BNO_REPORT_ACCELEROMETER,
             BNO_REPORT_GYROSCOPE,
             BNO_REPORT_MAGNETOMETER,
-            BNO_REPORT_ROTATION_VECTOR,
+            # BNO_REPORT_ROTATION_VECTOR,
             BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR
         ]
-        feature_names = [
-            "ACCELEROMETER",
-            "GYROSCOPE",
-            "MAGNETOMETER",
-            "ROTATION_VECTOR",
-            "GEOMAGNETIC_ROTATION_VECTOR"
-        ]
-        for feature, name in zip(features, feature_names):
+        for feature in features:
             for attempt in range(1, 4):
                 try:
                     self.bno.enable_feature(feature)
                     break
-                except Exception as e:
-                    self.get_logger().warning(f"Attempt {attempt} to enable {name} failed: {e}")
+                except Exception as e2:
+                    self.get_logger().warning(f"Attempt {attempt} to enable feature {feature} failed: {e2}")
                     time.sleep(0.5)
-            else:
-                self.get_logger().error(f"Failed to enable {name} after 3 attempts. Exiting.")
-                raise RuntimeError(f"Failed to enable {name} after 3 attempts.")
-        
-        # Create timer for publishing
-        self.timer = self.create_timer(0.01, self.publish_imu_data)  # 100Hz
-        
-        self.get_logger().info('BNO085 Node initialized')
-    
+        self.get_logger().info("BNO085 initialization complete.")
+
     def publish_imu_data(self):
         try:
             # Get sensor data
@@ -146,6 +137,15 @@ class BNO085Node(Node):
 
         except Exception as e:
             self.get_logger().error(f"Error reading BNO085 data: {e}")
+            # Attempt to reinitialize the BNO085 sensor
+            try:
+                self.get_logger().info("Attempting to reinitialize BNO085 sensor...")
+                self.initialize_bno085()
+            except Exception as reinit_e:
+                self.get_logger().error(f"Failed to reinitialize BNO085: {reinit_e}")
+                self.get_logger().error("Critical failure: Unable to recover BNO085. Shutting down node.")
+                rclpy.shutdown()
+
 
 def main(args=None):
     rclpy.init(args=args)
