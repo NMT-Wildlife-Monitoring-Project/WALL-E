@@ -12,7 +12,7 @@ from adafruit_bno08x import (
     BNO_REPORT_ACCELEROMETER,
     BNO_REPORT_GYROSCOPE,
     BNO_REPORT_MAGNETOMETER,
-    BNO_REPORT_ROTATION_VECTOR,
+    BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR,
 )
 
 class BNO085Node(Node):
@@ -49,7 +49,7 @@ class BNO085Node(Node):
             BNO_REPORT_ACCELEROMETER,
             BNO_REPORT_GYROSCOPE,
             BNO_REPORT_MAGNETOMETER,
-            BNO_REPORT_ROTATION_VECTOR
+            BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR
         ]
         feature_names = [
             "ACCELEROMETER",

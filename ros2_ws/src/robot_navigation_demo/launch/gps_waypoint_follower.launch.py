@@ -28,7 +28,7 @@ def generate_launch_description():
     # Get the launch directory
     bringup_dir = get_package_share_directory('nav2_bringup')
     gps_wpf_dir = get_package_share_directory(
-        "robot_navigation")
+        "nav2_gps_waypoint_follower_demo")
     launch_dir = os.path.join(gps_wpf_dir, 'launch')
     params_dir = os.path.join(gps_wpf_dir, "config")
     nav2_params = os.path.join(params_dir, "nav2_no_map_params.yaml")
@@ -49,6 +49,11 @@ def generate_launch_description():
         default_value='False',
         description='Whether to start mapviz')
 
+    gazebo_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(launch_dir, 'gazebo_gps_world.launch.py'))
+    )
+
     robot_localization_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(launch_dir, 'dual_ekf_navsat.launch.py'))
@@ -59,6 +64,7 @@ def generate_launch_description():
             os.path.join(bringup_dir, "launch", "navigation_launch.py")
         ),
         launch_arguments={
+            "use_sim_time": "True",
             "params_file": configured_params,
             "autostart": "True",
         }.items(),
@@ -78,6 +84,9 @@ def generate_launch_description():
 
     # Create the launch description and populate
     ld = LaunchDescription()
+
+    # simulator launch
+    ld.add_action(gazebo_cmd)
 
     # robot localization launch
     ld.add_action(robot_localization_cmd)
