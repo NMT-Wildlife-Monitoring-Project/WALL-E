@@ -10,7 +10,8 @@ def generate_launch_description():
             parameters=[{
                 'port': '/dev/gps',
                 'baud': 4800,
-                'frame_id': 'gps_link'
+                'frame_id': 'gps_link',
+                'topic': '/gps/fix'
             }],
             output='screen'
         )
