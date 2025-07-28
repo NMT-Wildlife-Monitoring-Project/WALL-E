@@ -16,7 +16,7 @@ def generate_launch_description():
     bringup_dir = FindPackageShare('robot_bringup')
 
     robot_description_path = os.path.join(
-        FindPackageShare('robot_description').find('robot_description'),
+        FindPackageShare('robot_bringup'),
         'urdf',
         'robot.urdf.xacro'
     )
