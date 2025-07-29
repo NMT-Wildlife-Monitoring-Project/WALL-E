@@ -37,7 +37,7 @@ declare -a ACTION_CMDS=(
     "ros2 launch robot_teleop robot_teleop_launch.py"
     "echo 'TODO: implement roslaunch control usb_cam.launch'"
     "echo 'TODO: implement roslaunch control view_camera.launch'"
-    "ros2 launch ros2_roboclaw_driver ros2_roboclaw_driver.launch.py"
+    "ros2 launch roboclaw_driver roboclaw_launch.py"
     "echo 'TODO: implement roslaunch rosbridge_server rosbridge_websocket.launch'"
 )
 
