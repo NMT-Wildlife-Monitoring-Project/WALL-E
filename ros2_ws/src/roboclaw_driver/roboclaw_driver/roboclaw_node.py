@@ -162,7 +162,6 @@ class RoboclawNode(Node):
             self.last_cmd_vel_time = self.get_clock().now()
         except serial.serialutil.SerialException as e:
             self.get_logger().warning(f"Serial error in cmd_vel_callback: {e}")
-            self.roboclaw.Close()
             self.connect()
 
     def check_cmd_vel_timeout(self):
@@ -177,7 +176,6 @@ class RoboclawNode(Node):
             self.roboclaw.SpeedAccelM1M2(self.address, self.accel_qpps, 0, 0)
         except serial.serialutil.SerialException as e:
             self.get_logger().warning(f"Serial error in stop_motors: {e}")
-            self.roboclaw.Close()
             self.connect()
         except Exception as e:
             self.get_logger().warn(f"Exception while stopping motors: {e}")
@@ -229,7 +227,6 @@ class RoboclawNode(Node):
             self.last_time = now
         except serial.serialutil.SerialException as e:
             self.get_logger().warning(f"Serial error in update_odom: {e}")
-            self.roboclaw.Close()
             self.connect()
 
     def error_code_to_string(self, code):
@@ -307,7 +304,6 @@ class RoboclawNode(Node):
             self.status_pub.publish(status)
         except serial.serialutil.SerialException as e:
             self.get_logger().warning(f"Serial error in publish_status: {e}")
-            self.roboclaw.Close()
             self.connect()
 
 def main(args=None):
@@ -320,7 +316,6 @@ def main(args=None):
     except serial.serialutil.SerialException as e:
         node.get_logger().warning(f"Serial error: {e}")
         node.get_logger().info("Attempting to reconnect to the roboclaw...")
-        node.roboclaw.Close()
         node.connect()
     node.stop_motors()
     node.destroy_node()
