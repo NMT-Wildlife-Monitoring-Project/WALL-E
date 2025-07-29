@@ -1,3 +1,4 @@
+import serial.serialutil
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
@@ -7,6 +8,7 @@ from tf_transformations import euler_from_quaternion, quaternion_from_euler
 import math
 from .roboclaw_3 import Roboclaw
 from robot_messages.msg import RoboclawStatus
+import serial
 
 class RoboclawNode(Node):
     ERROR_CODES = [
@@ -96,10 +98,7 @@ class RoboclawNode(Node):
 
         # Roboclaw setup
         self.roboclaw = Roboclaw(self.serial_port, self.baudrate)
-        if not self.roboclaw.Open():
-            self.get_logger().error(f'Failed to open Roboclaw on {self.serial_port}')
-        else:
-            self.get_logger().info('Roboclaw connected')
+        self.connect()
         
         # ROS2 interfaces
         qos = QoSProfile(depth=10)
@@ -124,6 +123,13 @@ class RoboclawNode(Node):
         self.create_timer(1/self.status_publish_rate, self.publish_status)
         # Timer for cmd_vel timeout
         self.create_timer(0.1, self.check_cmd_vel_timeout)
+    
+    def connect(self):
+        """Connect to the Roboclaw motor controller."""
+        if not self.roboclaw.Open():
+            self.get_logger().error(f'Failed to open Roboclaw on {self.serial_port}')
+            raise RuntimeError(f'Failed to open Roboclaw on {self.serial_port}')
+        self.get_logger().info(f'Connected to Roboclaw on {self.serial_port} at {self.baudrate} baud')
 
     def meters_to_pulses(self, v):
         """Convert linear velocity in m/s to quadrature pulses per second."""
@@ -134,25 +140,30 @@ class RoboclawNode(Node):
         return pulses * (math.pi * self.wheel_diameter) / self.qppr
 
     def cmd_vel_callback(self, msg):
-        # Convert Twist to wheel speeds (m/s)
-        v = msg.linear.x
-        omega = msg.angular.z
-        v_left = v - omega * self.wheel_separation / 2.0
-        v_right = v + omega * self.wheel_separation / 2.0
-        # Convert m/s to qpps
-        qpps_left = self.meters_to_pulses(v_left)
-        qpps_right = self.meters_to_pulses(v_right)        # Clamp speeds
-        qpps_left = max(-self.max_speed_qpps, min(self.max_speed_qpps, qpps_left))
-        qpps_right = max(-self.max_speed_qpps, min(self.max_speed_qpps, qpps_right))
-        # Reverse direction if configured
-        if self.m1_reverse:
-            qpps_left = -qpps_left
-        if self.m2_reverse:
-            qpps_right = -qpps_right
-        # Send to roboclaw
-        self.roboclaw.SpeedAccelM1M2(self.address, self.accel_qpps, qpps_left, qpps_right)
-        # Update last command time
-        self.last_cmd_vel_time = self.get_clock().now()
+        try:
+            # Convert Twist to wheel speeds (m/s)
+            v = msg.linear.x
+            omega = msg.angular.z
+            v_left = v - omega * self.wheel_separation / 2.0
+            v_right = v + omega * self.wheel_separation / 2.0
+            # Convert m/s to qpps
+            qpps_left = self.meters_to_pulses(v_left)
+            qpps_right = self.meters_to_pulses(v_right)        # Clamp speeds
+            qpps_left = max(-self.max_speed_qpps, min(self.max_speed_qpps, qpps_left))
+            qpps_right = max(-self.max_speed_qpps, min(self.max_speed_qpps, qpps_right))
+            # Reverse direction if configured
+            if self.m1_reverse:
+                qpps_left = -qpps_left
+            if self.m2_reverse:
+                qpps_right = -qpps_right
+            # Send to roboclaw
+            self.roboclaw.SpeedAccelM1M2(self.address, self.accel_qpps, qpps_left, qpps_right)
+            # Update last command time
+            self.last_cmd_vel_time = self.get_clock().now()
+        except serial.serialutil.SerialException as e:
+            self.get_logger().warning(f"Serial error in cmd_vel_callback: {e}")
+            self.roboclaw.Close()
+            self.connect()
 
     def check_cmd_vel_timeout(self):
         now = self.get_clock().now()
@@ -164,6 +175,10 @@ class RoboclawNode(Node):
     def stop_motors(self):
         try:
             self.roboclaw.SpeedAccelM1M2(self.address, self.accel_qpps, 0, 0)
+        except serial.serialutil.SerialException as e:
+            self.get_logger().warning(f"Serial error in stop_motors: {e}")
+            self.roboclaw.Close()
+            self.connect()
         except Exception as e:
             self.get_logger().warn(f"Exception while stopping motors: {e}")
 
@@ -171,46 +186,51 @@ class RoboclawNode(Node):
         self.stop_motors()
 
     def update_odom(self):
-        # Read encoders
-        enc_left = self.roboclaw.ReadEncM1(self.address)
-        enc_right = self.roboclaw.ReadEncM2(self.address)
-        if not (enc_left[0] and enc_right[0]):
-            self.get_logger().warn('Failed to read encoders')
-            return
-        enc_left = enc_left[1]
-        enc_right = enc_right[1]
-        now = self.get_clock().now()
-        dt = (now - self.last_time).nanoseconds / 1e9
-        if self.last_enc_left is not None and self.last_enc_right is not None and dt > 0:
-            d_left = self.pulses_to_meters(enc_left - self.last_enc_left)
-            d_right = self.pulses_to_meters(enc_right - self.last_enc_right)
-            d = (d_left + d_right) / 2.0
-            dth = (d_right - d_left) / self.wheel_separation
-            self.x += d * math.cos(self.th + dth / 2.0)
-            self.y += d * math.sin(self.th + dth / 2.0)
-            self.th += dth
-            vx = d / dt
-            vth = dth / dt
-            # Publish odometry
-            odom = Odometry()
-            odom.header.stamp = now.to_msg()
-            odom.header.frame_id = self.odom_frame_id
-            odom.child_frame_id = self.base_frame_id
-            odom.pose.pose.position.x = self.x
-            odom.pose.pose.position.y = self.y
-            odom.pose.pose.position.z = 0.0
-            q = quaternion_from_euler(0, 0, self.th)
-            odom.pose.pose.orientation.x = q[0]
-            odom.pose.pose.orientation.y = q[1]
-            odom.pose.pose.orientation.z = q[2]
-            odom.pose.pose.orientation.w = q[3]
-            odom.twist.twist.linear.x = vx
-            odom.twist.twist.linear.y = 0.0
-            odom.twist.twist.angular.z = vth
-            self.odom_pub.publish(odom)
-        self.last_enc_left = enc_left
-        self.last_enc_right = enc_right
-        self.last_time = now
+        try:
+            # Read encoders
+            enc_left = self.roboclaw.ReadEncM1(self.address)
+            enc_right = self.roboclaw.ReadEncM2(self.address)
+            if not (enc_left[0] and enc_right[0]):
+                self.get_logger().warn('Failed to read encoders')
+                return
+            enc_left = enc_left[1]
+            enc_right = enc_right[1]
+            now = self.get_clock().now()
+            dt = (now - self.last_time).nanoseconds / 1e9
+            if self.last_enc_left is not None and self.last_enc_right is not None and dt > 0:
+                d_left = self.pulses_to_meters(enc_left - self.last_enc_left)
+                d_right = self.pulses_to_meters(enc_right - self.last_enc_right)
+                d = (d_left + d_right) / 2.0
+                dth = (d_right - d_left) / self.wheel_separation
+                self.x += d * math.cos(self.th + dth / 2.0)
+                self.y += d * math.sin(self.th + dth / 2.0)
+                self.th += dth
+                vx = d / dt
+                vth = dth / dt
+                # Publish odometry
+                odom = Odometry()
+                odom.header.stamp = now.to_msg()
+                odom.header.frame_id = self.odom_frame_id
+                odom.child_frame_id = self.base_frame_id
+                odom.pose.pose.position.x = self.x
+                odom.pose.pose.position.y = self.y
+                odom.pose.pose.position.z = 0.0
+                q = quaternion_from_euler(0, 0, self.th)
+                odom.pose.pose.orientation.x = q[0]
+                odom.pose.pose.orientation.y = q[1]
+                odom.pose.pose.orientation.z = q[2]
+                odom.pose.pose.orientation.w = q[3]
+                odom.twist.twist.linear.x = vx
+                odom.twist.twist.linear.y = 0.0
+                odom.twist.twist.angular.z = vth
+                self.odom_pub.publish(odom)
+            self.last_enc_left = enc_left
+            self.last_enc_right = enc_right
+            self.last_time = now
+        except serial.serialutil.SerialException as e:
+            self.get_logger().warning(f"Serial error in update_odom: {e}")
+            self.roboclaw.Close()
+            self.connect()
 
     def error_code_to_string(self, code):
         if code == 0:
@@ -224,66 +244,71 @@ class RoboclawNode(Node):
         return "; ".join(msgs)
 
     def publish_status(self):
-        status = RoboclawStatus()
-        # Read motor 1 data
-        m1_qpps_raw = self.roboclaw.ReadSpeedM1(self.address)
-        m1_enc_raw = self.roboclaw.ReadEncM1(self.address)
-        m1_current_raw = self.roboclaw.ReadCurrents(self.address)
-        m1_qpps = int(m1_qpps_raw[1]) if m1_qpps_raw[0] else 0
-        m1_speed = float(self.pulses_to_meters(m1_qpps))
-        m1_motor_current = float(m1_current_raw[1])/100.0 if m1_current_raw[0] and len(m1_current_raw) > 1 else 0.0
-        m1_encoder_value = int(m1_enc_raw[1]) if m1_enc_raw[0] else 0
-        m1_encoder_status = int(m1_enc_raw[2]) if m1_enc_raw[0] and len(m1_enc_raw) > 2 else 0
+        try:
+            status = RoboclawStatus()
+            # Read motor 1 data
+            m1_qpps_raw = self.roboclaw.ReadSpeedM1(self.address)
+            m1_enc_raw = self.roboclaw.ReadEncM1(self.address)
+            m1_current_raw = self.roboclaw.ReadCurrents(self.address)
+            m1_qpps = int(m1_qpps_raw[1]) if m1_qpps_raw[0] else 0
+            m1_speed = float(self.pulses_to_meters(m1_qpps))
+            m1_motor_current = float(m1_current_raw[1])/100.0 if m1_current_raw[0] and len(m1_current_raw) > 1 else 0.0
+            m1_encoder_value = int(m1_enc_raw[1]) if m1_enc_raw[0] else 0
+            m1_encoder_status = int(m1_enc_raw[2]) if m1_enc_raw[0] and len(m1_enc_raw) > 2 else 0
 
-        # Read motor 2 data
-        m2_qpps_raw = self.roboclaw.ReadSpeedM2(self.address)
-        m2_enc_raw = self.roboclaw.ReadEncM2(self.address)
-        m2_qpps = int(m2_qpps_raw[1]) if m2_qpps_raw[0] else 0
-        m2_speed = float(self.pulses_to_meters(m2_qpps))
-        m2_motor_current = float(m1_current_raw[2])/100.0 if m1_current_raw[0] and len(m1_current_raw) > 2 else 0.0
-        m2_encoder_value = int(m2_enc_raw[1]) if m2_enc_raw[0] else 0
-        m2_encoder_status = int(m2_enc_raw[2]) if m2_enc_raw[0] and len(m2_enc_raw) > 2 else 0
+            # Read motor 2 data
+            m2_qpps_raw = self.roboclaw.ReadSpeedM2(self.address)
+            m2_enc_raw = self.roboclaw.ReadEncM2(self.address)
+            m2_qpps = int(m2_qpps_raw[1]) if m2_qpps_raw[0] else 0
+            m2_speed = float(self.pulses_to_meters(m2_qpps))
+            m2_motor_current = float(m1_current_raw[2])/100.0 if m1_current_raw[0] and len(m1_current_raw) > 2 else 0.0
+            m2_encoder_value = int(m2_enc_raw[1]) if m2_enc_raw[0] else 0
+            m2_encoder_status = int(m2_enc_raw[2]) if m2_enc_raw[0] and len(m2_enc_raw) > 2 else 0
 
-        # Clamp unsigned int fields to >= 0
-        m1_encoder_value = max(0, m1_encoder_value)
-        m1_encoder_status = max(0, m1_encoder_status)
-        m2_encoder_value = max(0, m2_encoder_value)
-        m2_encoder_status = max(0, m2_encoder_status)
-        qppr = max(0, self.qppr)
-        max_speed = max(0, int(self.max_speed))
-        max_speed_qpps = max(0, self.max_speed_qpps)
-        accel = max(0, int(self.accel))
-        accel_qpps = max(0, self.accel_qpps)
+            # Clamp unsigned int fields to >= 0
+            m1_encoder_value = max(0, m1_encoder_value)
+            m1_encoder_status = max(0, m1_encoder_status)
+            m2_encoder_value = max(0, m2_encoder_value)
+            m2_encoder_status = max(0, m2_encoder_status)
+            qppr = max(0, self.qppr)
+            max_speed = max(0, int(self.max_speed))
+            max_speed_qpps = max(0, self.max_speed_qpps)
+            accel = max(0, int(self.accel))
+            accel_qpps = max(0, self.accel_qpps)
 
-        # Assign to message fields
-        status.qppr = qppr
-        status.max_speed = max_speed
-        status.max_speed_qpps = max_speed_qpps
-        status.accel = accel
-        status.accel_qpps = accel_qpps
-        status.m1_qpps = m1_qpps
-        status.m1_speed = m1_speed
-        status.m1_motor_current = m1_motor_current
-        status.m1_encoder_value = m1_encoder_value
-        status.m1_encoder_status = m1_encoder_status
-        status.m2_qpps = m2_qpps
-        status.m2_speed = m2_speed
-        status.m2_motor_current = m2_motor_current
-        status.m2_encoder_value = m2_encoder_value
-        status.m2_encoder_status = m2_encoder_status
+            # Assign to message fields
+            status.qppr = qppr
+            status.max_speed = max_speed
+            status.max_speed_qpps = max_speed_qpps
+            status.accel = accel
+            status.accel_qpps = accel_qpps
+            status.m1_qpps = m1_qpps
+            status.m1_speed = m1_speed
+            status.m1_motor_current = m1_motor_current
+            status.m1_encoder_value = m1_encoder_value
+            status.m1_encoder_status = m1_encoder_status
+            status.m2_qpps = m2_qpps
+            status.m2_speed = m2_speed
+            status.m2_motor_current = m2_motor_current
+            status.m2_encoder_value = m2_encoder_value
+            status.m2_encoder_status = m2_encoder_status
 
-        # Read voltages and temperature
-        main_batt = self.roboclaw.ReadMainBatteryVoltage(self.address)
-        logic_batt = self.roboclaw.ReadLogicBatteryVoltage(self.address)
-        temp = self.roboclaw.ReadTemp(self.address)
-        err = self.roboclaw.ReadError(self.address)
-        err_code = err[1] if err[0] else 0
+            # Read voltages and temperature
+            main_batt = self.roboclaw.ReadMainBatteryVoltage(self.address)
+            logic_batt = self.roboclaw.ReadLogicBatteryVoltage(self.address)
+            temp = self.roboclaw.ReadTemp(self.address)
+            err = self.roboclaw.ReadError(self.address)
+            err_code = err[1] if err[0] else 0
 
-        status.main_battery_voltage = max(0.0, float(main_batt[1])/10.0 if main_batt[0] else 0.0)
-        status.logic_battery_voltage = max(0.0, float(logic_batt[1])/10.0 if logic_batt[0] else 0.0)
-        status.temperature = float(temp[1])/10.0 if temp[0] else 0.0
-        status.error_string = self.error_code_to_string(err_code)
-        self.status_pub.publish(status)
+            status.main_battery_voltage = max(0.0, float(main_batt[1])/10.0 if main_batt[0] else 0.0)
+            status.logic_battery_voltage = max(0.0, float(logic_batt[1])/10.0 if logic_batt[0] else 0.0)
+            status.temperature = float(temp[1])/10.0 if temp[0] else 0.0
+            status.error_string = self.error_code_to_string(err_code)
+            self.status_pub.publish(status)
+        except serial.serialutil.SerialException as e:
+            self.get_logger().warning(f"Serial error in publish_status: {e}")
+            self.roboclaw.Close()
+            self.connect()
 
 def main(args=None):
     rclpy.init(args=args)
@@ -292,6 +317,11 @@ def main(args=None):
         rclpy.spin(node)
     except KeyboardInterrupt:
         pass
+    except serial.serialutil.SerialException as e:
+        node.get_logger().warning(f"Serial error: {e}")
+        node.get_logger().info("Attempting to reconnect to the roboclaw...")
+        node.roboclaw.Close()
+        node.connect()
     node.stop_motors()
     node.destroy_node()
     rclpy.shutdown()
