@@ -50,7 +50,7 @@ class RoboclawNode(Node):
         self.declare_parameter('wheel_separation', 0.24) # meters
         self.declare_parameter('wheel_diameter', 0.095)    # meters
         self.declare_parameter('m1_reverse', True)  # Reverse motor 1 direction
-        self.declare_parameter('m2_reverse', True)  # Reverse motor 2 direction
+        self.declare_parameter('m2_reverse', False)  # Reverse motor 2 direction
         self.declare_parameter('odom_publish_rate', 50)  # Hz
         self.declare_parameter('status_publish_rate', 5)
         self.declare_parameter('status_topic', 'roboclaw_status')
