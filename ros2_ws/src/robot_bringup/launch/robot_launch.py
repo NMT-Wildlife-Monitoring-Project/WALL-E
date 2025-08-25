@@ -33,7 +33,8 @@ def generate_launch_description():
             PythonLaunchDescriptionSource([
                 FindPackageShare('sllidar_ros2'), '/launch/sllidar_s3_launch.py'
             ]),
-            condition=IfCondition(launch_rplidar)
+            condition=IfCondition(launch_rplidar),
+            launch_arguments={'frame_id': 'laser_link'}.items()
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
