@@ -60,7 +60,10 @@ def generate_launch_description():
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
                 FindPackageShare('roboclaw_driver'), '/launch/roboclaw_launch.py'
-            ])
+            ]),
+            launch_arguments={
+                'serial_port': '/dev/roboclaw'
+            }.items()
         ),
         TimerAction(
             period=5.0,
