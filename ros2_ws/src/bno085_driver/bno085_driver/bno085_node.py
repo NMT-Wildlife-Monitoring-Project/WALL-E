@@ -98,7 +98,7 @@ class BNO085Node(Node):
             imu_msg.orientation.w = quat[3]
 
             roll, pitch, yaw = euler_from_quaternion([quat[0], quat[1], quat[2], quat[3]])
-            self.get_logger().info(f"Orientation: Roll={roll}, Pitch={pitch}, Yaw={yaw}")
+            self.get_logger().debug(f"Orientation: Roll={roll}, Pitch={pitch}, Yaw={yaw}")
 
             # Angular velocity (rad/s)
             imu_msg.angular_velocity.x = gyro[0]
