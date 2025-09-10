@@ -61,7 +61,6 @@ def generate_launch_description():
         launch_arguments={
             "params_file": configured_params,
             "autostart": "True",
-            "lifecycle_nodes": "controller_server smoother_server planner_server route_server behavior_server velocity_smoother collision_monitor bt_navigator waypoint_follower"
         }.items(),
     )
 
