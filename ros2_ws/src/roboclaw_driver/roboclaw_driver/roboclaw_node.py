@@ -282,6 +282,26 @@ class RoboclawNode(Node):
                 odom.twist.twist.linear.x = vx
                 odom.twist.twist.linear.y = 0.0
                 odom.twist.twist.angular.z = vth
+
+                # Set pose covariance (example values, adjust as needed)
+                odom.pose.covariance = [
+                    0.01, 0,    0,    0,    0,    0,
+                    0,    0.01, 0,    0,    0,    0,
+                    0,    0,    0.01,  0,    0,    0,
+                    0,    0,    0,    0.1,  0,    0,
+                    0,    0,    0,    0,    0.1,  0,
+                    0,    0,    0,    0,    0,    0.1
+                ]
+                # Set twist covariance (example values, adjust as needed)
+                odom.twist.covariance = [
+                    0.01, 0,    0,    0,    0,    0,
+                    0,    0.01, 0,    0,    0,    0,
+                    0,    0,    0.01,  0,    0,    0,
+                    0,    0,    0,    0.1,  0,    0,
+                    0,    0,    0,    0,    0.1,  0,
+                    0,    0,    0,    0,    0,    0.1
+                ]
+
                 self.odom_pub.publish(odom)
             self.last_enc_left = enc_left
             self.last_enc_right = enc_right
