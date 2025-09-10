@@ -111,9 +111,21 @@ class BNO085Node(Node):
             imu_msg.linear_acceleration.z = accel[2]
 
             # Covariance matrices (set to unknown)
-            imu_msg.orientation_covariance = [0.01] * 9
-            imu_msg.angular_velocity_covariance = [0.01] * 9
-            imu_msg.linear_acceleration_covariance = [0.01] * 9
+            imu_msg.orientation_covariance = [
+                1.95e-4, 0,       0,
+                0,       1.95e-4, 0,
+                0,       0,       2.74e-3
+            ]
+            imu_msg.angular_velocity_covariance = [
+                9.0e-4, 0,      0,
+                0,      9.0e-4, 0,
+                0,      0,      9.0e-4
+            ]
+            imu_msg.linear_acceleration_covariance = [
+                6.25e-2, 0,       0,
+                0,       6.25e-2, 0,
+                0,       0,       6.25e-2
+            ]
 
             # Publish IMU message
             self.imu_pub.publish(imu_msg)
