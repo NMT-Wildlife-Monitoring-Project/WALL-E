@@ -7,6 +7,7 @@ import busio
 from adafruit_bno08x.i2c import BNO08X_I2C
 import time
 import os
+import numpy as np
 from tf_transformations import euler_from_quaternion
 
 
@@ -19,6 +20,9 @@ from adafruit_bno08x import (
 )
 
 class BNO085Node(Node):
+
+    varianceArray = np.empty((9,9,10))
+
     def __init__(self):
         super().__init__('bno085_node')
         
@@ -99,6 +103,7 @@ class BNO085Node(Node):
 
             roll, pitch, yaw = euler_from_quaternion([quat[0], quat[1], quat[2], quat[3]])
             self.get_logger().debug(f"Orientation: Roll={roll}, Pitch={pitch}, Yaw={yaw}")
+
 
             # Angular velocity (rad/s)
             imu_msg.angular_velocity.x = gyro[0]
