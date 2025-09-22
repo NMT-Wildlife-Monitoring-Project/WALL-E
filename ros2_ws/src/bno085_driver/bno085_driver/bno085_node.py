@@ -21,11 +21,10 @@ from adafruit_bno08x import (
 
 class BNO085Node(Node):
 
-    varianceArray = np.empty((9,9,10))
 
     def __init__(self):
         super().__init__('bno085_node')
-        
+        self.rollingArray = np.empty((9,10))
         # Declare parameter for I2C address
         self.declare_parameter('i2c_address', 0x4B)  # Default BNO085 address
         i2c_address = self.get_parameter('i2c_address').value
@@ -103,33 +102,50 @@ class BNO085Node(Node):
 
             roll, pitch, yaw = euler_from_quaternion([quat[0], quat[1], quat[2], quat[3]])
             self.get_logger().debug(f"Orientation: Roll={roll}, Pitch={pitch}, Yaw={yaw}")
-
+            
+            self.rollingArray = np.roll(self.rollingArray,1,1)
+            
+            self.rollingArray[0][0] = roll
+            self.rollingArray[1][0] = pitch
+            self.rollingArray[2][0] = yaw
 
             # Angular velocity (rad/s)
             imu_msg.angular_velocity.x = gyro[0]
             imu_msg.angular_velocity.y = gyro[1]
             imu_msg.angular_velocity.z = gyro[2]
 
+
+            self.rollingArray[3][0] = gyro[0]            
+            self.rollingArray[4][0] = gyro[1]            
+            self.rollingArray[5][0] = gyro[2]            
+
             # Linear acceleration (m/s²)
             imu_msg.linear_acceleration.x = accel[0]
             imu_msg.linear_acceleration.y = accel[1]
             imu_msg.linear_acceleration.z = accel[2]
 
+            self.rollingArray[6][0] = accel[0]            
+            self.rollingArray[7][0] = accel[1]            
+            self.rollingArray[8][0] = accel[2]            
+
+            varianceArray = np.var(self.rollingArray,axis=1)
+
+
             # Covariance matrices
             imu_msg.orientation_covariance = [
-                1.95e-4, 0,       0,
-                0,       1.95e-4, 0,
-                0,       0,       2.74e-3
+                varianceArray[0], 0,       0,
+                0,       varianceArray[1], 0,
+                0,       0,       varianceArray[2]
             ]
             imu_msg.angular_velocity_covariance = [
-                9.0e-4, 0,      0,
-                0,      9.0e-4, 0,
-                0,      0,      9.0e-4
+                varianceArray[3], 0,      0,
+                0,      varianceArray[4], 0,
+                0,      0,      varianceArray[5]
             ]
             imu_msg.linear_acceleration_covariance = [
-                6.25e-2, 0,       0,
-                0,       6.25e-2, 0,
-                0,       0,       6.25e-2
+                varianceArray[6], 0,       0,
+                0,       varianceArray[7], 0,
+                0,       0,       varianceArray[8]
             ]
 
             # Publish IMU message
