@@ -24,7 +24,6 @@ class BNO085Node(Node):
 
     def __init__(self):
         super().__init__('bno085_node')
-        self.rollingArray = np.empty((9,10))
         # Declare parameter for I2C address
         self.declare_parameter('i2c_address', 0x4B)  # Default BNO085 address
         i2c_address = self.get_parameter('i2c_address').value
@@ -51,7 +50,9 @@ class BNO085Node(Node):
         
         # Create timer for publishing
         self.timer = self.create_timer(0.05, self.publish_imu_data)  # 100Hz
-        
+
+        self.rollingArray = np.zeros((9,10))
+
         self.get_logger().info('BNO085 Node initialized')
     
     def initialize_bno085(self):
@@ -94,6 +95,8 @@ class BNO085Node(Node):
             imu_msg.header.stamp = self.get_clock().now().to_msg()
             imu_msg.header.frame_id = self.frame_id
 
+            self.rollingArray = np.roll(self.rollingArray,1,1)
+
             # Orientation (quaternion)
             imu_msg.orientation.x = quat[0]
             imu_msg.orientation.y = quat[1]
@@ -102,8 +105,6 @@ class BNO085Node(Node):
 
             roll, pitch, yaw = euler_from_quaternion([quat[0], quat[1], quat[2], quat[3]])
             self.get_logger().debug(f"Orientation: Roll={roll}, Pitch={pitch}, Yaw={yaw}")
-            
-            self.rollingArray = np.roll(self.rollingArray,1,1)
             
             self.rollingArray[0][0] = roll
             self.rollingArray[1][0] = pitch
