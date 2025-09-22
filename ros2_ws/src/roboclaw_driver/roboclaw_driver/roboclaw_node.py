@@ -258,8 +258,11 @@ class RoboclawNode(Node):
             now = self.get_clock().now()
             dt = (now - self.last_time).nanoseconds / 1e9
             if self.last_enc_left is not None and self.last_enc_right is not None and dt > 0:
-                d_left = self.pulses_to_meters(enc_left - self.last_enc_left)
-                d_right = self.pulses_to_meters(enc_right - self.last_enc_right)
+                # Account for motor direction reversal: encoder sign may be inverted
+                left_sign = -1 if self.m1_reverse else 1
+                right_sign = -1 if self.m2_reverse else 1
+                d_left = self.pulses_to_meters(left_sign * (enc_left - self.last_enc_left))
+                d_right = self.pulses_to_meters(right_sign * (enc_right - self.last_enc_right))
                 d = (d_left + d_right) / 2.0
                 dth = (d_right - d_left) / self.wheel_separation
                 self.x += d * math.cos(self.th + dth / 2.0)
@@ -287,18 +290,18 @@ class RoboclawNode(Node):
                 odom.pose.covariance = [
                     1.0e-4,  0,       0,       0,       0,       0,
                     0,       1.0e-4,  0,       0,       0,       0,
-                    0,       0,       1.0e6,   0,       0,       0,
-                    0,       0,       0,       1.0e6,   0,       0,
-                    0,       0,       0,       0,       1.0e6,   0,
+                    0,       0,       1.0e-6,   0,       0,       0,
+                    0,       0,       0,       1.0e-6,   0,       0,
+                    0,       0,       0,       0,       1.0e-6,   0,
                     0,       0,       0,       0,       0,       1.0e-4
                 ]
                 # Set twist covariance (example values, adjust as needed)
                 odom.twist.covariance = [
                     1.0e-6, 0,       0,       0,       0,       0,
                     0,       1.0e-8,   0,       0,       0,       0,
-                    0,       0,       1.0e6,   0,       0,       0,
-                    0,       0,       0,       1.0e6,   0,       0,
-                    0,       0,       0,       0,       1.0e6,   0,
+                    0,       0,       1.0e-6,   0,       0,       0,
+                    0,       0,       0,       1.0e-4,   0,       0,
+                    0,       0,       0,       0,       1.0e-4,   0,
                     0,       0,       0,       0,       0,       1.0e-4
                 ]
 
