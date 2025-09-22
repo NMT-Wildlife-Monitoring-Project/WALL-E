@@ -1,5 +1,11 @@
 # For parameter descriptions, please refer to the template parameter files for each node.
 
+#    sensor_config: [x, y, z,
+#                   roll, pitch, yaw,
+#                   vx, vy, vz,
+#                   vroll, vpitch, vyaw,
+#                   ax, ay, az]
+
 ekf_filter_node_odom:
   ros__parameters:
     frequency: 30.0

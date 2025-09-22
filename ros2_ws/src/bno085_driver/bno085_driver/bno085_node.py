@@ -110,7 +110,7 @@ class BNO085Node(Node):
             imu_msg.linear_acceleration.y = accel[1]
             imu_msg.linear_acceleration.z = accel[2]
 
-            # Covariance matrices (set to unknown)
+            # Covariance matrices
             imu_msg.orientation_covariance = [
                 1.95e-4, 0,       0,
                 0,       1.95e-4, 0,

@@ -285,21 +285,21 @@ class RoboclawNode(Node):
 
                 # Set pose covariance (example values, adjust as needed)
                 odom.pose.covariance = [
-                    9.0e-2,  0,       0,       0,       0,       0,
-                    0,       2.5e-1,  0,       0,       0,       0,
-                    0,       0,       1.0e3,   0,       0,       0,
-                    0,       0,       0,       1.0e3,   0,       0,
-                    0,       0,       0,       0,       1.0e3,   0,
-                    0,       0,       0,       0,       0,       1.95e-2
+                    1.0e-4,  0,       0,       0,       0,       0,
+                    0,       1.0e-4,  0,       0,       0,       0,
+                    0,       0,       1.0e6,   0,       0,       0,
+                    0,       0,       0,       1.0e6,   0,       0,
+                    0,       0,       0,       0,       1.0e6,   0,
+                    0,       0,       0,       0,       0,       1.0e-4
                 ]
                 # Set twist covariance (example values, adjust as needed)
                 odom.twist.covariance = [
-                    2.25e-2, 0,       0,       0,       0,       0,
-                    0,       1.0e3,   0,       0,       0,       0,
-                    0,       0,       1.0e3,   0,       0,       0,
-                    0,       0,       0,       1.0e3,   0,       0,
-                    0,       0,       0,       0,       1.0e3,   0,
-                    0,       0,       0,       0,       0,       2.25e-2
+                    1.0e-6, 0,       0,       0,       0,       0,
+                    0,       1.0e-8,   0,       0,       0,       0,
+                    0,       0,       1.0e6,   0,       0,       0,
+                    0,       0,       0,       1.0e6,   0,       0,
+                    0,       0,       0,       0,       1.0e6,   0,
+                    0,       0,       0,       0,       0,       1.0e-4
                 ]
 
                 self.odom_pub.publish(odom)
