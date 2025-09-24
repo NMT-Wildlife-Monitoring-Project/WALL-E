@@ -51,7 +51,7 @@ class BNO085Node(Node):
         # Create timer for publishing
         self.timer = self.create_timer(0.05, self.publish_imu_data)  # 100Hz
 
-        self.rollingArray = np.zeros((9,10))
+        self.rollingArray = np.zeros((9,200))
 
         self.get_logger().info('BNO085 Node initialized')
     
