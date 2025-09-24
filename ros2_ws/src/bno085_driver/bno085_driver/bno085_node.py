@@ -20,6 +20,7 @@ from adafruit_bno08x import (
 )
 
 #TODO Refactor
+#TODO fix high pass filter
 
 class BNO085Node(Node):
     def high_pass_filter_numpy(signal, cutoff_frequency, sampling_rate):
@@ -108,6 +109,7 @@ class BNO085Node(Node):
                     time.sleep(0.5)
 
         #TODO collect bias
+        #TODO test variance in init not rolling
         self.get_logger().info("BNO085 initialization complete.")
 
     def publish_imu_data(self):
