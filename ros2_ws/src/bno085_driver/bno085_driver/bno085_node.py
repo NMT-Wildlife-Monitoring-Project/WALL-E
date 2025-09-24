@@ -161,7 +161,7 @@ class BNO085Node(Node):
             self.rollingArray[7][0] = accel[1]            
             self.rollingArray[8][0] = accel[2]            
 
-            varianceArray = np.var(self.high_pass_filter_numpy(self.rollingArray,1,100),axis=1)
+            varianceArray = np.var(self.high_pass_filter_numpy(self.rollingArray,5,100),axis=1)
 
 
             # Covariance matrices
