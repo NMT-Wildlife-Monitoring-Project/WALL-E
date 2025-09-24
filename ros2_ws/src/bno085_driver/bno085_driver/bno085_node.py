@@ -19,6 +19,8 @@ from adafruit_bno08x import (
     BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR,
 )
 
+#TODO Refactor
+
 class BNO085Node(Node):
     def high_pass_filter_numpy(signal, cutoff_frequency, sampling_rate):
         """
@@ -104,6 +106,8 @@ class BNO085Node(Node):
                 except Exception as e2:
                     self.get_logger().warning(f"Attempt {attempt} to enable feature {feature} failed: {e2}")
                     time.sleep(0.5)
+
+        #TODO collect bias
         self.get_logger().info("BNO085 initialization complete.")
 
     def publish_imu_data(self):
@@ -126,6 +130,8 @@ class BNO085Node(Node):
             imu_msg.header = Header()
             imu_msg.header.stamp = self.get_clock().now().to_msg()
             imu_msg.header.frame_id = self.frame_id
+
+            #TODO add bias
 
             self.rollingArray = np.roll(self.rollingArray,1,1)
 
@@ -159,7 +165,8 @@ class BNO085Node(Node):
 
             self.rollingArray[6][0] = accel[0]            
             self.rollingArray[7][0] = accel[1]            
-            self.rollingArray[8][0] = accel[2]            
+            self.rollingArray[8][0] = accel[2]
+              
 
             varianceArray = np.var(self.high_pass_filter_numpy(self.rollingArray,10,100),axis=1)
 

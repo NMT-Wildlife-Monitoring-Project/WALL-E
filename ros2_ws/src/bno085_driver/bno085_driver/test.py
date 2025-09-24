@@ -49,28 +49,3 @@ while True:
     quat_i, quat_j, quat_k, quat_real = bno.geomagnetic_quaternion
     print("I: %0.6f  J: %0.6f K: %0.6f  Real: %0.6f" % (quat_i, quat_j, quat_k, quat_real))
     print("")
-
-    # Convert quaternion to roll, pitch, yaw (in radians)
-    # Quaternion: (i, j, k, real) = (x, y, z, w)
-    x, y, z, w = quat_i, quat_j, quat_k, quat_real
-
-    # Roll (x-axis rotation)
-    sinr_cosp = 2 * (w * x + y * z)
-    cosr_cosp = 1 - 2 * (x * x + y * y)
-    roll = math.atan2(sinr_cosp, cosr_cosp)
-
-    # Pitch (y-axis rotation)
-    sinp = 2 * (w * y - z * x)
-    if abs(sinp) >= 1:
-        pitch = math.copysign(math.pi / 2, sinp)
-    else:
-        pitch = math.asin(sinp)
-
-    # Yaw (z-axis rotation)
-    siny_cosp = 2 * (w * z + x * y)
-    cosy_cosp = 1 - 2 * (y * y + z * z)
-    yaw = math.atan2(siny_cosp, cosy_cosp)
-
-    print("RPY (radians):")
-    print("Roll: %0.6f  Pitch: %0.6f  Yaw: %0.6f" % (roll, pitch, yaw))
-    print("")
