@@ -15,7 +15,7 @@ from adafruit_bno08x import (
 from adafruit_bno08x.i2c import BNO08X_I2C
 import math
 
-i2c = busio.I2C(3, 2, frequency=400000)
+i2c = busio.I2C(3, 2)
 bno = BNO08X_I2C(i2c, address=0x4B)
 
 bno.enable_feature(BNO_REPORT_ACCELEROMETER)
@@ -46,7 +46,7 @@ while True:
     print("")
 
     print("Rotation Vector Quaternion:")
-    quat_i, quat_j, quat_k, quat_real = bno.quaternion
+    quat_i, quat_j, quat_k, quat_real = bno.geomagnetic_quaternion
     print("I: %0.6f  J: %0.6f K: %0.6f  Real: %0.6f" % (quat_i, quat_j, quat_k, quat_real))
     print("")
 
