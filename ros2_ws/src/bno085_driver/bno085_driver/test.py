@@ -8,9 +8,12 @@ from adafruit_bno08x import (
     BNO_REPORT_ACCELEROMETER,
     BNO_REPORT_GYROSCOPE,
     BNO_REPORT_MAGNETOMETER,
-    BNO_REPORT_ROTATION_VECTOR,
+    # BNO_REPORT_ROTATION_VECTOR,
+    BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR,
 )
+
 from adafruit_bno08x.i2c import BNO08X_I2C
+import math
 
 i2c = busio.I2C(3, 2, frequency=400000)
 bno = BNO08X_I2C(i2c, address=0x4B)
@@ -18,10 +21,15 @@ bno = BNO08X_I2C(i2c, address=0x4B)
 bno.enable_feature(BNO_REPORT_ACCELEROMETER)
 bno.enable_feature(BNO_REPORT_GYROSCOPE)
 bno.enable_feature(BNO_REPORT_MAGNETOMETER)
-bno.enable_feature(BNO_REPORT_ROTATION_VECTOR)
+bno.enable_feature(BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR)
+
+bno.begin_calibration()
 
 while True:
     time.sleep(0.5)
+    print("Calibration Status: ")
+    status = bno.calibration_status
+    print(status)
     print("Acceleration:")
     accel_x, accel_y, accel_z = bno.acceleration
     print("X: %0.6f  Y: %0.6f Z: %0.6f  m/s^2" % (accel_x, accel_y, accel_z))
@@ -40,4 +48,29 @@ while True:
     print("Rotation Vector Quaternion:")
     quat_i, quat_j, quat_k, quat_real = bno.quaternion
     print("I: %0.6f  J: %0.6f K: %0.6f  Real: %0.6f" % (quat_i, quat_j, quat_k, quat_real))
+    print("")
+
+    # Convert quaternion to roll, pitch, yaw (in radians)
+    # Quaternion: (i, j, k, real) = (x, y, z, w)
+    x, y, z, w = quat_i, quat_j, quat_k, quat_real
+
+    # Roll (x-axis rotation)
+    sinr_cosp = 2 * (w * x + y * z)
+    cosr_cosp = 1 - 2 * (x * x + y * y)
+    roll = math.atan2(sinr_cosp, cosr_cosp)
+
+    # Pitch (y-axis rotation)
+    sinp = 2 * (w * y - z * x)
+    if abs(sinp) >= 1:
+        pitch = math.copysign(math.pi / 2, sinp)
+    else:
+        pitch = math.asin(sinp)
+
+    # Yaw (z-axis rotation)
+    siny_cosp = 2 * (w * z + x * y)
+    cosy_cosp = 1 - 2 * (y * y + z * z)
+    yaw = math.atan2(siny_cosp, cosy_cosp)
+
+    print("RPY (radians):")
+    print("Roll: %0.6f  Pitch: %0.6f  Yaw: %0.6f" % (roll, pitch, yaw))
     print("")
