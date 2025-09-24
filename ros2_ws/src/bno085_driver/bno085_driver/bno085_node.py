@@ -49,7 +49,7 @@ class BNO085Node(Node):
         self.get_logger().info(f'Using I2C address: 0x{i2c_address:02X}')
         
         # Create timer for publishing
-        self.timer = self.create_timer(0.05, self.publish_imu_data)  # 100Hz
+        self.timer = self.create_timer(0.01, self.publish_imu_data)  # 100Hz
 
         self.rollingArray = np.zeros((9,200))
 
