@@ -23,39 +23,39 @@ from adafruit_bno08x import (
 #TODO fix high pass filter
 
 class BNO085Node(Node):
-    def high_pass_filter_numpy(signal, cutoff_frequency, sampling_rate):
-        """
-        Applies a simple high-pass filter to a 1D signal using NumPy.
+    # def high_pass_filter_numpy(signal, cutoff_frequency, sampling_rate):
+    #     """
+    #     Applies a simple high-pass filter to a 1D signal using NumPy.
 
-        Args:
-            signal (np.ndarray): The input 1D signal.
-            cutoff_frequency (float): The cutoff frequency for the high-pass filter.
-            sampling_rate (float): The sampling rate of the signal.
+    #     Args:
+    #         signal (np.ndarray): The input 1D signal.
+    #         cutoff_frequency (float): The cutoff frequency for the high-pass filter.
+    #         sampling_rate (float): The sampling rate of the signal.
 
-        Returns:
-            np.ndarray: The high-pass filtered signal.
-        """
+    #     Returns:
+    #         np.ndarray: The high-pass filtered signal.
+    #     """
 
-        N = len(signal)
+    #     N = len(signal)
         
-        # 1. Perform FFT
-        yf = np.fft.fft(signal)
-        xf = np.fft.fftfreq(N, 1 / sampling_rate)
+    #     # 1. Perform FFT
+    #     yf = np.fft.fft(signal)
+    #     xf = np.fft.fftfreq(N, 1 / sampling_rate)
 
-        # 2. Create a High-Pass Filter Mask
-        # We'll create a simple ideal high-pass filter: 1 for frequencies above cutoff, 0 otherwise.
-        # Note: For real-world applications, a smoother filter (e.g., Butterworth, Chebyshev) 
-        # would be preferred, but this demonstrates the concept with pure NumPy.
-        filter_mask = np.ones(N, dtype=complex)
-        filter_mask[np.abs(xf) < cutoff_frequency] = 0  # Attenuate frequencies below cutoff
+    #     # 2. Create a High-Pass Filter Mask
+    #     # We'll create a simple ideal high-pass filter: 1 for frequencies above cutoff, 0 otherwise.
+    #     # Note: For real-world applications, a smoother filter (e.g., Butterworth, Chebyshev) 
+    #     # would be preferred, but this demonstrates the concept with pure NumPy.
+    #     filter_mask = np.ones(N, dtype=complex)
+    #     filter_mask[np.abs(xf) < cutoff_frequency] = 0  # Attenuate frequencies below cutoff
 
-        # 3. Apply the Mask
-        filtered_yf = yf * filter_mask
+    #     # 3. Apply the Mask
+    #     filtered_yf = yf * filter_mask
 
-        # 4. Perform IFFT
-        filtered_signal = np.fft.ifft(filtered_yf)
+    #     # 4. Perform IFFT
+    #     filtered_signal = np.fft.ifft(filtered_yf)
 
-        return np.real(filtered_signal) # Return the real part as the original signal was real
+    #     return np.real(filtered_signal) # Return the real part as the original signal was real
 
     def __init__(self):
         super().__init__('bno085_node')
@@ -170,7 +170,7 @@ class BNO085Node(Node):
             self.rollingArray[8][0] = accel[2]
               
 
-            varianceArray = np.var(self.high_pass_filter_numpy(self.rollingArray,10,100),axis=1)
+            varianceArray = np.var(self.rollingArray,axis=1)
 
 
             # Covariance matrices
