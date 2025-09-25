@@ -51,8 +51,8 @@ class RoboclawNode(Node):
         self.declare_parameter('max_speed', 1.0) # m/s
         self.declare_parameter('max_speed_qpps', 10560)  # Max speed in quadrature pulses per second, -1 means use max_speed
         self.declare_parameter('accel_qpps', -1)      # Max accel in quadrature pulses per second^2, -1 means use accel
-        self.declare_parameter('wheel_separation', 0.24) # meters
-        self.declare_parameter('wheel_diameter', 0.095)    # meters
+        self.declare_parameter('wheel_separation', 0.240) # meters
+        self.declare_parameter('wheel_diameter', 0.105)    # meters
         self.declare_parameter('m1_reverse', True)  # Reverse motor 1 direction
         self.declare_parameter('m2_reverse', False)  # Reverse motor 2 direction
         self.declare_parameter('odom_publish_rate', 50)  # Hz
