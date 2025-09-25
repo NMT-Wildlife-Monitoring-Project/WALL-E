@@ -111,7 +111,8 @@ class RoboclawNode(Node):
         # ROS2 interfaces
         qos = QoSProfile(depth=10)
         self.odom_pub = self.create_publisher(Odometry, self.odom_topic, qos)
-        self.cmd_vel_sub = self.create_subscription(Twist, self.cmd_vel_topic, self.cmd_vel_callback, qos)
+        cmd_vel_qos = QoSProfile(depth=1)
+        self.cmd_vel_sub = self.create_subscription(Twist, self.cmd_vel_topic, self.cmd_vel_callback, cmd_vel_qos)
         self.status_pub = self.create_publisher(RoboclawStatus, self.status_topic, qos)
 
         # Odometry state

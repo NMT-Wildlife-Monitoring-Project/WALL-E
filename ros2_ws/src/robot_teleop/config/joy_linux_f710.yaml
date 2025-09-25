@@ -4,8 +4,8 @@ joy_linux_node:
   ros__parameters:
     device_name: "/dev/input/js0"  # Default joystick device
     deadzone: 0.05
-    autorepeat_rate: 20.0
-    coalesce_interval_ms: 1
+    autorepeat_rate: 10.0
+    coalesce_interval_ms: 20
     default_trig_val: false
 
 # teleop_twist_joy configuration  
