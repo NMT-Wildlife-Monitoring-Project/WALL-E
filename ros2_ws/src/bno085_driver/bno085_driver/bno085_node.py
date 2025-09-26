@@ -23,39 +23,6 @@ from adafruit_bno08x import (
 #TODO fix high pass filter
 
 class BNO085Node(Node):
-    # def high_pass_filter_numpy(signal, cutoff_frequency, sampling_rate):
-    #     """
-    #     Applies a simple high-pass filter to a 1D signal using NumPy.
-
-    #     Args:
-    #         signal (np.ndarray): The input 1D signal.
-    #         cutoff_frequency (float): The cutoff frequency for the high-pass filter.
-    #         sampling_rate (float): The sampling rate of the signal.
-
-    #     Returns:
-    #         np.ndarray: The high-pass filtered signal.
-    #     """
-
-    #     N = len(signal)
-        
-    #     # 1. Perform FFT
-    #     yf = np.fft.fft(signal)
-    #     xf = np.fft.fftfreq(N, 1 / sampling_rate)
-
-    #     # 2. Create a High-Pass Filter Mask
-    #     # We'll create a simple ideal high-pass filter: 1 for frequencies above cutoff, 0 otherwise.
-    #     # Note: For real-world applications, a smoother filter (e.g., Butterworth, Chebyshev) 
-    #     # would be preferred, but this demonstrates the concept with pure NumPy.
-    #     filter_mask = np.ones(N, dtype=complex)
-    #     filter_mask[np.abs(xf) < cutoff_frequency] = 0  # Attenuate frequencies below cutoff
-
-    #     # 3. Apply the Mask
-    #     filtered_yf = yf * filter_mask
-
-    #     # 4. Perform IFFT
-    #     filtered_signal = np.fft.ifft(filtered_yf)
-
-    #     return np.real(filtered_signal) # Return the real part as the original signal was real
 
     def __init__(self):
         super().__init__('bno085_node')
@@ -112,103 +79,120 @@ class BNO085Node(Node):
         #TODO test variance in init not rolling
         self.get_logger().info("BNO085 initialization complete.")
 
+    def initialize_imu_msg(self):
+        # Create IMU message
+        self.imu_msg = Imu()
+        # Header
+        self.imu_msg.header = Header()
+        self.imu_msg.header.stamp = self.get_clock().now().to_msg()
+        self.imu_msg.header.frame_id = self.frame_id
+        #TODO add bias
+        self.rollingArray = np.roll(self.rollingArray,1,1)
+
+    def get_imu_data(self):
+        # Get sensor data
+        self.accel = self.bno.acceleration
+        self.gyro = self.bno.gyro
+        self.quat = self.bno.geomagnetic_quaternion
+        self.mag = self.bno.magnetic
+
+        # Check if data is valid
+        if self.accel is None or self.gyro is None or self.quat is None:
+            self.get_logger().warning("Received invalid data from BNO085 sensor.")
+            return
+    
+    def publish_mag(self):
+        # Publish magnetometer data if available
+        if self.mag is not None:
+            mag_msg = MagneticField()
+            mag_msg.header = Header()
+            mag_msg.header.stamp = self.get_clock().now().to_msg()
+            mag_msg.header.frame_id = 'imu_link'
+
+            # Magnetic field (Tesla)
+            mag_msg.magnetic_field.x = mag[0] * 1e-6  # Convert µT to T
+            mag_msg.magnetic_field.y = mag[1] * 1e-6
+            mag_msg.magnetic_field.z = mag[2] * 1e-6
+
+            # Covariance (set to unknown)
+            mag_msg.magnetic_field_covariance = [-1.0] * 9
+
+            self.mag_pub.publish(mag_msg)
+
+    def imu_msg_orientation(self): 
+        # Orientation (quaternion)
+        self.imu_msg.orientation.x = self.quat[0]
+        self.imu_msg.orientation.y = self.quat[1]
+        self.imu_msg.orientation.z = self.quat[2]
+        self.imu_msg.orientation.w = self.quat[3]
+
+    def orientation_variance(self):
+        self.roll, self.pitch, self.yaw = euler_from_quaternion([self.quat[0], self.quat[1], self.quat[2], self.quat[3]])
+        self.rollingArray[0][0] = self.roll
+        self.rollingArray[1][0] = self.pitch
+        self.rollingArray[2][0] = self.yaw
+        self.imu_msg.orientation_covariance = [
+            self.varianceArray[0], 0,       0,
+            0,       self.varianceArray[1], 0,
+            0,       0,       self.varianceArray[2]
+        ]
+    def log_orientation(self):
+        self.get_logger().debug(f"Orientation: Roll={self.roll}, Pitch={self.pitch}, Yaw={self.yaw}")
+            
+    def imu_msg_angular(self): 
+        # Angular velocity (rad/s)
+        self.imu_msg.angular_velocity.x = self.gyro[0]
+        self.imu_msg.angular_velocity.y = self.gyro[1]
+        self.imu_msg.angular_velocity.z = self.gyro[2]
+
+    def angular_variance(self):
+        self.rollingArray[3][0] = self.gyro[0]            
+        self.rollingArray[4][0] = self.gyro[1]            
+        self.rollingArray[5][0] = self.gyro[2] 
+        self.imu_msg.angular_velocity_covariance = [
+            self.varianceArray[3], 0,      0,
+            0,     self.varianceArray[4], 0,
+            0,      0,      self.varianceArray[5]
+        ]   
+
+    def imu_msg_linear(self): 
+        # Linear acceleration (m/s²)
+        self.imu_msg.linear_acceleration.x = self.accel[0]
+        self.imu_msg.linear_acceleration.y = self.accel[1]
+        self.imu_msg.linear_acceleration.z = self.accel[2]
+        self.imu_msg.linear_acceleration_covariance = [
+            self.varianceArray[6], 0,       0,
+            0,       self.varianceArray[7], 0,
+            0,       0,       self.varianceArray[8]
+        ]
+
+    def linear_variance(self):
+        self.rollingArray[6][0] = self.accel[0]            
+        self.rollingArray[7][0] = self.accel[1]            
+        self.rollingArray[8][0] = self.accel[2]
+
+    def calculate_variance(self):
+        self.varianceArray = np.var(self.rollingArray,axis=1)
+        self.orientation_variance(self)
+        self.angular_variance(self)
+        self.linear_variance(self)
+
     def publish_imu_data(self):
         try:
-            # Get sensor data
-            accel = self.bno.acceleration
-            gyro = self.bno.gyro
-            quat = self.bno.geomagnetic_quaternion
-            mag = self.bno.magnetic
+            self.get_imu_data(self)
 
-            # Check if data is valid
-            if accel is None or gyro is None or quat is None:
-                self.get_logger().warning("Received invalid data from BNO085 sensor.")
-                return
+            self.initialize_imu_msg(self)
 
-            # Create IMU message
-            imu_msg = Imu()
+            self.imu_msg_orientation(self)
+            self.log_orientation(self)
+            self.imu_msg_angular(self)
+            self.imu_msg_linear(self)
 
-            # Header
-            imu_msg.header = Header()
-            imu_msg.header.stamp = self.get_clock().now().to_msg()
-            imu_msg.header.frame_id = self.frame_id
-
-            #TODO add bias
-
-            self.rollingArray = np.roll(self.rollingArray,1,1)
-
-            # Orientation (quaternion)
-            imu_msg.orientation.x = quat[0]
-            imu_msg.orientation.y = quat[1]
-            imu_msg.orientation.z = quat[2]
-            imu_msg.orientation.w = quat[3]
-
-            roll, pitch, yaw = euler_from_quaternion([quat[0], quat[1], quat[2], quat[3]])
-            self.get_logger().debug(f"Orientation: Roll={roll}, Pitch={pitch}, Yaw={yaw}")
-            
-            self.rollingArray[0][0] = roll
-            self.rollingArray[1][0] = pitch
-            self.rollingArray[2][0] = yaw
-
-            # Angular velocity (rad/s)
-            imu_msg.angular_velocity.x = gyro[0]
-            imu_msg.angular_velocity.y = gyro[1]
-            imu_msg.angular_velocity.z = gyro[2]
-
-
-            self.rollingArray[3][0] = gyro[0]            
-            self.rollingArray[4][0] = gyro[1]            
-            self.rollingArray[5][0] = gyro[2]            
-
-            # Linear acceleration (m/s²)
-            imu_msg.linear_acceleration.x = accel[0]
-            imu_msg.linear_acceleration.y = accel[1]
-            imu_msg.linear_acceleration.z = accel[2]
-
-            self.rollingArray[6][0] = accel[0]            
-            self.rollingArray[7][0] = accel[1]            
-            self.rollingArray[8][0] = accel[2]
-              
-
-            varianceArray = np.var(self.rollingArray,axis=1)
-
-
-            # Covariance matrices
-            imu_msg.orientation_covariance = [
-                varianceArray[0], 0,       0,
-                0,       varianceArray[1], 0,
-                0,       0,       varianceArray[2]
-            ]
-            imu_msg.angular_velocity_covariance = [
-                varianceArray[3], 0,      0,
-                0,      varianceArray[4], 0,
-                0,      0,      varianceArray[5]
-            ]
-            imu_msg.linear_acceleration_covariance = [
-                varianceArray[6], 0,       0,
-                0,       varianceArray[7], 0,
-                0,       0,       varianceArray[8]
-            ]
+            self.calculate_variance
 
             # Publish IMU message
-            self.imu_pub.publish(imu_msg)
+            self.imu_pub.publish(self.imu_msg)
 
-            # Publish magnetometer data if available
-            if mag is not None:
-                mag_msg = MagneticField()
-                mag_msg.header = Header()
-                mag_msg.header.stamp = self.get_clock().now().to_msg()
-                mag_msg.header.frame_id = 'imu_link'
-
-                # Magnetic field (Tesla)
-                mag_msg.magnetic_field.x = mag[0] * 1e-6  # Convert µT to T
-                mag_msg.magnetic_field.y = mag[1] * 1e-6
-                mag_msg.magnetic_field.z = mag[2] * 1e-6
-
-                # Covariance (set to unknown)
-                mag_msg.magnetic_field_covariance = [-1.0] * 9
-
-                self.mag_pub.publish(mag_msg)
 
         except Exception as e:
             self.get_logger().error(f"Error reading BNO085 data: {e}")
