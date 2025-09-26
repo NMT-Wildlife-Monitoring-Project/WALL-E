@@ -37,26 +37,26 @@ class BNO085:
             else:
                 raise RuntimeError(f"Failed to enable feature {feature} after 3 attempts.")
         
-        self.quat = np.zeroes(4)
-        self.rpy = np.zeroes(3)
+        self.quat = np.zeros(4)
+        self.rpy = np.zeros(3)
         self.rpy_covariance = np.array([
             7.68e-6,    0,      0,
             0,          4.1e-6,  0,
             0,          0,      1.615e-5,
         ])
-        self.accel = np.zeroes(3)
+        self.accel = np.zeros(3)
         self.accel_covariance = np.array([
             0.0003155, 0, 0,
             0,  0.001256, 0,
             0, 0, 0.000849
         ])
-        self.gyro = np.zeroes(3)
+        self.gyro = np.zeros(3)
         self.gyro_covariance = np.array([
             1e-4,  0,          0,
             0,         1e-4,   0,
             0,          0,      1e-4    
         ])
-        self.mag = np.zeroes(3)
+        self.mag = np.zeros(3)
         self.mag_covariance = np.array([
             1e-4, 0, 0,
             0, 1e-4, 0,
