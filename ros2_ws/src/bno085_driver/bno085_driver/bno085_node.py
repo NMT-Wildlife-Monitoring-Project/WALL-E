@@ -9,7 +9,7 @@ import time
 import os
 import numpy as np
 from tf_transformations import euler_from_quaternion
-import bno085
+from bno085_driver.bno085 import BNO085
 
 from adafruit_bno08x import (
     BNO_REPORT_ACCELEROMETER,
@@ -39,12 +39,12 @@ class BNO085Node(Node):
         self.mag_pub = self.create_publisher(MagneticField, 'imu/mag', 10)
         
 
-        self.initialize_bno085()
+        self.initialize_BNO085()
         self.get_logger().info(f'Using I2C address: 0x{i2c_address:02X}')
         
         # Create timer for publishing
         self.timer = self.create_timer(0.01, self.publish_imu_data)  # 100Hz
-        self.bno = bno085(i2c_address)
+        self.bno = BNO085(i2c_address)
         self.bno.calibrate()
 
         self.get_logger().info('BNO085 Node initialized')
