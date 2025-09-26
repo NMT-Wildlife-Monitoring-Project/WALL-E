@@ -66,11 +66,11 @@ class BNO085:
 
 
     def calibrate(self, num_samples=100):
-        quat_samples = np.array((len(self.quat), num_samples))
-        rpy_samples = np.array((len(self.rpy), num_samples))
-        gyro_samples = np.array((len(self.gyro), num_samples))
-        accel_samples = np.array((len(self.accel), num_samples))
-        mag_samples = np.array((len(self.mag), num_samples))
+        quat_samples = np.zeros((len(self.quat), num_samples))
+        rpy_samples = np.zeros((len(self.rpy), num_samples))
+        gyro_samples = np.zeros((len(self.gyro), num_samples))
+        accel_samples = np.zeros((len(self.accel), num_samples))
+        mag_samples = np.zeros((len(self.mag), num_samples))
         
         # Get samples (1 second)
         for i in range(num_samples):
