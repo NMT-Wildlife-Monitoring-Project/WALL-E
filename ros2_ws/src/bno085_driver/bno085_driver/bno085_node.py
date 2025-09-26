@@ -108,10 +108,10 @@ class BNO085Node(Node):
         try:
             self.bno.get_data()
         
-            self.initialize_imu_msg(self)
+            self.initialize_imu_msg()
             # Publish IMU message
             self.imu_pub.publish(self.imu_msg)
-            self.publish_mag(self)
+            self.publish_mag()
 
         except Exception as e:
             self.get_logger().error(f"Error reading BNO085 data: {e}")
@@ -122,7 +122,8 @@ class BNO085Node(Node):
             except Exception as reinit_e:
                 self.get_logger().error(f"Failed to reinitialize BNO085: {reinit_e}")
                 self.get_logger().error("Critical failure: Unable to recover BNO085. Shutting down node.")
-                rclpy.shutdown()
+                if rclpy.ok():
+                    rclpy.shutdown()
 
 
 def main(args=None):
@@ -135,7 +136,8 @@ def main(args=None):
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
