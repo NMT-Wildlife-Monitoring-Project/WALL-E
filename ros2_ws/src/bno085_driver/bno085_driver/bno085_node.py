@@ -132,10 +132,14 @@ class BNO085Node(Node):
         self.rollingArray[1][0] = self.pitch
         self.rollingArray[2][0] = self.yaw
         self.imu_msg.orientation_covariance = [
-            self.varianceArray[0], 0,       0,
-            0,       self.varianceArray[1], 0,
-            0,       0,       self.varianceArray[2]
+            # self.varianceArray[0], 0,       0,
+            # 0,       self.varianceArray[1], 0,
+            # 0,       0,       self.varianceArray[2]
+            7.68e-6,    0,      0,
+            0,          4.1e-6,  0,
+            0,          0,      1.615e-5,
         ]
+    
     def log_orientation(self):
         self.get_logger().debug(f"Orientation: Roll={self.roll}, Pitch={self.pitch}, Yaw={self.yaw}")
             
@@ -150,9 +154,12 @@ class BNO085Node(Node):
         self.rollingArray[4][0] = self.gyro[1]            
         self.rollingArray[5][0] = self.gyro[2] 
         self.imu_msg.angular_velocity_covariance = [
-            self.varianceArray[3], 0,      0,
-            0,     self.varianceArray[4], 0,
-            0,      0,      self.varianceArray[5]
+            # self.varianceArray[3], 0,      0,
+            # 0,     self.varianceArray[4], 0,
+            # 0,      0,      self.varianceArray[5]
+            0,      0,      0,
+            0,      0,      0,
+            0,      0,      0,
         ]   
 
     def imu_msg_linear(self): 
@@ -161,9 +168,12 @@ class BNO085Node(Node):
         self.imu_msg.linear_acceleration.y = self.accel[1]
         self.imu_msg.linear_acceleration.z = self.accel[2]
         self.imu_msg.linear_acceleration_covariance = [
-            self.varianceArray[6], 0,       0,
-            0,       self.varianceArray[7], 0,
-            0,       0,       self.varianceArray[8]
+            # self.varianceArray[6], 0,       0,
+            # 0,       self.varianceArray[7], 0,
+            # 0,       0,       self.varianceArray[8]
+            0.0003155,  0,          0,
+            0,          0.001256,   0,
+            0,          0,          0.000849
         ]
 
     def linear_variance(self):
