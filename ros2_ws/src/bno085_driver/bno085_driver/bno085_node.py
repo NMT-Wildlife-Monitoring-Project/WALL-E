@@ -110,9 +110,9 @@ class BNO085Node(Node):
             mag_msg.header.frame_id = 'imu_link'
 
             # Magnetic field (Tesla)
-            mag_msg.magnetic_field.x = mag[0] * 1e-6  # Convert µT to T
-            mag_msg.magnetic_field.y = mag[1] * 1e-6
-            mag_msg.magnetic_field.z = mag[2] * 1e-6
+            mag_msg.magnetic_field.x = self.mag[0] * 1e-6  # Convert µT to T
+            mag_msg.magnetic_field.y = self.mag[1] * 1e-6
+            mag_msg.magnetic_field.z = self.mag[2] * 1e-6
 
             # Covariance (set to unknown)
             mag_msg.magnetic_field_covariance = [-1.0] * 9
