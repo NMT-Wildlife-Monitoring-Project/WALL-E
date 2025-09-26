@@ -38,8 +38,6 @@ class BNO085Node(Node):
         self.imu_pub = self.create_publisher(Imu, 'imu/data', 10)
         self.mag_pub = self.create_publisher(MagneticField, 'imu/mag', 10)
         
-
-        self.initialize_BNO085()
         self.get_logger().info(f'Using I2C address: 0x{i2c_address:02X}')
         
         # Create timer for publishing
