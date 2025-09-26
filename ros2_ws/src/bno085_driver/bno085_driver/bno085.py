@@ -34,7 +34,8 @@ class BNO085:
                 except Exception as e2:
                     warnings.warn(f"Attempt {attempt} to enable feature {feature} failed: {e2}")
                     time.sleep(0.5)
-            raise RuntimeError(f"Failed to enable feature {feature} after 3 attempts.")
+            else:
+                raise RuntimeError(f"Failed to enable feature {feature} after 3 attempts.")
         
         self.quat = np.zeroes(4)
         self.rpy = np.zeroes(3)
