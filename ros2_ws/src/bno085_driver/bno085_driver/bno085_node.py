@@ -188,11 +188,12 @@ class BNO085Node(Node):
             self.imu_msg_angular(self)
             self.imu_msg_linear(self)
 
-            self.calculate_variance
+            self.calculate_variance(self)
 
             # Publish IMU message
             self.imu_pub.publish(self.imu_msg)
 
+            self.publish_mag(self)
 
         except Exception as e:
             self.get_logger().error(f"Error reading BNO085 data: {e}")
