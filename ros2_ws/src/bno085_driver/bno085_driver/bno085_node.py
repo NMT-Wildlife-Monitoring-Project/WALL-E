@@ -98,10 +98,10 @@ class BNO085Node(Node):
         self.imu_msg.header.stamp = self.get_clock().now().to_msg()
         self.imu_msg.header.frame_id = self.frame_id
         #TODO add bias
-        self.imu_msg_orientation(self)
-        self.imu_msg_angular(self)
-        self.imu_msg_linear(self)
-        self.imu_msg_variance(self)
+        self.imu_msg_orientation()
+        self.imu_msg_angular()
+        self.imu_msg_linear()
+        self.imu_msg_variance()
 
 
     def publish_imu_data(self):
