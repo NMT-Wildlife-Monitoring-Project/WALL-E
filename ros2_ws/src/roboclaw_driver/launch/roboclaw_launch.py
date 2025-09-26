@@ -14,7 +14,7 @@ def generate_launch_description():
         DeclareLaunchArgument('max_speed', default_value='1.0'),
         DeclareLaunchArgument('max_speed_qpps', default_value='10560'),
         DeclareLaunchArgument('accel_qpps', default_value='-1'),
-        DeclareLaunchArgument('wheel_separation', default_value='0.24'),
+        DeclareLaunchArgument('wheel_separation', default_value='0.39'),
         DeclareLaunchArgument('wheel_diameter', default_value='0.095'),
         DeclareLaunchArgument('m1_reverse', default_value='True'),
         DeclareLaunchArgument('m2_reverse', default_value='False'),
