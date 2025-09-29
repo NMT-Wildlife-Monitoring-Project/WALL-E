@@ -80,9 +80,9 @@ class BNO085Node(Node):
         imu_msg.linear_acceleration.z = self.bno.accel[2]
 
         # Covariances
-        imu_msg.orientation_covariance = self.bno.rpy_covariance
-        imu_msg.angular_velocity_covariance = self.bno.gyro_covariance
-        imu_msg.linear_acceleration_covariance = self.bno.accel_covariance
+        imu_msg.orientation_covariance = self.bno.rpy_covariance.tolist()
+        imu_msg.angular_velocity_covariance = self.bno.gyro_covariance.tolist()
+        imu_msg.linear_acceleration_covariance = self.bno.accel_covariance.tolist()
 
         return imu_msg
 

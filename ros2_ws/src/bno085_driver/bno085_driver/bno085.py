@@ -122,10 +122,10 @@ class BNO085:
         accel_var = np.var(accel_samples, axis=1)
         mag_var = np.var(mag_samples, axis=1)
 
-        self.rpy_covariance = np.diag(rpy_var)
-        self.gyro_covariance = np.diag(gyro_var)
-        self.accel_covariance = np.diag(accel_var)
-        self.mag_covariance = np.diag(mag_var)
+        self.rpy_covariance = np.diag(rpy_var).flatten()
+        self.gyro_covariance = np.diag(gyro_var).flatten()
+        self.accel_covariance = np.diag(accel_var).flatten()
+        self.mag_covariance = np.diag(mag_var).flatten()
 
     def update(self):
         self.quat = np.array(self.bno.geomagnetic_quaternion)
