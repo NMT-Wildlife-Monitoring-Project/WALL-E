@@ -12,7 +12,7 @@ class BNO085Node(Node):
         super().__init__('bno085_node')
         # Declare parameter for I2C address
         self.declare_parameter('i2c_address', 0x4B)  # Default BNO085 address
-        i2c_address = self.get_parameter('i2c_address').value
+        self.i2c_address = self.get_parameter('i2c_address').value
         
         # Declare parameter for frame ID
         self.declare_parameter('frame_id', 'imu_link')  # Default frame ID
@@ -22,16 +22,23 @@ class BNO085Node(Node):
         self.imu_pub = self.create_publisher(Imu, 'imu/data', 10)
         self.mag_pub = self.create_publisher(MagneticField, 'imu/mag', 10)
         
-        self.get_logger().info(f'Using I2C address: 0x{i2c_address:02X}')
+        self.get_logger().info(f'Using I2C address: 0x{self.i2c_address:02X}')
         
         # Create timer for publishing
         self.timer = self.create_timer(0.01, self.publish)  # 100Hz
 
         # Create BNO085 and calibrate
-        self.bno = BNO085(i2c_address)
-        self.bno.calibrate()
+        self.bno = None
+        self.initialize()
 
         self.get_logger().info('BNO085 Node initialized')
+    
+    def initialize(self):
+        if self.bno is not None:
+            del self.bno
+        self.bno = BNO085(self.i2c_address)
+        self.bno.calibrate()
+        
     
     def publish(self):
         try:
@@ -41,7 +48,7 @@ class BNO085Node(Node):
             # Attempt to reinitialize the BNO085 sensor
             try:
                 self.get_logger().info("Attempting to reinitialize BNO085 sensor...")
-                self.initialize_bno085()
+                self.initialize()
             except Exception as reinit_e:
                 self.get_logger().error(f"Failed to reinitialize BNO085: {reinit_e}")
                 self.get_logger().error("Critical failure: Unable to recover BNO085. Shutting down node.")
