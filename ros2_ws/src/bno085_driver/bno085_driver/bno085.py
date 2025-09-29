@@ -104,7 +104,7 @@ class BNO085:
         
         # Get samples (1 second)
         for i in range(num_samples):
-            self.get_data()
+            self.update()
             quat_samples[:,i] = self.quat
             rpy_samples[:,i] = self.rpy
             gyro_samples[:,i] = self.gyro
