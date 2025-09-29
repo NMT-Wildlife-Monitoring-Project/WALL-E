@@ -16,6 +16,35 @@ from adafruit_bno08x import (
 )
 
 class BNO085:
+    """
+    BNO085 sensor driver class for interfacing with the BNO085 IMU via I2C.
+    This class provides methods to initialize the sensor, enable desired features,
+    calibrate sensor biases and covariances, and update sensor readings.
+    Attributes:
+        i2c (busio.I2C): I2C bus instance used for communication.
+        bno (BNO08X_I2C): BNO085 sensor object.
+        quat (np.ndarray): Quaternion representing sensor orientation.
+        rpy (np.ndarray): Roll, pitch, yaw angles derived from quaternion.
+        rpy_covariance (np.ndarray): Covariance matrix for RPY angles.
+        accel (np.ndarray): Accelerometer readings (m/s^2).
+        accel_covariance (np.ndarray): Covariance matrix for accelerometer.
+        gyro (np.ndarray): Gyroscope readings (rad/s).
+        gyro_covariance (np.ndarray): Covariance matrix for gyroscope.
+        mag (np.ndarray): Magnetometer readings (uT).
+        mag_covariance (np.ndarray): Covariance matrix for magnetometer.
+        gryo_bias (np.ndarray): Estimated gyroscope bias.
+        accel_bias (np.ndarray): Estimated accelerometer bias.
+    Methods:
+        __init__(i2c_addr):
+            Initializes the BNO085 sensor, enables features, and sets up data structures.
+        calibrate(num_samples=100):
+            Collects samples to estimate sensor biases and covariances for calibration.
+            Expects imu to be stationary. Do not run this function to use default covariance
+            and zero bias.
+        update():
+            Updates sensor readings for quaternion, RPY, accelerometer, gyroscope, and magnetometer
+            and subtracts bias.
+    """
     def __init__(self, i2c_addr):
         self.i2c = busio.I2C(3, 2)
         self.bno = BNO08X_I2C(self.i2c, address=i2c_addr)
@@ -63,7 +92,8 @@ class BNO085:
             0, 0, 1e-4
         ])
 
-
+        self.gryo_bias = np.zeros(3)
+        self.accel_bias = np.zeros(3)
 
     def calibrate(self, num_samples=100):
         quat_samples = np.zeros((len(self.quat), num_samples))
@@ -97,14 +127,14 @@ class BNO085:
         self.accel_covariance = np.diag(accel_var)
         self.mag_covariance = np.diag(mag_var)
 
-    def get_data(self):
+    def update(self):
         self.quat = np.array(self.bno.geomagnetic_quaternion)
-        self.rpy = euler_from_quaternion(self.quat)
-        self.accel = np.array(self.bno.acceleration)
-        self.gyro = np.array(self.bno.gyro)
+        self.rpy = np.array(euler_from_quaternion(self.quat))
+        self.accel = np.array(self.bno.acceleration) - self.accel_bias
+        self.gyro = np.array(self.bno.gyro) - self.gryo_bias
         self.mag = np.array(self.bno.magnetic)
 
         if self.accel is None or self.gyro is None or self.quat is None:
-            raise RuntimeError("Received invalid data from BNO085 sensor.")        
-    
+            raise RuntimeError("Received invalid data from BNO085 sensor.")
+
 
