@@ -117,10 +117,10 @@ class BNO085:
         self.accel_bias = np.mean(accel_samples, axis=1)
 
         # Calculate variance
-        rpy_var = np.var(rpy_samples, axis=1)
-        gyro_var = np.var(gyro_samples, axis=1)
-        accel_var = np.var(accel_samples, axis=1)
-        mag_var = np.var(mag_samples, axis=1)
+        rpy_var = np.var(rpy_samples, axis=1, ddof=1)
+        gyro_var = np.var(gyro_samples, axis=1, ddof=1)
+        accel_var = np.var(accel_samples, axis=1, ddof=1)
+        mag_var = np.var(mag_samples, axis=1, ddof=1)
 
         self.rpy_covariance = np.diag(rpy_var).flatten()
         self.gyro_covariance = np.diag(gyro_var).flatten()
