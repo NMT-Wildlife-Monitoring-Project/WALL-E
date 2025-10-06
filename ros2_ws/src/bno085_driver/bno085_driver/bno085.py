@@ -11,8 +11,7 @@ from adafruit_bno08x import (
     BNO_REPORT_ACCELEROMETER,
     BNO_REPORT_GYROSCOPE,
     BNO_REPORT_MAGNETOMETER,
-    # BNO_REPORT_ROTATION_VECTOR,
-    BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR,
+    BNO_REPORT_ROTATION_VECTOR,
 )
 
 class BNO085:
@@ -52,8 +51,8 @@ class BNO085:
             BNO_REPORT_ACCELEROMETER,
             BNO_REPORT_GYROSCOPE,
             BNO_REPORT_MAGNETOMETER,
-            # BNO_REPORT_ROTATION_VECTOR,
-            BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR
+            # rotation vector (fused orientation)
+            BNO_REPORT_ROTATION_VECTOR,
         ]
         for feature in features:
             for attempt in range(1, 4):
@@ -128,7 +127,7 @@ class BNO085:
         self.mag_covariance = np.diag(mag_var).flatten()
 
     def update(self):
-        self.quat = np.array(self.bno.geomagnetic_quaternion)
+        self.quat = np.array(self.bno.quaternion)
         self.rpy = np.array(euler_from_quaternion(self.quat))
         self.accel = np.array(self.bno.acceleration) - self.accel_bias
         self.gyro = np.array(self.bno.gyro) - self.gryo_bias
