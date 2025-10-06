@@ -16,7 +16,7 @@
   <joint name="imu_joint" type="fixed">
     <parent link="base_link"/>
     <child link="imu_link"/>
-    <origin xyz="-0.07 0.03 0.05" rpy="0 0 0"/>
+    <origin xyz="-0.07 0.0 0.05" rpy="0 0 0"/>
   </joint>
 
   <!-- GPS -->
@@ -24,7 +24,7 @@
   <joint name="gps_joint" type="fixed">
     <parent link="base_link"/>
     <child link="gps_link"/>
-    <origin xyz="0 -0.06 0.185" rpy="0 0 1.57"/>
+    <origin xyz="0.0 0.05 0.05" rpy="0 0 0"/>
   </joint>
 
   <!-- Lidar -->
