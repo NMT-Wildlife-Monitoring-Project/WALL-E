@@ -123,7 +123,7 @@ RUN apt-get install -y ros-$ROS_DISTRO-ros2-control
 # Install rviz_imu_plugin for IMU visualization in RViz
 RUN apt-get update && apt-get install -y ros-$ROS_DISTRO-rviz-imu-plugin
 
-RUN apt-get install ros-$ROS_DISTRO-nav2-route
+RUN apt-get install -y ros-$ROS_DISTRO-nav2-route
 
 # Install ROS 2 command-line autocomplete
 RUN apt-get update && apt-get install -y python3-argcomplete
