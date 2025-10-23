@@ -13,7 +13,9 @@ bt_navigator:
     bt_loop_duration: 10
     default_server_timeout: 20
     wait_for_service_timeout: 1000
-    navigators: ["navigate_to_pose", "navigate_through_poses"]
+    navigators:
+      - navigate_to_pose
+      - navigate_through_poses
     navigate_to_pose:
       plugin: "nav2_bt_navigator::NavigateToPoseNavigator"
     navigate_through_poses:
@@ -34,9 +36,12 @@ controller_server:
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
     failure_tolerance: 0.3
-    progress_checker_plugins: ["progress_checker"]
-    goal_checker_plugins: ["general_goal_checker"] # "precise_goal_checker"
-    controller_plugins: ["FollowPath"]
+    progress_checker_plugins:
+      - progress_checker
+    goal_checker_plugins:
+      - general_goal_checker
+    controller_plugins:
+      - FollowPath
 
     # Progress checker parameters
     progress_checker:
@@ -50,7 +55,7 @@ controller_server:
     #  yaw_goal_tolerance: 0.25
     #  stateful: True
     general_goal_checker:
-      stateful: True
+      stateful: true
       plugin: "nav2_controller::SimpleGoalChecker"
       xy_goal_tolerance: 0.25
       yaw_goal_tolerance: 0.25
@@ -163,17 +168,24 @@ local_costmap:
       width: 3
       height: 3
       resolution: 0.05
-      footprint: [[0.17, 0.15], [0.17, -0.15], [-0.17, -0.15], [-0.17, 0.15]]
-      plugins: ["obstacle_layer", "inflation_layer"]
+      footprint:
+        - [0.17, 0.15]
+        - [0.17, -0.15]
+        - [-0.17, -0.15]
+        - [-0.17, 0.15]
+      plugins:
+        - obstacle_layer
+        - inflation_layer
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: True
-        observation_sources: scan
+        enabled: true
+        observation_sources:
+          - scan
         scan:
           topic: /scan
           max_obstacle_height: 2.0
-          clearing: True
-          marking: True
+          clearing: true
+          marking: true
           data_type: "LaserScan"
           raytrace_max_range: 3.0
           raytrace_min_range: 0.0
@@ -185,7 +197,7 @@ local_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
         inflation_radius: 0.24
-      always_send_full_costmap: True
+      always_send_full_costmap: true
 
 # GPS WPF CHANGE: Remove static layer
 # GPS WPF CHANGE: Set rolling global costmap with 50x50 size. See note below
@@ -197,25 +209,32 @@ global_costmap:
       global_frame: map
       robot_base_frame: base_link
       resolution: 0.1
-      footprint: [[0.17, 0.15], [0.17, -0.15], [-0.17, -0.15], [-0.17, 0.15]]
+      footprint:
+        - [0.17, 0.15]
+        - [0.17, -0.15]
+        - [-0.17, -0.15]
+        - [-0.17, 0.15]
       # When using GPS navigation you will potentially traverse huge environments which are not practical to
       # fit on a big static costmap. Thus it is recommended to use a rolling global costmap large enough to
       # contain each pair of successive waypoints. See: https://github.com/ros-planning/navigation2/issues/2174
-      rolling_window: True
+      rolling_window: true
       width: 50
       height: 50
       track_unknown_space: true
       # no static map
-      plugins: ["obstacle_layer", "inflation_layer"]
+      plugins:
+        - obstacle_layer
+        - inflation_layer
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: True
-        observation_sources: scan
+        enabled: true
+        observation_sources:
+          - scan
         scan:
           topic: /scan
           max_obstacle_height: 2.0
-          clearing: True
-          marking: True
+          clearing: true
+          marking: true
           data_type: "LaserScan"
           raytrace_max_range: 3.0
           raytrace_min_range: 0.0
@@ -227,7 +246,7 @@ global_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
         inflation_radius: 0.24
-      always_send_full_costmap: True
+      always_send_full_costmap: true
 
 # The yaml_filename does not need to be specified since it going to be set by defaults in launch.
 # If you'd rather set it in the yaml, remove the default "map" value in the tb3_simulation_launch.py
@@ -241,12 +260,13 @@ map_saver:
     save_map_timeout: 5.0
     free_thresh_default: 0.25
     occupied_thresh_default: 0.65
-    map_subscribe_transient_local: True
+    map_subscribe_transient_local: true
 
 planner_server:
   ros__parameters:
     expected_planner_frequency: 20.0
-    planner_plugins: ["GridBased"]
+    planner_plugins:
+      - GridBased
     GridBased:
       plugin: "nav2_navfn_planner::NavfnPlanner"
       tolerance: 0.5
@@ -255,12 +275,13 @@ planner_server:
 
 smoother_server:
   ros__parameters:
-    smoother_plugins: ["simple_smoother"]
+    smoother_plugins:
+      - simple_smoother
     simple_smoother:
       plugin: "nav2_smoother::SimpleSmoother"
       tolerance: 1.0e-10
       max_its: 1000
-      do_refinement: True
+      do_refinement: true
 
 behavior_server:
   ros__parameters:
@@ -269,7 +290,12 @@ behavior_server:
     local_footprint_topic: local_costmap/published_footprint
     global_footprint_topic: global_costmap/published_footprint
     cycle_frequency: 10.0
-    behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait"]
+    behavior_plugins:
+      - spin
+      - backup
+      - drive_on_heading
+      - assisted_teleop
+      - wait
     spin:
       plugin: "nav2_behaviors::Spin"
     backup:
@@ -296,21 +322,36 @@ waypoint_follower:
     waypoint_task_executor_plugin: "wait_at_waypoint"
     wait_at_waypoint:
       plugin: "nav2_waypoint_follower::WaitAtWaypoint"
-      enabled: True
+      enabled: true
       waypoint_pause_duration: 200
 
 velocity_smoother:
   ros__parameters:
     smoothing_frequency: 20.0
-    scale_velocities: False
+    scale_velocities: false
     feedback: "OPEN_LOOP"
-    max_velocity: [0.26, 0.0, 1.0]
-    min_velocity: [-0.26, 0.0, -1.0]
-    max_accel: [2.5, 0.0, 3.2]
-    max_decel: [-2.5, 0.0, -3.2]
+    max_velocity:
+      - 0.26
+      - 0.0
+      - 1.0
+    min_velocity:
+      - -0.26
+      - 0.0
+      - -1.0
+    max_accel:
+      - 2.5
+      - 0.0
+      - 3.2
+    max_decel:
+      - -2.5
+      - 0.0
+      - -3.2
     odom_topic: "odom"
     odom_duration: 0.1
-    deadband_velocity: [0.0, 0.0, 0.0]
+    deadband_velocity:
+      - 0.0
+      - 0.0
+      - 0.0
     velocity_timeout: 1.0
 
 collision_monitor:
@@ -322,11 +363,12 @@ collision_monitor:
     state_topic: "collision_monitor_state"
     transform_tolerance: 0.2
     source_timeout: 1.0
-    base_shift_correction: True
+    base_shift_correction: true
     stop_pub_timeout: 2.0
     # Polygons represent zone around the robot for "stop", "slowdown" and "limit" action types,
     # and robot footprint for "approach" action type.
-    polygons: ["FootprintApproach"]
+    polygons:
+      - FootprintApproach
     FootprintApproach:
       type: "polygon"
       action_type: "approach"
@@ -334,15 +376,16 @@ collision_monitor:
       time_before_collision: 2.0
       simulation_time_step: 0.1
       min_points: 6
-      visualize: False
-      enabled: True
-    observation_sources: ["scan"]
+      visualize: false
+      enabled: true
+    observation_sources:
+      - scan
     scan:
       type: "scan"
       topic: "scan"
       min_height: 0.15
       max_height: 2.0
-      enabled: True
+      enabled: true
 
 docking_server:
   ros__parameters:
@@ -359,7 +402,8 @@ docking_server:
     service_introspection_mode: "disabled"
 
     # Types of docks
-    dock_plugins: ["simple_charging_dock"]
+    dock_plugins:
+      - simple_charging_dock
     simple_charging_dock:
       plugin: "opennav_docking::SimpleChargingDock"
       docking_threshold: 0.05
@@ -379,11 +423,15 @@ docking_server:
 
     # Dock instances
     # The following example illustrates configuring dock instances.
-    docks: ['home_dock']  # Input your docks here
+    docks:
+      - home_dock  # Input your docks here
     home_dock:
       type: 'simple_charging_dock'
       frame: map
-      pose: [0.0, 0.0, 0.0]
+      pose:
+        - 0.0
+        - 0.0
+        - 0.0
 
     controller:
       k_phi: 3.0
