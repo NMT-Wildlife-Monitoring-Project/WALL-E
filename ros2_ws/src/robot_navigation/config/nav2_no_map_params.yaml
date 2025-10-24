@@ -172,6 +172,7 @@ local_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         observation_sources: scan
+        observation_persistence: 0.3
         scan:
           topic: /scan
           max_obstacle_height: 2.0
@@ -215,6 +216,7 @@ global_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         observation_sources: scan
+        observation_persistence: 0.3
         scan:
           topic: /scan
           max_obstacle_height: 2.0
