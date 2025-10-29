@@ -134,9 +134,13 @@ RUN rm -rf /var/lib/apt/lists/*
 
 RUN usermod -a -G input $USER
 
+WORKDIR /home/$USER/ros2_ws
+
+# Copy rviz config into the container
+COPY --chown=$USER:$USER rviz2 /home/$USER/.rviz2
+
 # Copy the workspace into the container
 COPY --chown=$USER:$USER ros2_ws /home/$USER/ros2_ws/
-WORKDIR /home/$USER/ros2_ws
 
 # Switch back to non-root user 'walle'
 USER $USER
