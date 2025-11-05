@@ -32,7 +32,10 @@ bt_navigator:
 controller_server:
   ros__parameters:
     controller_frequency: 20.0
-    cmd_vel_topic: "cmd_vel_nav_raw"
+    # NOTE: controller_server publishes to the default '/cmd_vel'.
+    # There is no documented `cmd_vel_topic` parameter on controller_server,
+    # so do not set it here. If you need to change the topic, remap the
+    # controller publisher in the launch file instead.
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
@@ -313,8 +316,9 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    input_cmd_vel: "cmd_vel_nav"
-    output_cmd_vel: "cmd_vel_nav_smoothed"
+    # Note: nav2_velocity_smoother subscribes to 'cmd_vel' and publishes
+    # 'smoothed_cmd_vel' by design. Topic remapping must be used to change
+    # the input (see launch file edits).
     max_velocity: [0.26, 0.0, 1.0]
     min_velocity: [-0.26, 0.0, -1.0]
     max_accel: [2.5, 0.0, 3.2]
@@ -328,7 +332,9 @@ collision_monitor:
   ros__parameters:
     base_frame_id: "base_link"
     odom_frame_id: "odom"
-    cmd_vel_in_topic: "cmd_vel_nav_smoothed"
+    # Connect collision monitor input to the smoother's actual output
+    # (nav2_velocity_smoother publishes 'smoothed_cmd_vel').
+    cmd_vel_in_topic: "smoothed_cmd_vel"
     cmd_vel_out_topic: "cmd_vel"
     state_topic: "collision_monitor_state"
     transform_tolerance: 0.2
