@@ -129,6 +129,8 @@ RUN apt-get install -y ros-$ROS_DISTRO-nav2-route
 RUN apt-get update && apt-get install -y python3-argcomplete
 RUN /bin/bash -c 'eval "$(register-python-argcomplete3 ros2)" >> /etc/bash.bashrc'
 
+RUN apt-get install -y ros-$ROS_DISTRO-twist-mux
+
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
