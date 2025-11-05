@@ -154,7 +154,7 @@ WORKDIR /home/$USER/ros2_ws
 # Build the workspace
 RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; \
                   export PATH="/opt/venv/bin:$PATH"; \
-                  colcon build --symlink-install -log-base /home/$USER/ros2_ws/logs'
+                  colcon build --symlink-install --log-base /home/$USER/ros2_ws/logs'
 
 # Copy the entrypoint script into the container
 USER root
