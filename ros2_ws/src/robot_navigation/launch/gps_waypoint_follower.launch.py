@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import launch_ros.actions
 
 from ament_index_python.packages import get_package_share_directory
 
@@ -54,6 +55,16 @@ def generate_launch_description():
             os.path.join(launch_dir, 'dual_ekf_navsat.launch.py'))
     )
 
+    # Add twist_mux node before navigation to arbitrate teleop vs nav
+    twist_mux_yaml = os.path.join(params_dir, 'twist_mux.yaml')
+    twist_mux_cmd = launch_ros.actions.Node(
+        package='twist_mux',
+        executable='twist_mux',
+        name='twist_mux',
+        output='screen',
+        parameters=[twist_mux_yaml]
+    )
+
     navigation2_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(bringup_dir, "launch", "navigation_launch.py")
@@ -81,6 +92,9 @@ def generate_launch_description():
 
     # robot localization launch
     ld.add_action(robot_localization_cmd)
+
+    # twist_mux
+    ld.add_action(twist_mux_cmd)
 
     # navigation2 launch
     ld.add_action(navigation2_cmd)
