@@ -136,24 +136,23 @@ RUN usermod -a -G input $USER
 
 WORKDIR /home/$USER/ros2_ws
 
+# Ensure the home directory exists and is owned by the user, and create a writable colcon log dir
+RUN mkdir -p /home/$USER && chown -R $USER:$USER /home/$USER && \
+    mkdir -p /home/$USER/ros2_ws/log && chown -R $USER:$USER /home/$USER/ros2_ws/log
+
+USER $USER
+WORKDIR /home/$USER/ros2_ws
+
 # Copy rviz config into the container
 COPY --chown=$USER:$USER rviz2 /home/$USER/.rviz2
 
 # Copy the workspace into the container
 COPY --chown=$USER:$USER ros2_ws /home/$USER/ros2_ws/
 
-# Switch back to non-root user 'walle'
-USER $USER
-WORKDIR /home/$USER/ros2_ws
-
-# Install rosdep dependencies as non-root user
-# RUN rosdep update && \
-#     rosdep install --from-paths /home/$USER/ros2_ws/src --ignore-src -r -y \
-#     --skip-keys "mapviz mapviz_plugins tile_map nmea_msgs" || true
-
-# Build the workspace
+# Build the workspace as non-root user; place colcon logs in a writable location
 RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; \
                   export PATH="/opt/venv/bin:$PATH"; \
+                  export COLCON_LOG_BASE="/home/$USER/ros2_ws/log"; \
                   colcon build --symlink-install'
 
 # Copy the entrypoint script into the container
