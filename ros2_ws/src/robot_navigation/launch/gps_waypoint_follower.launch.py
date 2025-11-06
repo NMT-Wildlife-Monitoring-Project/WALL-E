@@ -72,7 +72,7 @@ def generate_launch_description():
         name='velocity_smoother',
         output='screen',
         parameters=[configured_params],
-        remappings=[('cmd_vel', '/cmd_vel_raw')]
+        remappings=[('cmd_vel', '/cmd_vel_out')]
     )
 
     navigation2_cmd = IncludeLaunchDescription(
