@@ -1,12 +1,14 @@
 twist_mux:
   ros__parameters:
+    use_stamped: false          # or true, if your input topics publish TwistStamped
     output_topic: "/cmd_vel_raw"
     topics:
-      - name: teleop
+      teleop:
         topic: "/cmd_vel_teleop"
         timeout: 0.5
         priority: 20
-      - name: nav
+      nav:
         topic: "/cmd_vel_nav"
         timeout: 0.5
         priority: 10
+
