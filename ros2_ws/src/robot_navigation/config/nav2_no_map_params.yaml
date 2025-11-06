@@ -316,9 +316,6 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    # Note: nav2_velocity_smoother subscribes to 'cmd_vel' and publishes
-    # 'smoothed_cmd_vel' by design. Topic remapping must be used to change
-    # the input (see launch file edits).
     max_velocity: [0.26, 0.0, 1.0]
     min_velocity: [-0.26, 0.0, -1.0]
     max_accel: [2.5, 0.0, 3.2]

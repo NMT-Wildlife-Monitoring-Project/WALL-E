@@ -65,6 +65,16 @@ def generate_launch_description():
         parameters=[twist_mux_yaml]
     )
 
+    # Launch a standalone velocity_smoother that subscribes to /cmd_vel_raw
+    velocity_smoother_cmd = launch_ros.actions.Node(
+        package='nav2_velocity_smoother',
+        executable='velocity_smoother',
+        name='velocity_smoother',
+        output='screen',
+        parameters=[configured_params],
+        remappings=[('cmd_vel', '/cmd_vel_raw')]
+    )
+
     navigation2_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(bringup_dir, "launch", "navigation_launch.py")
@@ -95,6 +105,9 @@ def generate_launch_description():
 
     # twist_mux
     ld.add_action(twist_mux_cmd)
+
+    # velocity smoother (remapped to accept mux output)
+    ld.add_action(velocity_smoother_cmd)
 
     # navigation2 launch
     ld.add_action(navigation2_cmd)

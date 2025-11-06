@@ -6,7 +6,6 @@ ros__parameters:
       timeout: 0.5
       priority: 20
     - name: nav
-      # Nav2 controller publishes on the default /cmd_vel; subscribe to that
-      topic: "/cmd_vel"
+      topic: "/cmd_vel_nav"
       timeout: 0.5
       priority: 10
