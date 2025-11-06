@@ -159,7 +159,6 @@ controller_server:
       #   twirling_cost_power: 1
       #   twirling_cost_weight: 10.0
 
-# GPS WPF CHANGE: Remove static layer
 local_costmap:
   local_costmap:
     ros__parameters:
@@ -197,8 +196,6 @@ local_costmap:
         inflation_radius: 0.24
       always_send_full_costmap: True
 
-# GPS WPF CHANGE: Remove static layer
-# GPS WPF CHANGE: Set rolling global costmap with 50x50 size. See note below
 global_costmap:
   global_costmap:
     ros__parameters:
