@@ -131,6 +131,8 @@ RUN /bin/bash -c 'eval "$(register-python-argcomplete3 ros2)" >> /etc/bash.bashr
 
 RUN apt-get install -y ros-$ROS_DISTRO-twist-mux
 
+# RUN apt-get install -y ros-$ROS_DISTRO-laser-filters
+
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
