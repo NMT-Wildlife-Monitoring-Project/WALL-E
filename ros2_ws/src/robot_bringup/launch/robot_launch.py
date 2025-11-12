@@ -83,7 +83,7 @@ def generate_launch_description():
             actions=[
                 IncludeLaunchDescription(
                     PythonLaunchDescriptionSource([
-                        FindPackageShare('robot_navigation'), '/launch/launch_waypoint_system.launch.py'
+                        FindPackageShare('waypoint_server'), '/launch/launch_waypoint_system.launch.py'
                     ]),
                     condition=IfCondition(launch_waypoints)
                 )
