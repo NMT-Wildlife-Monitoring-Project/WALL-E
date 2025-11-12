@@ -13,6 +13,7 @@ def generate_launch_description():
     launch_gps = LaunchConfiguration('launch_gps')
     launch_urdf = LaunchConfiguration('launch_urdf')
     launch_nav = LaunchConfiguration('launch_nav')
+    launch_waypoints = LaunchConfiguration('launch_waypoints')
 
     bringup_dir = FindPackageShare('robot_bringup')
 
