@@ -17,7 +17,18 @@ def generate_launch_description():
         output='screen',
     )
 
+    waypoint_interactive_markers = Node(
+        package='robot_navigation',
+        executable='waypoint_interactive_markers.py',
+        name='waypoint_interactive_markers',
+        output='screen',
+        parameters=[
+            {'fixed_frame': 'map'},
+        ],
+    )
+
     return LaunchDescription([
         waypoint_server,
         waypoint_follower,
+        waypoint_interactive_markers,
     ])
