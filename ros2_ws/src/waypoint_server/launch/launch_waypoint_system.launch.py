@@ -5,21 +5,21 @@ from launch_ros.actions import Node
 def generate_launch_description():
     waypoint_server = Node(
         package='waypoint_server',
-        executable='waypoint_server_node.py',
+        executable='waypoint_server_node',
         name='waypoint_server',
         output='screen',
     )
 
     waypoint_follower = Node(
         package='waypoint_server',
-        executable='waypoint_follower_node.py',
+        executable='waypoint_follower_node',
         name='waypoint_follower',
         output='screen',
     )
 
     waypoint_interactive_markers = Node(
         package='robot_navigation',
-        executable='waypoint_interactive_markers.py',
+        executable='waypoint_interactive_markers',
         name='waypoint_interactive_markers',
         output='screen',
         parameters=[
