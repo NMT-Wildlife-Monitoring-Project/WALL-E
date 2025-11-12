@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>robot_waypoint</name>
+  <name>waypoint_server</name>
   <version>0.1.0</version>
   <description>Launch files and configurations for bringing up the robot</description>
 
