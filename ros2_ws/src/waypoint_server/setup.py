@@ -20,7 +20,6 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            'waypoint_server_node = waypoint_server.waypoint_server_node:main',
             'waypoint_follower_node = waypoint_server.waypoint_follower_node:main',
         ],
     },

@@ -12,7 +12,6 @@ install(
 )
 
 install(PROGRAMS
-  waypoint_server/waypoint_server_node.py
   waypoint_server/waypoint_follower_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
