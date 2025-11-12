@@ -20,7 +20,7 @@ install(DIRECTORY config
 
 # Install executables (Python entrypoints)
 install(PROGRAMS
-  src/waypoint_server/waypoint_server_node.py
+  waypoint_server/waypoint_server_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
