@@ -3,13 +3,6 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    waypoint_server = Node(
-        package='waypoint_server',
-        executable='waypoint_server_node',
-        name='waypoint_server',
-        output='screen',
-    )
-
     waypoint_follower = Node(
         package='waypoint_server',
         executable='waypoint_follower_node',
@@ -28,7 +21,6 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        waypoint_server,
         waypoint_follower,
         waypoint_interactive_markers,
     ])
