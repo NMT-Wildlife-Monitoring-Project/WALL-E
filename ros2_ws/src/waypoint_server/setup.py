@@ -11,6 +11,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', ['launch/launch_waypoint_system.launch.py']),
+        ('share/' + package_name + '/config', ['config/waypoints.yaml']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -20,7 +21,7 @@ setup(
     license='Apache License 2.0',
     entry_points={
         'console_scripts': [
-            'waypoint_follower_node = waypoint_server.waypoint_follower_node:main'
+            'waypoint_follower_node = waypoint_server.waypoint_follower_node:main',
             'gps_waypoint_handler_node = waypoint_server.gps_waypoint_handler_node:main',
         ],
     },
