@@ -75,6 +75,20 @@ def generate_launch_description():
         remappings=[('cmd_vel', '/cmd_vel_out')]
     )
 
+    # GPS waypoint handler node
+    gps_waypoint_handler_cmd = launch_ros.actions.Node(
+        package='waypoint_server',
+        executable='gps_waypoint_handler_node',
+        name='gps_waypoint_handler',
+        output='screen',
+        parameters=[{
+            'waypoint_file': os.path.join(get_package_share_directory('waypoint_server'), 'config', 'waypoints.yaml'),
+            'frame_id': 'map',
+            'wait_for_nav2': True,
+            'fromll_service': '/fromLL'
+        }]
+    )
+
     navigation2_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(bringup_dir, "launch", "navigation_launch.py")
@@ -108,6 +122,9 @@ def generate_launch_description():
 
     # velocity smoother (remapped to accept mux output)
     ld.add_action(velocity_smoother_cmd)
+
+    # GPS waypoint handler
+    ld.add_action(gps_waypoint_handler_cmd)
 
     # navigation2 launch
     ld.add_action(navigation2_cmd)

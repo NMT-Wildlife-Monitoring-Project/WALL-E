@@ -13,7 +13,6 @@ def generate_launch_description():
     launch_gps = LaunchConfiguration('launch_gps')
     launch_urdf = LaunchConfiguration('launch_urdf')
     launch_nav = LaunchConfiguration('launch_nav')
-    launch_waypoints = LaunchConfiguration('launch_waypoints')
 
     bringup_dir = FindPackageShare('robot_bringup')
 
@@ -29,7 +28,6 @@ def generate_launch_description():
         DeclareLaunchArgument('launch_gps', default_value='true'),
         DeclareLaunchArgument('launch_urdf', default_value='true'),
         DeclareLaunchArgument('launch_nav', default_value='true'),
-        DeclareLaunchArgument('launch_waypoints', default_value='true'),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
@@ -78,15 +76,5 @@ def generate_launch_description():
                 )
             ]
         ),
-        TimerAction(
-            period=10.0,  # start 5s after nav
-            actions=[
-                IncludeLaunchDescription(
-                    PythonLaunchDescriptionSource([
-                        FindPackageShare('waypoint_server'), '/launch/launch_waypoint_system.launch.py'
-                    ]),
-                    condition=IfCondition(launch_waypoints)
-                )
-            ]
-        ),
+
     ])
