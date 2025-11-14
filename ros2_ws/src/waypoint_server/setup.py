@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'waypoint_follower_node = waypoint_server.waypoint_follower_node:main'
+            'gps_waypoint_handler_node = waypoint_server.gps_waypoint_handler_node:main',
         ],
     },
 )

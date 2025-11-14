@@ -10,6 +10,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped
 from nav2_simple_commander.robot_navigator import BasicNavigator
 from robot_localization.srv import FromLL
+from ament_index_python.packages import get_package_share_directory
 import yaml
 
 
@@ -42,8 +43,16 @@ class GpsWaypointFileFollower(Node):
     def __init__(self):
         super().__init__("gps_waypoint_file_follower")
 
+        # Get package share directory for config files
+        try:
+            package_share = get_package_share_directory('waypoint_server')
+            default_waypoint_file = os.path.join(package_share, 'config', 'waypoints.yaml')
+        except:
+            # Fallback if package not found
+            default_waypoint_file = ""
+
         # Parameters
-        self.declare_parameter("waypoint_file", "")
+        self.declare_parameter("waypoint_file", default_waypoint_file)
         self.declare_parameter("frame_id", "map")
         self.declare_parameter("wait_for_nav2", True)
         self.declare_parameter("fromll_service", "/fromLL")
@@ -88,8 +97,8 @@ class GpsWaypointFileFollower(Node):
         self.navigator = BasicNavigator()
 
         if self.wait_for_nav2:
-            # Use your localizer here ('amcl', 'robot_localization', etc.)
-            self.navigator.waitUntilNav2Active(localizer="amcl")
+            # Using robot_localization for GPS-based localization (no AMCL)
+            self.navigator.waitUntilNav2Active(localizer="robot_localization")
             self.get_logger().info("Nav2 is active.")
 
         # Start once after setup
