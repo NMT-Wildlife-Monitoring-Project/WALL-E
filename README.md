@@ -114,3 +114,12 @@ This package is for rplidar laserscan sensors.
 
 # Cellular
 <https://www.waveshare.com/wiki/SIM7600E-H_4G_HAT>
+
+
+sudo nmcli dev disconnect wlan0
+sudo zerotier-cli peers
+ipv4 - trying wifi
+sudo systemctl restart zerotier-one.service
+sudo zerotier-cli peers 
+should be ipv6
+may need to reboot
