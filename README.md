@@ -108,13 +108,8 @@ See <https://wiki.ros.org/joy> and <https://wiki.ros.org/teleop_twist_joy>. The 
 ## sllidar_ros2
 This package is for rplidar laserscan sensors.
 
-
-
-
-
 # Cellular
 <https://www.waveshare.com/wiki/SIM7600E-H_4G_HAT>
-
 
 sudo nmcli dev disconnect wlan0
 sudo zerotier-cli peers
@@ -123,3 +118,218 @@ sudo systemctl restart zerotier-one.service
 sudo zerotier-cli peers 
 should be ipv6
 may need to reboot
+
+# 📡 Jetson Cellular Setup (SIM7600 USB Modem)
+
+This project supports using a **SIM7600 USB LTE modem** on both Raspberry Pi 5 and NVIDIA Jetson platforms.
+The connection uses **IPv6-only cellular** with **Cloudflare DNS64** to provide full IPv4 compatibility (GitHub, Docker, ROS, apt, etc.) even when the carrier does not provide IPv4.
+
+* SIM7600 USB modem
+* IPv6-only LTE
+* Cloudflare DNS64/NAT64 workaround
+* Using your saved `.nmconnection` file
+* Fully portable for Pi → Jetson
+
+These instructions assume the repo contains:
+
+```
+scripts/mint-cellular.nmconnection
+```
+
+which holds the working NetworkManager profile.
+
+---
+
+## 1. Install Required Networking Packages
+
+Jetson devices often ship with a mixture of networking stacks.
+Ensure NetworkManager + ModemManager are installed and active:
+
+```bash
+sudo apt update
+sudo apt install -y network-manager modemmanager
+```
+
+Disable legacy networkd if it is enabled:
+
+```bash
+sudo systemctl disable systemd-networkd --now || true
+sudo systemctl enable NetworkManager --now
+```
+
+Reboot:
+
+```bash
+sudo reboot
+```
+
+---
+
+## 2. Plug In the SIM7600 Modem
+
+After reboot, verify the modem is detected:
+
+```bash
+mmcli -L
+```
+
+Expected:
+
+```
+Found 1 modems:
+    /org/freedesktop/ModemManager1/Modem/0 [SimCom] SIM7600
+```
+
+Confirm USB detection:
+
+```bash
+lsusb | grep -i sim
+```
+
+---
+
+## 3. Install the NetworkManager Profile
+
+From the project root:
+
+```bash
+cd WALL-E/scripts
+
+sudo cp mint-cellular.nmconnection /etc/NetworkManager/system-connections/
+sudo chown root:root /etc/NetworkManager/system-connections/mint-cellular.nmconnection
+sudo chmod 600 /etc/NetworkManager/system-connections/mint-cellular.nmconnection
+```
+
+Reload NetworkManager:
+
+```bash
+sudo nmcli connection reload
+```
+
+---
+
+## 4. Fix /etc/resolv.conf (Required!)
+
+Some Jetson images ship with a static or immutable `/etc/resolv.conf`,
+preventing NetworkManager from injecting the correct DNS64 servers.
+
+Run:
+
+```bash
+sudo chattr -i /etc/resolv.conf 2>/dev/null || true
+sudo rm -f /etc/resolv.conf
+sudo ln -s /run/NetworkManager/resolv.conf /etc/resolv.conf
+```
+
+---
+
+## 5. Connect to LTE
+
+```bash
+sudo nmcli connection up mint-cellular
+```
+
+The SIM7600 will automatically:
+
+* Create an **IPv6-only data connection**
+* Receive a global IPv6 address
+* Use the baked-in **Cloudflare DNS64 servers**:
+
+  ```
+  2606:4700:4700::64
+  2606:4700:4700::640
+  ```
+* Gain IPv4 compatibility via NAT64
+
+---
+
+## 6. Verify Connectivity
+
+### IPv6 address
+
+```bash
+ip -6 addr show dev wwan0
+```
+
+Should show a global address like:
+
+```
+2607:xxxx:xxxx::xxxx/64
+```
+
+### IPv6 reachability
+
+```bash
+ping6 ipv6.google.com
+```
+
+### IPv4-only service through NAT64
+
+```bash
+git ls-remote https://github.com
+docker pull ubuntu
+curl -4 https://ifconfig.co
+```
+
+All of these should work even though the modem has **no IPv4 address**.
+
+---
+
+## 7. Auto-Connect on Boot (Optional)
+
+```bash
+sudo nmcli connection modify mint-cellular connection.autoconnect yes
+```
+
+---
+
+## 8. Troubleshooting
+
+### Check modem status
+
+```bash
+mmcli -m 0
+```
+
+### Check IPv6 routes
+
+```bash
+ip -6 route
+```
+
+### Check DNS64 is active
+
+```bash
+getent ahosts github.com
+```
+
+Should return a synthesized IPv6 address starting with:
+
+```
+64:ff9b::
+```
+
+If so, NAT64 is working.
+
+---
+
+# ✔ Summary
+
+Once installed, the Jetson will:
+
+* Use **IPv6-only LTE**
+* Use **DNS64** to synthesize IPv4 addresses
+* Access all IPv4-only services (GitHub SSH, Docker Hub, etc.)
+* Maintain the exact same behavior as your Pi
+
+Everything is driven by the included:
+
+```
+scripts/mint-cellular.nmconnection
+```
+
+so setup on a Jetson is as simple as **copy file → reload NM → connect**.
+
+---
+
+If you want, I can generate a **setup_cellular.sh** script that automates every step above, including safety checks, detection, and verification.
