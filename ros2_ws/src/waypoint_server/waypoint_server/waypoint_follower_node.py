@@ -117,7 +117,7 @@ class WaypointFollower(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = WaypointFollower()
+#    node = WaypointFollower()
     rclpy.spin(node)
     rclpy.shutdown()
 
