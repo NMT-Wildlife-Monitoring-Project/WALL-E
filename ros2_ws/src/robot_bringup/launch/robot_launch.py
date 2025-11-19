@@ -64,5 +64,11 @@ def generate_launch_description():
             launch_arguments={
                 'serial_port': '/dev/roboclaw'
             }.items()
+        ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([
+                FindPackageShare('robot_navigation'), '/launch/gps_waypoint_follower.launch.py'
+            ]),
+            condition=IfCondition(launch_nav)
         )
     ])
