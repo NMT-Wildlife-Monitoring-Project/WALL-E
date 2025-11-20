@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import busio
+import board  # For Jetson I2C
 from adafruit_bno08x.i2c import BNO08X_I2C
 import numpy as np
 import time
@@ -45,7 +46,12 @@ class BNO085:
             and subtracts bias.
     """
     def __init__(self, i2c_addr):
-        self.i2c = busio.I2C(3, 2)
+        # Raspberry Pi specific I2C initialization (GPIO pins 3 and 2)
+        # self.i2c = busio.I2C(3, 2)
+
+        # Jetson I2C initialization (uses default I2C bus from board)
+        self.i2c = board.I2C()
+
         self.bno = BNO08X_I2C(self.i2c, address=i2c_addr)
         features = [
             BNO_REPORT_ACCELEROMETER,
