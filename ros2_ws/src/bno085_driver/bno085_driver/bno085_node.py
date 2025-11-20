@@ -13,7 +13,11 @@ class BNO085Node(Node):
         # Declare parameter for I2C address
         self.declare_parameter('i2c_address', 0x4B)  # Default BNO085 address
         self.i2c_address = self.get_parameter('i2c_address').value
-        
+
+        # Declare parameter for I2C bus number
+        self.declare_parameter('i2c_bus', 1)  # Default to bus 1 (Jetson/Pi standard)
+        self.i2c_bus = self.get_parameter('i2c_bus').value
+
         # Declare parameter for frame ID
         self.declare_parameter('frame_id', 'imu_link')  # Default frame ID
         self.frame_id = self.get_parameter('frame_id').value
@@ -21,9 +25,9 @@ class BNO085Node(Node):
         # Publishers
         self.imu_pub = self.create_publisher(Imu, 'imu/data', 10)
         self.mag_pub = self.create_publisher(MagneticField, 'imu/mag', 10)
-        
-        self.get_logger().info(f'Using I2C address: 0x{self.i2c_address:02X}')
-        
+
+        self.get_logger().info(f'Using I2C bus: {self.i2c_bus}, address: 0x{self.i2c_address:02X}')
+
         # Create timer for publishing
         self.timer = self.create_timer(0.01, self.publish)  # 100Hz
 
@@ -36,7 +40,7 @@ class BNO085Node(Node):
     def initialize(self):
         if self.bno is not None:
             del self.bno
-        self.bno = BNO085(self.i2c_address)
+        self.bno = BNO085(self.i2c_address, self.i2c_bus)
         self.bno.calibrate()
         
     

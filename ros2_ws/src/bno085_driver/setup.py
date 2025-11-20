@@ -16,7 +16,7 @@ setup(
         (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
         (os.path.join('share', package_name, 'config'), glob('config/*.json')),
     ],
-    install_requires=['setuptools', 'smbus2'],
+    install_requires=['setuptools', 'smbus2', 'adafruit-extended-bus'],
     zip_safe=True,
     maintainer='pi5-walle',
     maintainer_email='user@todo.todo',
