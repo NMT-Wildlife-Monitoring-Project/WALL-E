@@ -14,8 +14,8 @@ RUN useradd -m $USER && \
 # Create the sgx group for GPIO access
 RUN groupadd -g 993 gpio
 
-# Create the i2c group for I2C device access (if it doesn't exist)
-RUN groupadd -f i2c
+# Create the i2c group for I2C device access with matching GID from host (116 on this Jetson)
+RUN groupadd -g 116 i2c
 
 # Add user to groups for hardware access, including sgx for GPIO and i2c for I2C devices
 RUN usermod -a -G dialout,tty,audio,video,gpio,i2c $USER
