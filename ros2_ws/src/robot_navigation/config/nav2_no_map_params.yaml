@@ -123,7 +123,7 @@ controller_server:
         cost_weight: 3.81
         near_collision_cost: 253
         critical_cost: 300.0
-        consider_footprint: false
+        consider_footprint: true
         collision_cost: 1000000.0
         near_goal_distance: 1.0
         trajectory_point_step: 2
@@ -184,7 +184,7 @@ local_costmap:
           raytrace_max_range: 10.0
           raytrace_min_range: 0.0
           obstacle_max_range: 8.0
-          obstacle_min_range: 0.22
+          obstacle_min_range: 0.30
           # outdoors there will probably be more inf points
           inf_is_valid: true
       inflation_layer:
@@ -227,7 +227,7 @@ global_costmap:
           raytrace_max_range: 25.0
           raytrace_min_range: 0.0
           obstacle_max_range: 20.0
-          obstacle_min_range: 0.22
+          obstacle_min_range: 0.30
           # outdoors there will probably be more inf points
           inf_is_valid: true
       inflation_layer:

@@ -2,19 +2,24 @@
 id=mint-cellular
 uuid=90dc8b86-c84e-49d8-a174-043c64f28e05
 type=gsm
-timestamp=1763579278
+autoconnect=true
+autoconnect-priority=100
 
 [gsm]
 apn=fast.t-mobile.com
+# Optional: these are safe to add but not required
+# home-only=true
+# network-id=310260
+# ip-type=ipv6  # Some NM/MM versions accept this; others just ignore it.
 
 [ipv4]
-method=auto
-route-metric=300
+method=disabled
 
 [ipv6]
 addr-gen-mode=default
 dns=2606:4700:4700::64;2606:4700:4700::640;
 ignore-auto-dns=true
 method=auto
+route-metric=300
 
 [proxy]

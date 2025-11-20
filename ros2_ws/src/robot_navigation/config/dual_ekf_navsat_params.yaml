@@ -133,3 +133,6 @@ navsat_transform:
     wait_for_datum: true
     # Datum timeout - wait up to 30 seconds for initial GPS fix and pose
     datum_timeout: 30.0
+    # Force UTM zone 13S for New Mexico coordinates (longitude -108° to -102°)
+    utm_zone: 13
+    utm_band: "S"
