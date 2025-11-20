@@ -9,7 +9,7 @@ def generate_launch_description():
             name='bno085_node',
             parameters=[{
                 'i2c_address': 0x4B,  # Default I2C address for BNO085
-                'i2c_bus': 1  # I2C bus number (1 for Jetson/Pi, may need to adjust)
+                'i2c_bus': 7  # I2C bus number (1 for Jetson/Pi, may need to adjust)
             }],
             output='screen'
         )

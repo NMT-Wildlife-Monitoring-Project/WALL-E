@@ -15,7 +15,7 @@ class BNO085Node(Node):
         self.i2c_address = self.get_parameter('i2c_address').value
 
         # Declare parameter for I2C bus number
-        self.declare_parameter('i2c_bus', 1)  # Default to bus 1 (Jetson/Pi standard)
+        self.declare_parameter('i2c_bus', 7)  # Default to bus 1 (Jetson/Pi standard)
         self.i2c_bus = self.get_parameter('i2c_bus').value
 
         # Declare parameter for frame ID
