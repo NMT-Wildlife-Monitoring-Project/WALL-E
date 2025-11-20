@@ -14,8 +14,11 @@ RUN useradd -m $USER && \
 # Create the sgx group for GPIO access
 RUN groupadd -g 993 gpio
 
-# Add user to groups for hardware access, including sgx for GPIO
-RUN usermod -a -G dialout,tty,audio,video,gpio $USER
+# Create the i2c group for I2C device access (if it doesn't exist)
+RUN groupadd -f i2c
+
+# Add user to groups for hardware access, including sgx for GPIO and i2c for I2C devices
+RUN usermod -a -G dialout,tty,audio,video,gpio,i2c $USER
 
 # Switch to root for installations
 USER root
