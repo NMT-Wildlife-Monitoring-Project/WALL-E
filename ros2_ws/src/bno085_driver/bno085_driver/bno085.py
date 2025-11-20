@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import busio
+from adafruit_extended_bus import ExtendedI2C
 from adafruit_bno08x.i2c import BNO08X_I2C
 import numpy as np
 import time
@@ -34,8 +34,11 @@ class BNO085:
         gryo_bias (np.ndarray): Estimated gyroscope bias.
         accel_bias (np.ndarray): Estimated accelerometer bias.
     Methods:
-        __init__(i2c_addr):
+        __init__(i2c_addr, i2c_bus):
             Initializes the BNO085 sensor, enables features, and sets up data structures.
+            Args:
+                i2c_addr: I2C address of the BNO085 sensor
+                i2c_bus: I2C bus number (default=1 for Jetson, typically 1 for most boards)
         calibrate(num_samples=100):
             Collects samples to estimate sensor biases and covariances for calibration.
             Expects imu to be stationary. Do not run this function to use default covariance
@@ -44,8 +47,21 @@ class BNO085:
             Updates sensor readings for quaternion, RPY, accelerometer, gyroscope, and magnetometer
             and subtracts bias.
     """
-    def __init__(self, i2c_addr):
-        self.i2c = busio.I2C(3, 2)
+    def __init__(self, i2c_addr, i2c_bus=1):
+        """
+        Initialize BNO085 sensor using I2C bus.
+
+        Args:
+            i2c_addr: I2C address of the BNO085 sensor (typically 0x4A or 0x4B)
+            i2c_bus: I2C bus number (default=1)
+                    - Jetson Orin Nano: typically bus 1 or 7 (/dev/i2c-1 or /dev/i2c-7)
+                    - Raspberry Pi: typically bus 1 (/dev/i2c-1)
+        """
+        # Initialize I2C using ExtendedI2C which directly accesses /dev/i2c-{i2c_bus}
+        # This works on Jetson, Raspberry Pi, and other Linux SBCs
+        self.i2c = ExtendedI2C(i2c_bus)
+
+        # Initialize BNO085 sensor
         self.bno = BNO08X_I2C(self.i2c, address=i2c_addr)
         features = [
             BNO_REPORT_ACCELEROMETER,
