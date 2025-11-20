@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-import busio
-# import board  # Commented out - board detection not reliable across platforms
+from adafruit_extended_bus import ExtendedI2C
 from adafruit_bno08x.i2c import BNO08X_I2C
 import numpy as np
 import time
@@ -49,30 +48,20 @@ class BNO085:
             and subtracts bias.
     """
     def __init__(self, i2c_addr, i2c_bus=1):
-        # Raspberry Pi specific I2C initialization (GPIO pins 3 and 2)
-        # Works on Pi but not cross-platform compatible
-        # self.i2c = busio.I2C(3, 2)
+        """
+        Initialize BNO085 sensor using I2C bus.
 
-        # Cross-platform I2C initialization using I2C bus number
-        # Jetson Orin Nano: typically uses bus 1 or 7 (/dev/i2c-1 or /dev/i2c-7)
-        # Raspberry Pi: typically uses bus 1 (/dev/i2c-1)
-        # This method works on both platforms
-        from board import SCL, SDA
-        import busio
-        try:
-            # Try to use board pins (works on most platforms)
-            self.i2c = busio.I2C(SCL, SDA)
-        except (NotImplementedError, AttributeError):
-            # Fallback: use I2C bus number directly (Jetson, Pi, etc.)
-            # This accesses /dev/i2c-{i2c_bus}
-            warnings.warn(f"Using I2C bus {i2c_bus} directly (board detection failed)")
-            import smbus2
-            # Use smbus2 as fallback which is more universally supported
-            bus = smbus2.SMBus(i2c_bus)
-            # Wrap it for Adafruit compatibility
-            from adafruit_extended_bus import ExtendedI2C
-            self.i2c = ExtendedI2C(i2c_bus)
+        Args:
+            i2c_addr: I2C address of the BNO085 sensor (typically 0x4A or 0x4B)
+            i2c_bus: I2C bus number (default=1)
+                    - Jetson Orin Nano: typically bus 1 or 7 (/dev/i2c-1 or /dev/i2c-7)
+                    - Raspberry Pi: typically bus 1 (/dev/i2c-1)
+        """
+        # Initialize I2C using ExtendedI2C which directly accesses /dev/i2c-{i2c_bus}
+        # This works on Jetson, Raspberry Pi, and other Linux SBCs
+        self.i2c = ExtendedI2C(i2c_bus)
 
+        # Initialize BNO085 sensor
         self.bno = BNO08X_I2C(self.i2c, address=i2c_addr)
         features = [
             BNO_REPORT_ACCELEROMETER,
