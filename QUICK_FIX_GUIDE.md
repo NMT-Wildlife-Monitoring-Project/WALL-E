@@ -14,9 +14,72 @@
 
 ---
 
-## Phase 1: Critical Fixes (Do These First - 1.5 Hours)
+## Phase 1: Critical Fixes (Do These First - 2 Hours)
 
-### Fix #1: Reduce Inflation Radius (15 minutes)
+### Fix #0: Add Scan Matcher to Robot Launch with Optional Parameter (15 minutes)
+
+**File:** `/home/ndev/WALL-E/ros2_ws/src/robot_bringup/launch/robot_launch.py`
+
+**Add after line 14 (with other LaunchConfiguration declarations):**
+```python
+launch_scan_matcher = LaunchConfiguration('launch_scan_matcher')
+```
+
+**Add after line 30 (with other DeclareLaunchArgument calls):**
+```python
+DeclareLaunchArgument('launch_scan_matcher', default_value='true'),
+```
+
+**Add before the closing bracket of LaunchDescription (around line 74):**
+```python
+IncludeLaunchDescription(
+    PythonLaunchDescriptionSource([
+        FindPackageShare('scan_matcher'), '/launch/scan_matcher_launch.py'
+    ]),
+    condition=IfCondition(launch_scan_matcher)
+),
+```
+
+**Why:** Scan matcher runs on request, can be disabled if needed. Provides refined odometry to local EKF.
+
+**Test:** `ros2 launch robot_bringup robot_launch.py launch_scan_matcher:=false` (to disable)
+
+---
+
+### Fix #1: Add `publish_tf` Parameter to RoboClaw (20 minutes)
+
+**File A:** `/home/ndev/WALL-E/ros2_ws/src/roboclaw_driver/launch/roboclaw_launch.py`
+
+**After line 28 (with other DeclareLaunchArgument calls):**
+```python
+DeclareLaunchArgument('publish_tf', default_value='false'),
+```
+
+**In node_params list (after line 52), add:**
+```python
+{'publish_tf': LaunchConfiguration('publish_tf')},
+```
+
+**File B:** `/home/ndev/WALL-E/ros2_ws/src/roboclaw_driver/roboclaw_driver/roboclaw_node.py`
+
+**After line 65 (with other declare_parameter calls):**
+```python
+self.declare_parameter('publish_tf', False)
+```
+
+**After line 85 (with other get_parameter calls):**
+```python
+self.publish_tf = self.get_parameter('publish_tf').get_parameter_value().bool_value
+```
+
+**Around line 112 (remove/comment existing TF broadcaster if any, or verify it doesn't exist):**
+Current code only publishes Odometry, which is correct. No TF broadcaster exists currently, so parameter is for future safety and consistency.
+
+**Why:** If TF broadcasting ever gets added to RoboClaw, it will be disabled by default. EKF remains authoritative for transforms.
+
+---
+
+### Fix #2: Reduce Inflation Radius (15 minutes)
 
 **File:** `/home/ndev/WALL-E/ros2_ws/src/robot_navigation/config/nav2_no_map_params.yaml`
 
@@ -204,19 +267,19 @@ scan:
   clearing: True
   marking: True
   data_type: "LaserScan"
-  raytrace_max_range: 12.0
+  raytrace_max_range: 8.0
   raytrace_min_range: 0.0
-  obstacle_max_range: 10.0
+  obstacle_max_range: 8.0
   obstacle_min_range: 0.10
 ```
 
-**Why:** Matches actual S-Lidar S3 range (~5.5m in sunlight). obstacle_min_range 0.10m catches antenna but excludes noise.
+**Why:** Matches actual S-Lidar S3 range (~5.5m in sunlight). Local uses 5m, global uses 8m per user request. obstacle_min_range 0.10m catches antenna but excludes noise.
 
 ---
 
-### Tune #3: Scan Matcher Reduction
+### Tune #3: Scan Matcher Reduction & EKF Integration
 
-**File:** `/home/ndev/WALL-E/ros2_ws/src/scan_matcher/config/scan_matcher_params.yaml`
+**File A:** `/home/ndev/WALL-E/ros2_ws/src/scan_matcher/config/scan_matcher_params.yaml`
 
 **Lines 16-23:**
 ```yaml
@@ -234,6 +297,26 @@ downsample_factor: 4
 ```
 
 **Why:** ICP still runs but 75% faster. Stops blocking EKF/costmap updates.
+
+---
+
+**File B:** `/home/ndev/WALL-E/ros2_ws/src/robot_navigation/config/dual_ekf_navsat_params.yaml`
+
+**After line 30 (in ekf_filter_node_odom section, after odom0_queue_size):**
+```yaml
+    # Scan matcher odometry (integrated into local frame)
+    odom1: odom_matched
+    odom1_config: [false, false, false,
+                  false, false, false,
+                  true,  true,  false,
+                  false, false, true,
+                  false, false, false]
+    odom1_queue_size: 5
+    odom1_differential: false
+    odom1_relative: false
+```
+
+**Why:** Scan matcher corrections feed into local EKF (odom frame). Improves odometry accuracy in short-range navigation without affecting global GPS frame. If scan_matcher is disabled, EKF gracefully falls back to wheel odometry + IMU only.
 
 ---
 
@@ -351,13 +434,16 @@ cd docker
 
 | File | Lines | Change | Reason |
 |------|-------|--------|--------|
+| robot_launch.py | Add after 14, 30, 74 | Add launch_scan_matcher parameter & conditional include | Enable scan matcher optionally |
+| roboclaw_launch.py | Add after 28, 52 | Add publish_tf parameter | Enable TF safely (default: false) |
+| roboclaw_node.py | Add after 65, 85 | Add publish_tf parameter & getter | Parameter support |
 | nav2_no_map_params.yaml | 62-64 | batch_size: 2000 -> 500 | CPU load |
 | nav2_no_map_params.yaml | 191-193, 233-236 | inflation_radius: 0.24 -> 0.15 | Antenna blockage |
 | nav2_no_map_params.yaml | 161-162, 199-200 | costmap update_frequency | Sync with controller |
 | nav2_no_map_params.yaml | 34 | controller_frequency: 20 -> 10 | Match costmap rate |
-| nav2_no_map_params.yaml | 178-189, 221-232 | raytrace_max_range, obstacle_min_range | Realistic ranges |
+| nav2_no_map_params.yaml | 178-189, 221-232 | Local: 5m, Global: 8m raytrace | Realistic ranges + user request |
+| dual_ekf_navsat_params.yaml | Add after line 30 | Add odom1: odom_matched to local EKF | Integrate scan matcher to local frame |
 | scan_matcher_params.yaml | 16-23 | max_iterations: 20 -> 10 | CPU load |
-| roboclaw_node.py | ~113 | Comment TF broadcaster | Remove conflict |
 
 ---
 
@@ -391,15 +477,20 @@ After implementation:
 - [ ] CPU usage < 40% sustained (`top` command)
 - [ ] TF2 shows single tree: `ros2 run tf2_tools tf2_monitor`
 - [ ] All topics update at target frequency with <5% jitter
+- [ ] `/odom_matched` topic publishing when scan_matcher running
+- [ ] `ros2 topic hz /odom_matched` shows ~10Hz (scan matcher rate)
 - [ ] 20m waypoint navigation reaches goal
 - [ ] 50m waypoint navigation completes (may replan 1-2 times)
 - [ ] No "transform timeout" or "collision_monitor" spam in logs
+- [ ] Robot can be launched with `launch_scan_matcher:=false` and still navigates (using wheel odom + GPS only)
 
 ---
 
 **Estimated Total Time:** 3-4 hours (including rebuild and testing)
 
-**Risk Level:** LOW (all changes are parameter tuning + one simple code comment)
+**Risk Level:** LOW (all changes are parameter tuning + optional parameter additions)
 
 **Rollback Difficulty:** EASY (git checkout any file)
+
+**Key Safety Feature:** All changes are backward compatible. Scan matcher is optional and EKFs degrade gracefully without it.
 
