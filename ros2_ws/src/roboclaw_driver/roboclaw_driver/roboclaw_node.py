@@ -63,6 +63,7 @@ class RoboclawNode(Node):
         self.declare_parameter('odom_frame_id', 'odom')
         self.declare_parameter('base_frame_id', 'base_link')
         self.declare_parameter('cmd_vel_timeout', 1.0)  # seconds
+        self.declare_parameter('publish_tf', False)
 
         # Get parameters
         self.serial_port = self.get_parameter('serial_port').get_parameter_value().string_value
@@ -83,6 +84,7 @@ class RoboclawNode(Node):
         self.odom_frame_id = self.get_parameter('odom_frame_id').get_parameter_value().string_value
         self.base_frame_id = self.get_parameter('base_frame_id').get_parameter_value().string_value
         self.cmd_vel_timeout = self.get_parameter('cmd_vel_timeout').get_parameter_value().double_value
+        self.publish_tf = self.get_parameter('publish_tf').get_parameter_value().bool_value
         self.max_speed_qpps_param = self.get_parameter('max_speed_qpps').get_parameter_value().integer_value
         self.accel_qpps_param = self.get_parameter('accel_qpps').get_parameter_value().integer_value
 

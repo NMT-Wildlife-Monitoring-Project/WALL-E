@@ -31,7 +31,7 @@ bt_navigator:
 
 controller_server:
   ros__parameters:
-    controller_frequency: 20.0
+    controller_frequency: 10.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
@@ -59,9 +59,9 @@ controller_server:
     # DWB parameters
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
-      time_steps: 56
+      time_steps: 24
       model_dt: 0.05
-      batch_size: 2000
+      batch_size: 500
       ax_max: 3.0
       ax_min: -3.0
       ay_max: 3.0
@@ -158,8 +158,8 @@ controller_server:
 local_costmap:
   local_costmap:
     ros__parameters:
-      update_frequency: 5.0
-      publish_frequency: 3.0
+      update_frequency: 10.0
+      publish_frequency: 5.0
       global_frame: odom
       robot_base_frame: base_link
       rolling_window: true
@@ -181,23 +181,23 @@ local_costmap:
           clearing: True
           marking: True
           data_type: "LaserScan"
-          raytrace_max_range: 10.0
+          raytrace_max_range: 5.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 8.0
-          obstacle_min_range: 0.30
+          obstacle_max_range: 4.5
+          obstacle_min_range: 0.10
           # outdoors there will probably be more inf points
           inf_is_valid: true
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.24
+        cost_scaling_factor: 2.0
+        inflation_radius: 0.15
       always_send_full_costmap: True
 
 global_costmap:
   global_costmap:
     ros__parameters:
-      update_frequency: 1.0
-      publish_frequency: 0.5
+      update_frequency: 2.0
+      publish_frequency: 1.0
       global_frame: map
       robot_base_frame: base_link
       footprint: "[[0.16, 0.15], [0.16, -0.15], [-0.16, -0.15], [-0.16, 0.15]]"
@@ -224,16 +224,16 @@ global_costmap:
           clearing: True
           marking: True
           data_type: "LaserScan"
-          raytrace_max_range: 25.0
+          raytrace_max_range: 8.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 20.0
-          obstacle_min_range: 0.30
+          obstacle_max_range: 8.0
+          obstacle_min_range: 0.10
           # outdoors there will probably be more inf points
           inf_is_valid: true
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.24
+        cost_scaling_factor: 2.0
+        inflation_radius: 0.15
       always_send_full_costmap: True
 
 # The yaml_filename does not need to be specified since it going to be set by defaults in launch.

@@ -7,12 +7,14 @@ from launch_ros.substitutions import FindPackageShare
 import os
 from launch_ros.actions import Node
 
+# Modified by Claude - Added scan matcher integration
 def generate_launch_description():
     launch_rplidar = LaunchConfiguration('launch_rplidar')
     launch_bno085 = LaunchConfiguration('launch_bno085')
     launch_gps = LaunchConfiguration('launch_gps')
     launch_urdf = LaunchConfiguration('launch_urdf')
     launch_nav = LaunchConfiguration('launch_nav')
+    launch_scan_matcher = LaunchConfiguration('launch_scan_matcher')
 
     bringup_dir = FindPackageShare('robot_bringup')
 
@@ -28,6 +30,7 @@ def generate_launch_description():
         DeclareLaunchArgument('launch_gps', default_value='true'),
         DeclareLaunchArgument('launch_urdf', default_value='true'),
         DeclareLaunchArgument('launch_nav', default_value='true'),
+        DeclareLaunchArgument('launch_scan_matcher', default_value='true'),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
@@ -70,5 +73,11 @@ def generate_launch_description():
                 FindPackageShare('robot_navigation'), '/launch/gps_waypoint_follower.launch.py'
             ]),
             condition=IfCondition(launch_nav)
-        )
+        ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([
+                FindPackageShare('scan_matcher'), '/launch/scan_matcher_launch.py'
+            ]),
+            condition=IfCondition(launch_scan_matcher)
+        ),
     ])

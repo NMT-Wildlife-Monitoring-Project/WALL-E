@@ -26,6 +26,7 @@ def generate_launch_description():
         DeclareLaunchArgument('odom_frame_id', default_value='odom'),
         DeclareLaunchArgument('base_frame_id', default_value='base_link'),
         DeclareLaunchArgument('cmd_vel_timeout', default_value='1.0'),
+        DeclareLaunchArgument('publish_tf', default_value='false'),
     ]
 
     # Pass all arguments as parameters to the node
@@ -50,6 +51,7 @@ def generate_launch_description():
         {'odom_frame_id': LaunchConfiguration('odom_frame_id')},
         {'base_frame_id': LaunchConfiguration('base_frame_id')},
         {'cmd_vel_timeout': LaunchConfiguration('cmd_vel_timeout')},
+        {'publish_tf': LaunchConfiguration('publish_tf')},
     ]
 
     return LaunchDescription(
