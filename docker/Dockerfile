@@ -185,8 +185,8 @@ RUN groupadd input 2>/dev/null || true && usermod -a -G input $USER
 # ============================================================================
 # User and Directory Setup
 # ============================================================================
-RUN mkdir -p /home/$USER && chown -R $USER:$USER /home/$USER && \
-    mkdir -p /home/$USER/ros2_ws/log && chown -R $USER:$USER /home/$USER/ros2_ws/log
+RUN mkdir -p /home/$USER/ros2_ws/log && \
+    chown -R $USER:$USER /home/$USER
 
 WORKDIR /home/$USER/ros2_ws
 
