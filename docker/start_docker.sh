@@ -181,7 +181,7 @@ WEB INTERFACE
   -w, --webapp             Run web control panel (port 8000)
 
 CUSTOM
-  -c, --command <cmd>      Run custom command in container
+  --command <cmd>          Run custom command in container
 
 CONTAINER MANAGEMENT
   -b, --build              Build Docker image (stops running container if any)
@@ -257,9 +257,21 @@ setup_environment_file() {
 
 # Add display support to environment and docker flags
 enable_display_support() {
+    if [ -z "$DISPLAY" ]; then
+        echo "Warning: DISPLAY not set. GUI applications may not work."
+        echo "         Ensure you have X11 forwarding enabled or use: export DISPLAY=:0"
+        return
+    fi
+
+    if [ ! -e /tmp/.X11-unix ]; then
+        echo "Warning: X11 socket not found at /tmp/.X11-unix"
+        echo "         GUI applications may not work without X11."
+        return
+    fi
+
     echo "DISPLAY=$DISPLAY" >> "$ENV_FILE"
     DOCKER_RUN_FLAGS+=("--volume=/tmp/.X11-unix:/tmp/.X11-unix:rw")
-    xhost +local:docker
+    xhost +local:docker 2>/dev/null || true
     echo "Display support enabled"
 }
 
@@ -344,6 +356,11 @@ build_command_list() {
         fi
     done
 
+    # Auto-enable display for visualization commands that require it
+    if [ "$RUN_RVIZ" = true ] || [ "$RUN_LIDAR_VIEW" = true ]; then
+        DISPLAY_ENABLED=true
+    fi
+
     # Print summary
     if [ ${#SELECTED_CMDS[@]} -gt 0 ]; then
         echo "Selected commands: ${SELECTED_CMDS[*]}"
@@ -406,8 +423,8 @@ while [[ "$#" -gt 0 ]]; do
         --gps) RUN_GPS=true; shift ;;
 
         # Debugging & Visualization
-        -R|--rviz) RUN_RVIZ=true; DISPLAY_ENABLED=true; shift ;;
-        -v|--lidar-view) RUN_LIDAR_VIEW=true; DISPLAY_ENABLED=true; shift ;;
+        -R|--rviz) RUN_RVIZ=true; shift ;;
+        -v|--lidar-view) RUN_LIDAR_VIEW=true; shift ;;
         -B|--rosbridge) RUN_ROSBRIDGE=true; shift ;;
         --scan-matcher) RUN_SCAN_MATCHER=true; shift ;;
         --waypoint-server) RUN_WAYPOINT_SERVER=true; shift ;;
@@ -425,7 +442,7 @@ while [[ "$#" -gt 0 ]]; do
         # Container management
         -b|--build) BUILD_CONTAINER=true; shift ;;
         -x|--stop) STOP_CONTAINER=true; shift ;;
-        -R|--restart) RESTART_CONTAINER=true; shift ;;
+        --restart) RESTART_CONTAINER=true; shift ;;
         -k|--clean) CLEAN_DOCKER=true; shift ;;
 
         # Options
@@ -490,7 +507,7 @@ if [ -n "$BLINKA_FORCEBOARD" ]; then
 fi
 
 # USB camera support (if requested)
-if [ "$RUN_USB_CAM_NODE" = true ]; then
+if [ "$RUN_CAMERA" = true ]; then
     if [ -e /dev/video0 ]; then
         DOCKER_RUN_FLAGS+=("--device=/dev/video0")
     else
