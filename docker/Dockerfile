@@ -1,4 +1,17 @@
-# Argument for ROS version
+# ============================================================================
+# WALL-E ROS 2 Navigation Stack - Docker Build
+# ============================================================================
+# IMPORTANT: Keep all apt-get and pip installs BEFORE COPY commands.
+# Docker layer caching will re-run from the first changed line onward.
+# If you add COPY before installs, rebuilds will re-install all packages!
+#
+# To add new dependencies in future:
+# 1. Add apt-get packages to the appropriate STAGE (1-10)
+# 2. Add pip packages to STAGE 11
+# 3. Keep COPY commands at the END (after all installs)
+# 4. Keep workspace build (colcon, npm) at the very end
+# ============================================================================
+
 ARG ROS_DISTRO=jazzy
 FROM ros:${ROS_DISTRO}
 
