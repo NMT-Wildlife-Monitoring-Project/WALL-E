@@ -11,141 +11,138 @@ ENV USER=$USER
 RUN useradd -m $USER && \
     echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Create the sgx group for GPIO access
-RUN groupadd -g 993 gpio
-
-# Create the i2c group for I2C device access with matching GID from host (116 on this Jetson)
-RUN groupadd -g 116 i2c
-
-# Add user to groups for hardware access, including sgx for GPIO and i2c for I2C devices
-RUN usermod -a -G dialout,tty,audio,video,gpio,i2c $USER
+# Create hardware access groups
+RUN groupadd -g 993 gpio && \
+    groupadd -g 116 i2c && \
+    usermod -a -G dialout,tty,audio,video,gpio,i2c,input $USER
 
 # Switch to root for installations
 USER root
 
-# Install necessary dependencies
-# Install add-apt-repository support
-RUN apt-get update \
- && apt-get install -y software-properties-common
-
-# Install build tools and utilities
-RUN apt-get install -y \
+# ============================================================================
+# STAGE 1: Core System Dependencies
+# ============================================================================
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    software-properties-common \
     build-essential \
     cmake \
     wget \
     curl \
     tar \
-    git
+    git \
+    ca-certificates
 
-# Install Python and serial support
-# Note: python3-full is excluded due to ARM64 repository issues on Jetson
-RUN apt-get install -y \
+# ============================================================================
+# STAGE 2: Python and Build Tools
+# ============================================================================
+# Note: Avoid python3-full and python3.12-venv on ARM64 Jetson due to 404 errors
+RUN apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
     python3-serial \
+    && apt-get install -y --fix-missing \
     python3-venv
 
-# Install networking and mDNS
-RUN apt-get install -y \
+# ============================================================================
+# STAGE 3: Networking and Utilities
+# ============================================================================
+RUN apt-get install -y --no-install-recommends \
     iputils-ping \
     avahi-daemon \
     libnss-mdns \
     avahi-utils \
     dbus \
-    zip
+    zip \
+    net-tools
 
-# Install GPS tooling
-RUN apt-get install -y \
+# ============================================================================
+# STAGE 4: GPS and Hardware Support
+# ============================================================================
+RUN apt-get install -y --no-install-recommends \
     gpsd \
     gpsd-clients \
-    gpsd-tools
+    gpsd-tools \
+    libudev-dev \
+    libsdl2-dev \
+    joystick \
+    python3-rpi.gpio \
+    python3-lgpio
 
-# Install ROS navigation packages
-RUN apt-get install -y \
+# ============================================================================
+# STAGE 5: ROS 2 Core Packages
+# ============================================================================
+RUN apt-get install -y --no-install-recommends \
     ros-$ROS_DISTRO-rviz2 \
     ros-$ROS_DISTRO-navigation2 \
-    ros-$ROS_DISTRO-nav2-bringup
+    ros-$ROS_DISTRO-nav2-bringup \
+    ros-$ROS_DISTRO-slam-toolbox \
+    ros-$ROS_DISTRO-robot-localization \
+    ros-$ROS_DISTRO-tf2-tools
 
-# Install ROS SLAM packages
-RUN apt-get install -y \
-    ros-$ROS_DISTRO-slam-toolbox
-
-# Install ROS teleop packages
-RUN apt-get install -y \
+# ============================================================================
+# STAGE 6: ROS 2 Control and Teleop
+# ============================================================================
+RUN apt-get install -y --no-install-recommends \
     ros-$ROS_DISTRO-teleop-twist-keyboard \
     ros-$ROS_DISTRO-teleop-twist-joy \
     ros-$ROS_DISTRO-joy \
-    ros-$ROS_DISTRO-joy-linux
+    ros-$ROS_DISTRO-joy-linux \
+    ros-$ROS_DISTRO-ros2-controllers \
+    ros-$ROS_DISTRO-ros2-control \
+    ros-$ROS_DISTRO-twist-mux
 
-# Install ROS communication and transform packages
-RUN apt-get install -y \
+# ============================================================================
+# STAGE 7: ROS 2 Communication and Transform
+# ============================================================================
+RUN apt-get install -y --no-install-recommends \
     ros-$ROS_DISTRO-rosbridge-suite \
     ros-$ROS_DISTRO-tf2-geometry-msgs \
     ros-$ROS_DISTRO-tf2-ros \
+    ros-$ROS_DISTRO-tf-transformations \
     ros-$ROS_DISTRO-geometry-msgs \
     ros-$ROS_DISTRO-sensor-msgs \
     ros-$ROS_DISTRO-nav-msgs
 
-# Additional dependencies for Slamware SDK
-RUN apt-get install -y \
+# ============================================================================
+# STAGE 8: ROS 2 Development
+# ============================================================================
+RUN apt-get install -y --no-install-recommends \
     ros-$ROS_DISTRO-rclcpp \
     ros-$ROS_DISTRO-rclcpp-components \
     ros-$ROS_DISTRO-std-msgs \
-    ros-$ROS_DISTRO-visualization-msgs
-
-RUN apt-get update && apt-get install -y libudev-dev libsdl2-dev joystick
-
-RUN apt-get install -y ros-$ROS_DISTRO-tf-transformations
-
-# Install Python build dependencies for ROS
-RUN apt-get install -y \
-    python3-rpi.gpio \
-    python3-lgpio
-
-# Install Adafruit libraries and numpy into the system Python
-# numpy is installed via pip to avoid conflicts with opencv-python-headless
-RUN pip3 install --break-system-packages numpy adafruit-blinka adafruit-circuitpython-bno08x gps
-
-# Install ROS robot localization and mapviz packages
-RUN apt-get install -y \
-    ros-$ROS_DISTRO-robot-localization
-
-RUN apt-get install -y python3-rosdep
-
-RUN apt-get install -y ros-$ROS_DISTRO-ros2-controllers
-RUN apt-get install -y \
+    ros-$ROS_DISTRO-visualization-msgs \
     ros-$ROS_DISTRO-robot-state-publisher \
-    ros-$ROS_DISTRO-xacro
-RUN apt-get install -y ros-$ROS_DISTRO-ros2-control
+    ros-$ROS_DISTRO-xacro \
+    ros-$ROS_DISTRO-rviz-imu-plugin \
+    ros-$ROS_DISTRO-nav2-route \
+    python3-rosdep \
+    python3-argcomplete
 
-# RUN apt-get install -y \
-#     ros-$ROS_DISTRO-mapviz \
-#     ros-$ROS_DISTRO-mapviz-plugins \
-#     ros-$ROS_DISTRO-tile-map \
-#     ros-$ROS_DISTRO-multires-image
-
-# Install rviz_imu_plugin for IMU visualization in RViz
-RUN apt-get update && apt-get install -y ros-$ROS_DISTRO-rviz-imu-plugin
-
-RUN apt-get install -y ros-$ROS_DISTRO-nav2-route
-
-# Install ROS 2 command-line autocomplete
-RUN apt-get update && apt-get install -y python3-argcomplete
+# ============================================================================
+# STAGE 9: Command-line Autocomplete Setup
+# ============================================================================
 RUN /bin/bash -c 'eval "$(register-python-argcomplete3 ros2)" >> /etc/bash.bashrc'
 
-RUN apt-get install -y ros-$ROS_DISTRO-twist-mux
-
-# RUN apt-get install -y ros-$ROS_DISTRO-laser-filters
-RUN   pip3 install --break-system-packages adafruit-extended-bus
-
-# Install Node.js for web app frontend build
-# Generated/Edited by Claude
+# ============================================================================
+# STAGE 10: Node.js for Web Frontend
+# ============================================================================
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs
+    apt-get install -y --no-install-recommends nodejs
+
+# ============================================================================
+# STAGE 11: Python Packages (Core and Web)
+# ============================================================================
+# Install numpy first with --ignore-installed to avoid Debian package conflicts
+RUN pip3 install --break-system-packages --ignore-installed numpy
+
+# Install Adafruit libraries
+RUN pip3 install --break-system-packages \
+    adafruit-blinka \
+    adafruit-circuitpython-bno08x \
+    adafruit-extended-bus \
+    gps
 
 # Install web app backend dependencies
-# Install numpy first with --ignore-installed to work around Debian package conflicts
-RUN pip3 install --break-system-packages --ignore-installed numpy
 RUN pip3 install --break-system-packages \
     fastapi \
     uvicorn[standard] \
@@ -156,55 +153,56 @@ RUN pip3 install --break-system-packages \
     httpx \
     aiofiles
 
-# Clean up
-RUN rm -rf /var/lib/apt/lists/*
+# ============================================================================
+# STAGE 12: Cleanup
+# ============================================================================
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN usermod -a -G input $USER
-
-WORKDIR /home/$USER/ros2_ws
-
-# Ensure the home directory exists and is owned by the user, and create a writable colcon log dir
+# ============================================================================
+# User and Directory Setup
+# ============================================================================
 RUN mkdir -p /home/$USER && chown -R $USER:$USER /home/$USER && \
     mkdir -p /home/$USER/ros2_ws/log && chown -R $USER:$USER /home/$USER/ros2_ws/log
 
-USER $USER
 WORKDIR /home/$USER/ros2_ws
 
-# Copy rviz config into the container
+# ============================================================================
+# Copy Source Code and Configuration
+# ============================================================================
 COPY --chown=$USER:$USER rviz2 /home/$USER/.rviz2
-
-# Copy the workspace into the container
 COPY --chown=$USER:$USER ros2_ws /home/$USER/ros2_ws/
+COPY --chown=$USER:$USER web_app /home/$USER/web_app/
 
-# Build the workspace as non-root user; place colcon logs in a writable location
+# ============================================================================
+# Build ROS 2 Workspace
+# ============================================================================
+USER $USER
+WORKDIR /home/$USER/ros2_ws
 RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; \
                   export PATH="/opt/venv/bin:$PATH"; \
                   export COLCON_LOG_BASE="/home/$USER/ros2_ws/log"; \
                   colcon build --symlink-install'
 
-# Copy web app into the container
-# Generated/Edited by Claude
-COPY --chown=$USER:$USER web_app /home/$USER/web_app/
-
-# Build React frontend
+# ============================================================================
+# Build React Frontend
+# ============================================================================
 WORKDIR /home/$USER/web_app/frontend
 RUN npm install && npm run build
 
-# Return to home directory
-WORKDIR /home/$USER
-
-# Copy the entrypoint script into the container
+# ============================================================================
+# Setup Entrypoint
+# ============================================================================
 USER root
 WORKDIR /home/$USER
 COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.sh && \
+    echo 'SUBSYSTEM=="gpio", KERNEL=="gpiochip*", MODE="0660", GROUP="sgx"' > /etc/udev/rules.d/99-gpio.rules
 
-# Set entrypoint to use the external script
 ENTRYPOINT ["/entrypoint.sh"]
 
-# Ensure /dev/gpiochip* devices have correct permissions
-RUN echo 'SUBSYSTEM=="gpio", KERNEL=="gpiochip*", MODE="0660", GROUP="sgx"' > /etc/udev/rules.d/99-gpio.rules
-
-# Switch back to non-root user 'walle'
+# ============================================================================
+# Final Setup
+# ============================================================================
 USER $USER
 WORKDIR /home/$USER
