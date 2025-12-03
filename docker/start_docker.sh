@@ -208,6 +208,7 @@ EXAMPLES
   ./start_docker.sh -R -d                      # Start RViz with display
   ./start_docker.sh -r -R -d                   # Robot + RViz visualization
   ./start_docker.sh -r --ekf                   # Robot with EKF localization
+  ./start_docker.sh --imu --imu-cal            # Start IMU and run magnetometer calibration action
   ./start_docker.sh -w -B                      # Web app + rosbridge
   ./start_docker.sh -c "ros2 topic list"       # Run custom command
   ./start_docker.sh -d                         # Interactive bash with display
