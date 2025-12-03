@@ -42,7 +42,7 @@ def generate_launch_description():
         DeclareLaunchArgument('launch_urdf', default_value='true'),
         DeclareLaunchArgument('launch_nav', default_value='true'),
         DeclareLaunchArgument('launch_scan_matcher', default_value='true'),
-        DeclareLaunchArgument('launch_waypoint_server', default_value='true'),
+        DeclareLaunchArgument('launch_waypoint_server', default_value='false'),
 
         # LiDAR sensor
         IncludeLaunchDescription(
