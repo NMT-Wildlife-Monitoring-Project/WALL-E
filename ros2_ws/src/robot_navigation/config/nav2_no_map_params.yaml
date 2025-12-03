@@ -168,7 +168,8 @@ local_costmap:
       resolution: 0.10
       footprint: "[[0.16, 0.15], [0.16, -0.15], [-0.16, -0.15], [-0.16, 0.15]]"
       plugins: ["obstacle_layer", "inflation_layer"]
-      transform_tolerance: 0.5
+      # Allow more slack so late TF messages don’t drop scans; keep as small as viable
+      transform_tolerance: 0.8
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
