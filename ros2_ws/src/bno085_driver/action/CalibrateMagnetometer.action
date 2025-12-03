@@ -1,0 +1,15 @@
+# Goal - request calibration
+float32 duration  # How long to rotate (seconds)
+float32 rotation_speed  # Angular velocity (rad/s)
+---
+# Result - calibration outcome
+bool success
+float64[3] hard_iron_offset  # Computed offsets for x, y, z (µT)
+float64 calibration_quality  # 0-1 quality metric
+string message
+---
+# Feedback - progress updates
+float32 progress  # 0.0 to 1.0
+int32 samples_collected
+float64[3] mag_min  # Running min values
+float64[3] mag_max  # Running max values

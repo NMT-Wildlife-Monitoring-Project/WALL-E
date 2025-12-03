@@ -14,6 +14,15 @@ from adafruit_bno08x import (
     BNO_REPORT_ROTATION_VECTOR,
 )
 
+# Try to import geomagnetic rotation vector (requires newer adafruit_bno08x)
+try:
+    from adafruit_bno08x import BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR
+    USE_GEOMAGNETIC = True
+except ImportError:
+    USE_GEOMAGNETIC = False
+    warnings.warn("BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR not available. Using standard rotation vector. "
+                  "For better outdoor heading accuracy, update adafruit-circuitpython-bno08x")
+
 class BNO085:
     """
     BNO085 sensor driver class for interfacing with the BNO085 IMU via I2C.
@@ -63,12 +72,16 @@ class BNO085:
 
         # Initialize BNO085 sensor
         self.bno = BNO08X_I2C(self.i2c, address=i2c_addr)
+
+        # Use geomagnetic rotation vector if available (magnetometer-corrected heading)
+        # Otherwise fall back to standard rotation vector (gyro-only heading, drifts)
+        rotation_feature = BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR if USE_GEOMAGNETIC else BNO_REPORT_ROTATION_VECTOR
+
         features = [
             BNO_REPORT_ACCELEROMETER,
             BNO_REPORT_GYROSCOPE,
             BNO_REPORT_MAGNETOMETER,
-            # rotation vector (fused orientation)
-            BNO_REPORT_ROTATION_VECTOR,
+            rotation_feature,
         ]
         for feature in features:
             for attempt in range(1, 4):
@@ -83,10 +96,12 @@ class BNO085:
         
         self.quat = np.zeros(4)
         self.rpy = np.zeros(3)
+        # Increase yaw covariance if using magnetometer-based heading (more noise but no drift)
+        yaw_variance = 1e-3 if USE_GEOMAGNETIC else 1.615e-5
         self.rpy_covariance = np.array([
             7.68e-6,    0,      0,
             0,          4.1e-6,  0,
-            0,          0,      1.615e-5,
+            0,          0,      yaw_variance,
         ])
         self.accel = np.zeros(3)
         self.accel_covariance = np.array([
@@ -98,7 +113,7 @@ class BNO085:
         self.gyro_covariance = np.array([
             1e-4,  0,          0,
             0,         1e-4,   0,
-            0,          0,      1e-4    
+            0,          0,      1e-4
         ])
         self.mag = np.zeros(3)
         self.mag_covariance = np.array([
@@ -109,6 +124,7 @@ class BNO085:
 
         self.gryo_bias = np.zeros(3)
         self.accel_bias = np.zeros(3)
+        self.mag_offset = np.zeros(3)  # Magnetometer hard iron offset
 
     def calibrate(self, num_samples=100):
         quat_samples = np.zeros((len(self.quat), num_samples))
@@ -147,9 +163,13 @@ class BNO085:
         self.rpy = np.array(euler_from_quaternion(self.quat))
         self.accel = np.array(self.bno.acceleration) - self.accel_bias
         self.gyro = np.array(self.bno.gyro) - self.gryo_bias
-        self.mag = np.array(self.bno.magnetic)
+        # Apply magnetometer calibration offset
+        raw_mag = np.array(self.bno.magnetic)
+        self.mag = raw_mag - self.mag_offset if raw_mag is not None else raw_mag
 
         if self.accel is None or self.gyro is None or self.quat is None:
             raise RuntimeError("Received invalid data from BNO085 sensor.")
 
-
+    def set_mag_offset(self, offset):
+        """Set magnetometer hard iron offset calibration."""
+        self.mag_offset = np.array(offset)
