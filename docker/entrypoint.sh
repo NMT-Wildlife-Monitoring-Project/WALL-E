@@ -1,7 +1,8 @@
 #!/bin/bash
 
 source /opt/ros/$ROS_DISTRO/setup.bash
-source $HOME/ros2_ws/install/setup.bash
+# Always use walle's workspace regardless of which user is running
+source /home/walle/ros2_ws/install/setup.bash
 
 # Execute the passed command
 # If single argument, treat as shell command string (for proper argument parsing)

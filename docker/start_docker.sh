@@ -496,6 +496,8 @@ DOCKER_RUN_FLAGS+=("--cap-add=NET_ADMIN")
 DOCKER_RUN_FLAGS+=("--device=/dev/net/tun")
 DOCKER_RUN_FLAGS+=("--device=/dev/mem")
 DOCKER_RUN_FLAGS+=("--volume=/dev:/dev:rw")
+# Run as root to access hardware devices (I2C, GPIO, serial ports)
+DOCKER_RUN_FLAGS+=("--user=root")
 
 # Shared memory
 mkdir -p /tmp/shared
@@ -515,8 +517,6 @@ if [ "$RUN_IMU" = true ] || [ "$RUN_ROBOT_LAUNCH" = true ]; then
             DOCKER_RUN_FLAGS+=("--device=$i2c_device")
         fi
     done
-    # Run as root when accessing hardware to avoid permission issues
-    DOCKER_RUN_FLAGS+=("--user=root")
 fi
 
 # USB camera support (if requested)
