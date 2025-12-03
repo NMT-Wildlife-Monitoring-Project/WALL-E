@@ -30,6 +30,7 @@ RUN_IMU=false
 RUN_GPS=false
 
 # Action flags - Debugging & Visualization
+RUN_RVIZ=false
 RUN_LIDAR_VIEW=false
 RUN_ROSBRIDGE=false
 RUN_SCAN_MATCHER=false
@@ -93,6 +94,7 @@ declare -a SENSORS_CMDS=(
 
 # Debugging & Visualization
 declare -a DEBUG_VIZ_FLAGS=(
+    RUN_RVIZ
     RUN_LIDAR_VIEW
     RUN_ROSBRIDGE
     RUN_SCAN_MATCHER
@@ -100,6 +102,7 @@ declare -a DEBUG_VIZ_FLAGS=(
 )
 
 declare -a DEBUG_VIZ_CMDS=(
+    "rviz2 -d /home/walle/.rviz2/default.rviz"
     "ros2 launch sllidar_ros2 view_sllidar_s3_launch.py"
     "ros2 launch rosbridge_server rosbridge_websocket_launch.xml"
     "ros2 launch scan_matcher scan_matcher_launch.py"
@@ -164,6 +167,7 @@ SENSORS (often used for testing individual sensors)
   --gps                    Start GPS/NMEA driver
 
 DEBUGGING & VISUALIZATION (development and diagnostics)
+  -R, --rviz               Start RViz 2 with default config (requires -d)
   -v, --lidar-view         Visualize LiDAR in RViz (requires -d)
   -B, --rosbridge          Run rosbridge server (required for web app)
   --scan-matcher           Start ICP scan matching (odometry refinement)
@@ -197,7 +201,8 @@ EXAMPLES
   ./start_docker.sh -r                         # Start robot bringup
   ./start_docker.sh -r -n                      # Robot + navigation
   ./start_docker.sh -l -t                      # LiDAR + teleop control
-  ./start_docker.sh -v -d                      # Visualize LiDAR in RViz
+  ./start_docker.sh -R -d                      # Start RViz with display
+  ./start_docker.sh -r -R -d                   # Robot + RViz visualization
   ./start_docker.sh -r --ekf                   # Robot with EKF localization
   ./start_docker.sh -w -B                      # Web app + rosbridge
   ./start_docker.sh -c "ros2 topic list"       # Run custom command
@@ -401,6 +406,7 @@ while [[ "$#" -gt 0 ]]; do
         --gps) RUN_GPS=true; shift ;;
 
         # Debugging & Visualization
+        -R|--rviz) RUN_RVIZ=true; DISPLAY_ENABLED=true; shift ;;
         -v|--lidar-view) RUN_LIDAR_VIEW=true; DISPLAY_ENABLED=true; shift ;;
         -B|--rosbridge) RUN_ROSBRIDGE=true; shift ;;
         --scan-matcher) RUN_SCAN_MATCHER=true; shift ;;
