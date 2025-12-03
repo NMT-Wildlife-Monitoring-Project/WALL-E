@@ -215,8 +215,8 @@ RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; \
 # ============================================================================
 # Build React Frontend
 # ============================================================================
-WORKDIR /home/$USER/web_app/frontend
-RUN npm install && npm run build
+# WORKDIR /home/$USER/web_app/frontend
+# RUN npm install && npm run build
 
 # ============================================================================
 # Setup Entrypoint and GPIO Rules
