@@ -25,9 +25,10 @@ RUN useradd -m $USER && \
     echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Create hardware access groups
+# Note: 'input' group is added later after system packages install
 RUN groupadd -g 993 gpio && \
     groupadd -g 116 i2c && \
-    usermod -a -G dialout,tty,audio,video,gpio,i2c,input $USER
+    usermod -a -G dialout,tty,audio,video,gpio,i2c $USER
 
 # Switch to root for installations
 USER root
@@ -171,6 +172,12 @@ RUN pip3 install --break-system-packages \
 # ============================================================================
 RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# ============================================================================
+# STAGE 13: Add remaining user groups
+# ============================================================================
+# Add 'input' group after system packages install (group doesn't exist in base image)
+RUN usermod -a -G input $USER
 
 # ============================================================================
 # User and Directory Setup
