@@ -25,10 +25,11 @@ RUN useradd -m $USER && \
     echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Create hardware access groups
+# Note: Don't specify GID (-g) as different platforms (RPi, Jetson, x86) have different GIDs
 # Note: 'input' group is added later after system packages install
-RUN groupadd -g 993 gpio && \
-    groupadd -g 116 i2c && \
-    usermod -a -G dialout,tty,audio,video,gpio,i2c $USER
+RUN groupadd gpio 2>/dev/null || true && \
+    groupadd i2c 2>/dev/null || true && \
+    usermod -a -G dialout,tty,audio,video,gpio,i2c $USER 2>/dev/null || true
 
 # Switch to root for installations
 USER root
@@ -78,9 +79,10 @@ RUN apt-get install -y --no-install-recommends \
     gpsd-tools \
     libudev-dev \
     libsdl2-dev \
-    joystick \
+    joystick && \
+    apt-get install -y --no-install-recommends --fix-missing \
     python3-rpi.gpio \
-    python3-lgpio
+    python3-lgpio || true
 
 # ============================================================================
 # STAGE 5: ROS 2 Core Packages
@@ -149,12 +151,13 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
 # Install numpy first with --ignore-installed to avoid Debian package conflicts
 RUN pip3 install --break-system-packages --ignore-installed numpy
 
-# Install Adafruit libraries
+# Install hardware-specific Adafruit libraries
+# These may fail on non-ARM platforms but build continues (|| true)
 RUN pip3 install --break-system-packages \
     adafruit-blinka \
     adafruit-circuitpython-bno08x \
     adafruit-extended-bus \
-    gps
+    gps || true
 
 # Install web app backend dependencies
 RUN pip3 install --break-system-packages \
@@ -211,13 +214,15 @@ WORKDIR /home/$USER/web_app/frontend
 RUN npm install && npm run build
 
 # ============================================================================
-# Setup Entrypoint
+# Setup Entrypoint and GPIO Rules
 # ============================================================================
 USER root
 WORKDIR /home/$USER
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && \
-    echo 'SUBSYSTEM=="gpio", KERNEL=="gpiochip*", MODE="0660", GROUP="sgx"' > /etc/udev/rules.d/99-gpio.rules
+    mkdir -p /etc/udev/rules.d && \
+    (groupid=$(getent group sgx | cut -d: -f3) || groupid="gpio") && \
+    echo "SUBSYSTEM==\"gpio\", KERNEL==\"gpiochip*\", MODE=\"0660\", GROUP=\"${groupid}\"" > /etc/udev/rules.d/99-gpio.rules
 
 ENTRYPOINT ["/entrypoint.sh"]
 
