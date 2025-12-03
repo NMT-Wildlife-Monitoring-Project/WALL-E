@@ -15,6 +15,7 @@ def generate_launch_description():
     launch_urdf = LaunchConfiguration('launch_urdf')
     launch_nav = LaunchConfiguration('launch_nav')
     launch_scan_matcher = LaunchConfiguration('launch_scan_matcher')
+    launch_waypoint_server = LaunchConfiguration('launch_waypoint_server')
 
     bringup_dir = FindPackageShare('robot_bringup')
 
@@ -24,6 +25,12 @@ def generate_launch_description():
         'robot.urdf.xacro'
     ])
 
+    waypoint_file = PathJoinSubstitution([
+        FindPackageShare('waypoint_server'),
+        'config',
+        'waypoints.yaml'
+    ])
+
     return LaunchDescription([
         DeclareLaunchArgument('launch_rplidar', default_value='true'),
         DeclareLaunchArgument('launch_bno085', default_value='true'),
@@ -31,6 +38,7 @@ def generate_launch_description():
         DeclareLaunchArgument('launch_urdf', default_value='true'),
         DeclareLaunchArgument('launch_nav', default_value='true'),
         DeclareLaunchArgument('launch_scan_matcher', default_value='true'),
+        DeclareLaunchArgument('launch_waypoint_server', default_value='true'),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
@@ -73,6 +81,19 @@ def generate_launch_description():
                 FindPackageShare('robot_navigation'), '/launch/gps_waypoint_follower.launch.py'
             ]),
             condition=IfCondition(launch_nav)
+        ),
+        Node(
+            package='waypoint_server',
+            executable='gps_waypoint_handler_node',
+            name='gps_waypoint_handler',
+            output='screen',
+            parameters=[{
+                'waypoint_file': waypoint_file,
+                'frame_id': 'map',
+                'wait_for_nav2': True,
+                'fromll_service': '/fromLL'
+            }],
+            condition=IfCondition(launch_waypoint_server)
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
