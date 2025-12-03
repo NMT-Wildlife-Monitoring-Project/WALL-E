@@ -18,13 +18,28 @@ ENV_FILE="env_file.txt"
 # ============================================================================
 # GLOBAL STATE
 # ============================================================================
-# Action flags
+# Action flags - Core Operations
 RUN_ROBOT_LAUNCH=false
+RUN_NAVIGATE=false
 RUN_TELEOP_LAUNCH=false
-RUN_USB_CAM_NODE=false
-RUN_VIEW_CAMERA_LAUNCH=false
-RUN_MOTORS_LAUNCH=false
+
+# Action flags - Sensors
+RUN_LIDAR=false
+RUN_CAMERA=false
+RUN_IMU=false
+RUN_GPS=false
+
+# Action flags - Debugging & Visualization
+RUN_LIDAR_VIEW=false
 RUN_ROSBRIDGE=false
+RUN_SCAN_MATCHER=false
+RUN_WAYPOINT_SERVER=false
+
+# Action flags - Advanced & Specialized
+RUN_EKF=false
+RUN_MOTORS_LAUNCH=false
+
+# Action flags - Web Interface
 RUN_WEBAPP=false
 COMMAND_TO_RUN=""
 
@@ -48,24 +63,84 @@ DOCKER_RUN_FLAGS=()
 # ============================================================================
 # ACTION MAPPINGS (Flags → Commands)
 # ============================================================================
-declare -a ACTION_FLAGS=(
+# Core Operations
+declare -a CORE_OPS_FLAGS=(
     RUN_ROBOT_LAUNCH
+    RUN_NAVIGATE
     RUN_TELEOP_LAUNCH
-    RUN_USB_CAM_NODE
-    RUN_VIEW_CAMERA_LAUNCH
-    RUN_MOTORS_LAUNCH
+)
+
+declare -a CORE_OPS_CMDS=(
+    "ros2 launch robot_bringup robot_launch.py"
+    "ros2 launch robot_navigation gps_waypoint_follower.launch.py"
+    "ros2 launch robot_teleop robot_teleop_launch.py"
+)
+
+# Sensors (often used for testing)
+declare -a SENSORS_FLAGS=(
+    RUN_LIDAR
+    RUN_CAMERA
+    RUN_IMU
+    RUN_GPS
+)
+
+declare -a SENSORS_CMDS=(
+    "ros2 launch sllidar_ros2 sllidar_s3_launch.py"
+    "ros2 launch robot_bringup usb_cam_launch.py"
+    "ros2 launch bno085_driver bno085_launch.py"
+    "ros2 launch robot_bringup gps_launch.py"
+)
+
+# Debugging & Visualization
+declare -a DEBUG_VIZ_FLAGS=(
+    RUN_LIDAR_VIEW
     RUN_ROSBRIDGE
+    RUN_SCAN_MATCHER
+    RUN_WAYPOINT_SERVER
+)
+
+declare -a DEBUG_VIZ_CMDS=(
+    "ros2 launch sllidar_ros2 view_sllidar_s3_launch.py"
+    "ros2 launch rosbridge_server rosbridge_websocket_launch.xml"
+    "ros2 launch scan_matcher scan_matcher_launch.py"
+    "ros2 launch waypoint_server launch_waypoint_system.launch.py"
+)
+
+# Advanced & Specialized
+declare -a ADVANCED_FLAGS=(
+    RUN_EKF
+    RUN_MOTORS_LAUNCH
+)
+
+declare -a ADVANCED_CMDS=(
+    "ros2 launch robot_navigation dual_ekf_navsat.launch.py"
+    "ros2 launch roboclaw_driver roboclaw_launch.py"
+)
+
+# Web Interface
+declare -a WEB_FLAGS=(
     RUN_WEBAPP
 )
 
-declare -a ACTION_CMDS=(
-    "ros2 launch robot_bringup robot_launch.py"
-    "ros2 launch robot_teleop robot_teleop_launch.py"
-    "echo 'TODO: implement roslaunch control usb_cam.launch'"
-    "echo 'TODO: implement roslaunch control view_camera.launch'"
-    "ros2 launch roboclaw_driver roboclaw_launch.py"
-    "ros2 launch rosbridge_server rosbridge_websocket_launch.xml"
+declare -a WEB_CMDS=(
     "cd /home/walle/web_app/backend && python -m uvicorn main:app --host 0.0.0.0 --port 8000"
+)
+
+# Combine all action arrays
+declare -a ACTION_FLAGS=(
+    "${CORE_OPS_FLAGS[@]}"
+    "${SENSORS_FLAGS[@]}"
+    "${DEBUG_VIZ_FLAGS[@]}"
+    "${ADVANCED_FLAGS[@]}"
+    "${WEB_FLAGS[@]}"
+)
+
+declare -a ACTION_CMDS=(
+    "${CORE_OPS_CMDS[@]}"
+    "${SENSORS_CMDS[@]}"
+    "${DEBUG_VIZ_CMDS[@]}"
+    "${ADVANCED_CMDS[@]}"
+    "${WEB_CMDS[@]}"
 )
 
 # ============================================================================
@@ -77,37 +152,58 @@ usage() {
     cat << 'USAGE'
 Usage: ./start_docker.sh [OPTIONS]
 
-ACTIONS (select one or more):
-  -s, --start              Start all robot processes (robot bringup)
+CORE OPERATIONS (essential robot functionality)
+  -r, --robot              Start all robot processes (robot bringup)
+  -n, --navigate           Start GPS waypoint navigation
   -t, --teleop             Run joystick/teleop control
-  -u, --usb-cam            Start USB camera node
-  -v, --video-stream       View video stream (enables display)
-  -m, --motors             Run motor control node
+
+SENSORS (often used for testing individual sensors)
+  -l, --lidar              Start LiDAR (S-Lidar S3)
+  -c, --camera             Start USB camera
+  --imu                    Start IMU sensor (BNO085)
+  --gps                    Start GPS/NMEA driver
+
+DEBUGGING & VISUALIZATION (development and diagnostics)
+  -v, --lidar-view         Visualize LiDAR in RViz (requires -d)
   -B, --rosbridge          Run rosbridge server (required for web app)
+  --scan-matcher           Start ICP scan matching (odometry refinement)
+  --waypoint-server        Start waypoint management server
+
+ADVANCED & SPECIALIZED (advanced navigation and system tuning)
+  --ekf                    Start EKF localization (dual filter: odom + map)
+  -m, --motors             Run motor control (roboclaw driver)
+
+WEB INTERFACE
   -w, --webapp             Run web control panel (port 8000)
+
+CUSTOM
   -c, --command <cmd>      Run custom command in container
 
-CONTAINER MANAGEMENT:
+CONTAINER MANAGEMENT
   -b, --build              Build Docker image (stops running container if any)
   -x, --stop               Stop the running container
   -R, --restart            Restart the container if running
   -k, --clean              Clean up Docker system (prune all unused images/volumes)
 
-OPTIONS:
+OPTIONS
   -i, --ros-domain-id <id> Set ROS domain ID (default: 62)
   -C, --copy <from> <to>   Copy files from container to host
   -d, --display            Enable X11 display forwarding (for RViz, etc)
   -q, --quiet              Run commands in background (detached mode)
   -h, --help               Show this help message
 
-EXAMPLES:
-  ./start_docker.sh -b                    # Build image
-  ./start_docker.sh -s                    # Start all robot processes
-  ./start_docker.sh -w -B                 # Start web app + rosbridge
-  ./start_docker.sh -c "ros2 topic list"  # Run custom command
-  ./start_docker.sh -d                    # Interactive bash with display enabled
+EXAMPLES
+  ./start_docker.sh -b                         # Build image
+  ./start_docker.sh -r                         # Start robot bringup
+  ./start_docker.sh -r -n                      # Robot + navigation
+  ./start_docker.sh -l -t                      # LiDAR + teleop control
+  ./start_docker.sh -v -d                      # Visualize LiDAR in RViz
+  ./start_docker.sh -r --ekf                   # Robot with EKF localization
+  ./start_docker.sh -w -B                      # Web app + rosbridge
+  ./start_docker.sh -c "ros2 topic list"       # Run custom command
+  ./start_docker.sh -d                         # Interactive bash with display
 
-DEFAULT BEHAVIOR (no actions specified):
+DEFAULT BEHAVIOR (no actions specified)
   Opens interactive bash terminal in the container
 USAGE
     exit 1
@@ -293,15 +389,32 @@ execute_commands() {
 # Parse command-line arguments
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
-        # Actions
-        -s|--start) RUN_ROBOT_LAUNCH=true; shift ;;
+        # Core Operations
+        -r|--robot) RUN_ROBOT_LAUNCH=true; shift ;;
+        -n|--navigate) RUN_NAVIGATE=true; shift ;;
         -t|--teleop) RUN_TELEOP_LAUNCH=true; shift ;;
-        -u|--usb-cam) RUN_USB_CAM_NODE=true; shift ;;
-        -v|--video-stream) RUN_VIEW_CAMERA_LAUNCH=true; DISPLAY_ENABLED=true; shift ;;
-        -m|--motors) RUN_MOTORS_LAUNCH=true; shift ;;
+
+        # Sensors
+        -l|--lidar) RUN_LIDAR=true; shift ;;
+        -c|--camera) RUN_CAMERA=true; shift ;;
+        --imu) RUN_IMU=true; shift ;;
+        --gps) RUN_GPS=true; shift ;;
+
+        # Debugging & Visualization
+        -v|--lidar-view) RUN_LIDAR_VIEW=true; DISPLAY_ENABLED=true; shift ;;
         -B|--rosbridge) RUN_ROSBRIDGE=true; shift ;;
+        --scan-matcher) RUN_SCAN_MATCHER=true; shift ;;
+        --waypoint-server) RUN_WAYPOINT_SERVER=true; shift ;;
+
+        # Advanced & Specialized
+        --ekf) RUN_EKF=true; shift ;;
+        -m|--motors) RUN_MOTORS_LAUNCH=true; shift ;;
+
+        # Web Interface
         -w|--webapp) RUN_WEBAPP=true; shift ;;
-        -c|--command) COMMAND_TO_RUN="$2"; shift 2 ;;
+
+        # Custom
+        --command) COMMAND_TO_RUN="$2"; shift 2 ;;
 
         # Container management
         -b|--build) BUILD_CONTAINER=true; shift ;;
