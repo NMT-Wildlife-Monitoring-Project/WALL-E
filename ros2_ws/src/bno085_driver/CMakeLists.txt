@@ -20,10 +20,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 ament_export_dependencies(rosidl_default_runtime)
 
-# Install Python modules (guard against duplicate target definition)
-if(NOT TARGET ament_cmake_python_symlink_${PROJECT_NAME})
-  ament_python_install_package(${PROJECT_NAME})
-endif()
+# Install Python modules
+ament_python_install_package(${PROJECT_NAME}
+  PACKAGE_DIR bno085_driver
+)
 
 # Install Python executables
 # Install Python executable with expected name (no .py extension)
