@@ -46,8 +46,8 @@ class RoboclawNode(Node):
         self.declare_parameter('serial_port', '/dev/roboclaw')
         self.declare_parameter('baudrate', 9600)
         self.declare_parameter('address', 128)
-        # 64 CPR encoder on motor shaft * 50:1 gearbox = 3200 counts/rev at the wheel (Roboclaw counts all edges).
-        self.declare_parameter('qppr', 3200)
+        # Measured effective counts per wheel rev for 50:1 Pololu 37D encoder setup.
+        self.declare_parameter('qppr', 7000)
         self.declare_parameter('accel', 1.5)    # m/s^2
         self.declare_parameter('max_speed', 1.0) # m/s
         self.declare_parameter('max_speed_qpps', 10560)  # Max speed in quadrature pulses per second, -1 means use max_speed

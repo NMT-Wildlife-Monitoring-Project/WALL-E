@@ -9,7 +9,7 @@ def generate_launch_description():
         DeclareLaunchArgument('serial_port', default_value='/dev/roboclaw'),
         DeclareLaunchArgument('baudrate', default_value='9600'),
         DeclareLaunchArgument('address', default_value='128'),
-        DeclareLaunchArgument('qppr', default_value='3200'),
+        DeclareLaunchArgument('qppr', default_value='7000'),
         DeclareLaunchArgument('accel', default_value='1.5'),
         DeclareLaunchArgument('max_speed', default_value='1.0'),
         DeclareLaunchArgument('max_speed_qpps', default_value='10560'),
