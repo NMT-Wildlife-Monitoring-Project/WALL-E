@@ -73,26 +73,36 @@ class BNO085:
         # Initialize BNO085 sensor
         self.bno = BNO08X_I2C(self.i2c, address=i2c_addr)
 
-        # Use geomagnetic rotation vector if available (magnetometer-corrected heading)
-        # Otherwise fall back to standard rotation vector (gyro-only heading, drifts)
-        rotation_feature = BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR if USE_GEOMAGNETIC else BNO_REPORT_ROTATION_VECTOR
-
-        features = [
+        # Prefer geomagnetic rotation vector (mag-corrected absolute yaw); if unavailable or fails,
+        # fall back to standard rotation vector so we always have a quaternion stream.
+        feature_candidates = [
             BNO_REPORT_ACCELEROMETER,
             BNO_REPORT_GYROSCOPE,
             BNO_REPORT_MAGNETOMETER,
-            rotation_feature,
         ]
-        for feature in features:
+        rotation_pref = []
+        if USE_GEOMAGNETIC:
+            rotation_pref.append(BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR)
+        rotation_pref.append(BNO_REPORT_ROTATION_VECTOR)
+        feature_candidates += rotation_pref
+
+        enabled_rotation = False
+        for feature in feature_candidates:
             for attempt in range(1, 4):
                 try:
                     self.bno.enable_feature(feature)
+                    if feature in rotation_pref and not enabled_rotation:
+                        enabled_rotation = True
+                        self.get_rotation_type = "geomagnetic" if feature == BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR else "rotation"
                     break
                 except Exception as e2:
                     warnings.warn(f"Attempt {attempt} to enable feature {feature} failed: {e2}")
                     time.sleep(0.5)
             else:
-                raise RuntimeError(f"Failed to enable feature {feature} after 3 attempts.")
+                warnings.warn(f"Failed to enable feature {feature} after 3 attempts.")
+
+        if not enabled_rotation:
+            raise RuntimeError("No rotation vector feature enabled; cannot provide quaternion.")
         
         self.quat = np.zeros(4)
         self.rpy = np.zeros(3)
