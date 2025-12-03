@@ -60,7 +60,7 @@ controller_server:
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
       time_steps: 24
-      model_dt: 0.05
+      model_dt: 0.1
       batch_size: 500
       ax_max: 3.0
       ax_min: -3.0

@@ -149,18 +149,23 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
 # STAGE 11: Python Packages (Core and Web)
 # ============================================================================
 # Install numpy first with --ignore-installed to avoid Debian package conflicts
-RUN pip3 install --break-system-packages --ignore-installed numpy
+# Pin numpy to < 2.0 for compatibility with transforms3d and scipy
+RUN pip3 install --break-system-packages --ignore-installed "numpy<2.0"
 
 # Install hardware-specific Adafruit libraries
 # These may fail on non-ARM platforms but build continues (|| true)
+# Pin numpy < 2.0 to prevent dependency upgrades
 RUN pip3 install --break-system-packages \
+    "numpy<2.0" \
     adafruit-blinka \
     adafruit-circuitpython-bno08x \
     adafruit-extended-bus \
     gps || true
 
 # Install web app backend dependencies
+# Pin numpy < 2.0 to prevent dependency upgrades
 RUN pip3 install --break-system-packages \
+    "numpy<2.0" \
     fastapi \
     uvicorn[standard] \
     websockets \
