@@ -180,7 +180,7 @@ RUN apt-get clean && \
 # STAGE 13: Add remaining user groups
 # ============================================================================
 # Add 'input' group after system packages install (group doesn't exist in base image)
-RUN usermod -a -G input $USER
+RUN groupadd input 2>/dev/null || true && usermod -a -G input $USER
 
 # ============================================================================
 # User and Directory Setup
