@@ -96,6 +96,8 @@ def generate_launch_description():
         launch_arguments={
             "params_file": configured_params,
             "autostart": "True",
+            # navigation_launch.py expects uppercase log levels
+            "log_level": "INFO",
         }.items(),
     )
 
