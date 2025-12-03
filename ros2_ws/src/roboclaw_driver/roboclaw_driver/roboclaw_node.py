@@ -289,23 +289,22 @@ class RoboclawNode(Node):
                 odom.twist.twist.linear.y = 0.0
                 odom.twist.twist.angular.z = vth
 
-                # Set pose covariance (example values, adjust as needed)
+                # Set realistic covariances so the EKF can downweight wheel odom.
                 odom.pose.covariance = [
-                    1.0e-4,  0,       0,       0,       0,       0,
-                    0,       1.0e-4,  0,       0,       0,       0,
-                    0,       0,       1.0e-4,   0,       0,       0,
-                    0,       0,       0,       1.0e-4,   0,       0,
-                    0,       0,       0,       0,       1.0e-4,   0,
-                    0,       0,       0,       0,       0,       1.0e-3
+                    0.02, 0,    0,    0,    0,    0,
+                    0,    0.02, 0,    0,    0,    0,
+                    0,    0,    0.1,  0,    0,    0,
+                    0,    0,    0,    0.1,  0,    0,
+                    0,    0,    0,    0,    0.1,  0,
+                    0,    0,    0,    0,    0,    0.05
                 ]
-                # Set twist covariance (example values, adjust as needed)
                 odom.twist.covariance = [
-                    1.0e-4, 0,       0,       0,       0,       0,
-                    0,       1.0e-4,   0,       0,       0,       0,
-                    0,       0,       1.0e-4,   0,       0,       0,
-                    0,       0,       0,       1.0e-4,   0,       0,
-                    0,       0,       0,       0,       1.0e-4,   0,
-                    0,       0,       0,       0,       0,       1e-3
+                    0.02, 0,    0,    0,    0,    0,
+                    0,    0.02, 0,    0,    0,    0,
+                    0,    0,    0.1,  0,    0,    0,
+                    0,    0,    0,    0.1,  0,    0,
+                    0,    0,    0,    0,    0.1,  0,
+                    0,    0,    0,    0,    0,    0.05
                 ]
 
                 self.odom_pub.publish(odom)
