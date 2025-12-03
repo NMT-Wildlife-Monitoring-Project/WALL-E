@@ -506,6 +506,19 @@ if [ -n "$BLINKA_FORCEBOARD" ]; then
     DOCKER_RUN_FLAGS+=("--env=BLINKA_FORCEBOARD=$BLINKA_FORCEBOARD")
 fi
 
+# I2C device support (for sensors like BNO085 IMU)
+# Enable I2C if explicitly requested or if robot hardware is being launched
+if [ "$RUN_IMU" = true ] || [ "$RUN_ROBOT_LAUNCH" = true ]; then
+    # Find all I2C devices and pass them to the container
+    for i2c_device in /dev/i2c-*; do
+        if [ -e "$i2c_device" ]; then
+            DOCKER_RUN_FLAGS+=("--device=$i2c_device")
+        fi
+    done
+    # Run as root when accessing hardware to avoid permission issues
+    DOCKER_RUN_FLAGS+=("--user=root")
+fi
+
 # USB camera support (if requested)
 if [ "$RUN_CAMERA" = true ]; then
     if [ -e /dev/video0 ]; then
