@@ -11,6 +11,7 @@ find_package(ament_cmake_python REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(action_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
+ament_get_python_install_dir(PYTHON_INSTALL_DIR)
 
 # Generate action interfaces
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -20,12 +21,11 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 ament_export_dependencies(rosidl_default_runtime)
 
-# Install Python modules (skip if targets already exist to avoid duplicate target errors)
-if(NOT TARGET ament_cmake_python_symlink_${PROJECT_NAME})
-  ament_python_install_package(${PROJECT_NAME}
-    PACKAGE_DIR bno085_driver
-  )
-endif()
+# Install Python modules manually to avoid duplicate custom targets
+install(
+  DIRECTORY bno085_driver
+  DESTINATION ${PYTHON_INSTALL_DIR}
+)
 
 # Install Python executables
 # Install Python executable with expected name (no .py extension)
