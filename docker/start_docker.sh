@@ -28,6 +28,7 @@ RUN_LIDAR=false
 RUN_CAMERA=false
 RUN_IMU=false
 RUN_GPS=false
+RUN_IMU_CAL=false
 
 # Action flags - Debugging & Visualization
 RUN_RVIZ=false
@@ -83,6 +84,7 @@ declare -a SENSORS_FLAGS=(
     RUN_CAMERA
     RUN_IMU
     RUN_GPS
+    RUN_IMU_CAL
 )
 
 declare -a SENSORS_CMDS=(
@@ -90,6 +92,7 @@ declare -a SENSORS_CMDS=(
     "ros2 launch robot_bringup usb_cam_launch.py"
     "ros2 launch bno085_driver bno085_launch.py"
     "ros2 launch robot_bringup gps_launch.py"
+    "ros2 action send_goal /calibrate_magnetometer bno085_driver/action/CalibrateMagnetometer '{duration: 20.0, rotation_speed: 0.3}'"
 )
 
 # Debugging & Visualization
@@ -164,6 +167,7 @@ SENSORS (often used for testing individual sensors)
   -l, --lidar              Start LiDAR (S-Lidar S3)
   -c, --camera             Start USB camera
   --imu                    Start IMU sensor (BNO085)
+  --imu-cal                Run BNO085 magnetometer calibration action (requires bno085_node running)
   --gps                    Start GPS/NMEA driver
 
 DEBUGGING & VISUALIZATION (development and diagnostics)
@@ -420,6 +424,7 @@ while [[ "$#" -gt 0 ]]; do
         -l|--lidar) RUN_LIDAR=true; shift ;;
         -c|--camera) RUN_CAMERA=true; shift ;;
         --imu) RUN_IMU=true; shift ;;
+        --imu-cal) RUN_IMU_CAL=true; shift ;;
         --gps) RUN_GPS=true; shift ;;
 
         # Debugging & Visualization
