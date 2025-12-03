@@ -26,9 +26,11 @@ if(NOT TARGET ament_cmake_python_symlink_${PROJECT_NAME})
 endif()
 
 # Install Python executables
+# Install Python executable with expected name (no .py extension)
 install(PROGRAMS
   bno085_driver/bno085_node.py
   DESTINATION lib/${PROJECT_NAME}
+  RENAME bno085_node
 )
 
 # Install launch files
