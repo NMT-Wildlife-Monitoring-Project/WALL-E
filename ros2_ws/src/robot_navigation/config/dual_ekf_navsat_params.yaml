@@ -82,7 +82,9 @@ ekf_filter_node_map:
     base_link_frame: base_link # the frame id used by the turtlebot's diff drive plugin
     world_frame: map
 
-    odom0: odom
+    # Use the fused odom EKF output for prediction instead of raw wheel odom to
+    # keep the map frame stable and avoid mixing GPS feedback into the predictor.
+    odom0: odometry/local
     odom0_config: [false, false, false,
                   false, false, false,
                   true,  true,  false,

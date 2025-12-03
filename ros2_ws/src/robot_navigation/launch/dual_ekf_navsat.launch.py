@@ -55,7 +55,9 @@ def generate_launch_description():
                     ("gps/fix", "fix"),
                     ("gps/filtered", "gps/filtered"),
                     ("odometry/gps", "odometry/gps"),
-                    ("odometry/filtered", "odometry/global"),
+                    # Use the odom EKF output (wheel/imu/scan), not the GPS-fused map EKF,
+                    # to avoid feedback loops and map frame jumps.
+                    ("odometry/filtered", "odometry/local"),
                 ],
             ),
         ]
