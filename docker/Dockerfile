@@ -38,12 +38,12 @@ RUN apt-get install -y \
     git
 
 # Install Python and serial support
+# Note: python3-full is excluded due to ARM64 repository issues on Jetson
 RUN apt-get install -y \
     python3 \
     python3-pip \
     python3-serial \
-    python3-venv \
-    python3-full
+    python3-venv
 
 # Install networking and mDNS
 RUN apt-get install -y \
