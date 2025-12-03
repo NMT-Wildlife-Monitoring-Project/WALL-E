@@ -33,6 +33,7 @@ RUN apt-get install -y \
     build-essential \
     cmake \
     wget \
+    curl \
     tar \
     git
 
@@ -98,12 +99,12 @@ RUN apt-get install -y ros-$ROS_DISTRO-tf-transformations
 
 # Install Python build dependencies for ROS
 RUN apt-get install -y \
-    python3-numpy \
     python3-rpi.gpio \
     python3-lgpio
 
-# Install Adafruit libraries into the system Python
-RUN pip3 install --break-system-packages adafruit-blinka adafruit-circuitpython-bno08x gps
+# Install Adafruit libraries and numpy into the system Python
+# numpy is installed via pip to avoid conflicts with opencv-python-headless
+RUN pip3 install --break-system-packages numpy adafruit-blinka adafruit-circuitpython-bno08x gps
 
 # Install ROS robot localization and mapviz packages
 RUN apt-get install -y \
@@ -137,6 +138,24 @@ RUN apt-get install -y ros-$ROS_DISTRO-twist-mux
 # RUN apt-get install -y ros-$ROS_DISTRO-laser-filters
 RUN   pip3 install --break-system-packages adafruit-extended-bus
 
+# Install Node.js for web app frontend build
+# Generated/Edited by Claude
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs
+
+# Install web app backend dependencies
+# Install numpy first with --ignore-installed to work around Debian package conflicts
+RUN pip3 install --break-system-packages --ignore-installed numpy
+RUN pip3 install --break-system-packages \
+    fastapi \
+    uvicorn[standard] \
+    websockets \
+    opencv-python-headless \
+    PyYAML \
+    python-multipart \
+    httpx \
+    aiofiles
+
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -162,6 +181,17 @@ RUN /bin/bash -c '. /opt/ros/$ROS_DISTRO/setup.sh; \
                   export PATH="/opt/venv/bin:$PATH"; \
                   export COLCON_LOG_BASE="/home/$USER/ros2_ws/log"; \
                   colcon build --symlink-install'
+
+# Copy web app into the container
+# Generated/Edited by Claude
+COPY --chown=$USER:$USER web_app /home/$USER/web_app/
+
+# Build React frontend
+WORKDIR /home/$USER/web_app/frontend
+RUN npm install && npm run build
+
+# Return to home directory
+WORKDIR /home/$USER
 
 # Copy the entrypoint script into the container
 USER root

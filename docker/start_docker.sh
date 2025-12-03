@@ -30,6 +30,7 @@ declare -a ACTION_FLAGS=(
     RUN_VIEW_CAMERA_LAUNCH
     RUN_MOTORS_LAUNCH
     RUN_ROSBRIDGE
+    RUN_WEBAPP
 )
 
 declare -a ACTION_CMDS=(
@@ -38,25 +39,27 @@ declare -a ACTION_CMDS=(
     "echo 'TODO: implement roslaunch control usb_cam.launch'"
     "echo 'TODO: implement roslaunch control view_camera.launch'"
     "ros2 launch roboclaw_driver roboclaw_launch.py"
-    "echo 'TODO: implement roslaunch rosbridge_server rosbridge_websocket.launch'"
+    "ros2 launch rosbridge_server rosbridge_websocket_launch.xml"
+    "cd /home/walle/web_app/backend && python -m uvicorn main:app --host 0.0.0.0 --port 8000"
 )
 
 # Function to show usage
 usage() {
     echo "Usage: $0 [ --start (-s) | --teleop (-t) | --usb-cam (-u) \
-    | --video-stream (-v) | --motors (-g) | --rosbridge (-B) --command (-c) <command>]  \
+    | --video-stream (-v) | --motors (-g) | --rosbridge (-B) | --webapp (-w) | --command (-c) <command>]  \
     [ --ros-domain-id (-i) <id> | --copy (-C) <from> <to> | --display (-d) \
     | --build (-b) | --stop (-x) | --restart (-R) | --quiet (-q) | --help (-h) ]"
     echo "This script is used to start and manage a Docker container for WALL-E the wildlife monitoring robot."
     echo "If no IP addresses are specified, the script will attempt to determine them from the hostname. If this fails, try setting the hostname or IP."
     echo "If no action is specified, the script will open an interactive bash terminal in the container."
-    echo "Actions (pick ONE):"
+    echo "Actions (pick ONE or combine):"
     echo "  --start (-s)                Start all processes on the robot"
     echo "  --teleop (-t)               Run joystick control"
     echo "  --usb-cam (-u)              Run usb camera node"
     echo "  --video-stream (-v)         View the video stream"
     echo "  --motors (-m)               Run motor control"
-    echo "  --rosbridge (-B)            Run rosbridge server"
+    echo "  --rosbridge (-B)            Run rosbridge server (required for web app)"
+    echo "  --webapp (-w)               Run web control panel (port 8000)"
     echo "  --command (-c) <command>    Pass a command to be run in the container"
     echo "Options:"
     echo "  --ros-domain-id (-i) <id>   Set the ROS domain ID (default: $ROS_DOMAIN_ID)"
@@ -76,6 +79,7 @@ RUN_USB_CAM_NODE=false
 RUN_VIEW_CAMERA_LAUNCH=false
 RUN_MOTORS_LAUNCH=false
 RUN_ROSBRIDGE=false
+RUN_WEBAPP=false
 COMMAND_TO_RUN=""
 
 DISPLAY_ENABLED=false
@@ -98,6 +102,7 @@ while [[ "$#" -gt 0 ]]; do
         --motors|-m) RUN_MOTORS_LAUNCH=true; shift ;;
         --command|-c) COMMAND_TO_RUN="$2"; shift 2 ;;
         --rosbridge|-B) RUN_ROSBRIDGE=true; shift ;;
+        --webapp|-w) RUN_WEBAPP=true; shift ;;
         --copy|-C) 
             if [[ -z "$2" || -z "$3" ]]; then
                 echo "Error: --copy requires two arguments: <from> <to>"
