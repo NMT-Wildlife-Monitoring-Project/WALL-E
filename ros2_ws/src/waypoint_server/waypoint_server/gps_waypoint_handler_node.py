@@ -122,6 +122,14 @@ class GpsWaypointFileFollower(Node):
 
         poses = []
 
+
+
+
+
+
+
+
+
         for i, wp in enumerate(data["waypoints"]):
             try:
                 lat = float(wp["lat"])
