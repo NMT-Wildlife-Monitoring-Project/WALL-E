@@ -52,8 +52,8 @@ class RoboclawNode(Node):
         self.declare_parameter('max_speed', 1.0) # m/s
         self.declare_parameter('max_speed_qpps', 10560)  # Max speed in quadrature pulses per second, -1 means use max_speed
         self.declare_parameter('accel_qpps', -1)      # Max accel in quadrature pulses per second^2, -1 means use accel
-        self.declare_parameter('wheel_separation', 0.4) # meters (effective tuned for yaw scale)
-        self.declare_parameter('wheel_diameter', 0.105)    # meters
+        self.declare_parameter('wheel_separation', 0.39) # meters (effective tuned for yaw scale)
+        self.declare_parameter('wheel_diameter', 0.095)    # meters
         self.declare_parameter('m1_reverse', True)  # Reverse motor 1 direction
         self.declare_parameter('m2_reverse', False)  # Reverse motor 2 direction
         self.declare_parameter('odom_publish_rate', 20)  # Hz
@@ -105,6 +105,7 @@ class RoboclawNode(Node):
         self._reconnecting = False
         self.connected = False
         self._last_cmd = (0, 0)
+        self._cmd_valid = False
         self._reconnect_backoff = 0.2
 
         # Roboclaw setup
@@ -205,6 +206,7 @@ class RoboclawNode(Node):
         if self.m2_reverse:
             qpps_right = -qpps_right
         self._last_cmd = (qpps_left, qpps_right)
+        self._cmd_valid = True
         if not self.connected:
             return
         try:
@@ -229,6 +231,8 @@ class RoboclawNode(Node):
             with self._port_lock:
                 if not self.connected: return
                 self.roboclaw.SpeedAccelM1M2(self.address, self.accel_qpps, 0, 0)
+            self._last_cmd = (0, 0)
+            self._cmd_valid = False
         except (serial.serialutil.SerialException, OSError) as e:
             self.get_logger().warning(f"Serial error in stop_motors: {e}")
 
@@ -236,12 +240,12 @@ class RoboclawNode(Node):
         self.stop_motors()
 
     def _heartbeat(self):
-        if not self.connected:
+        if not self.connected or not self._cmd_valid:
             return
         try:
             ql, qr = self._last_cmd
             with self._port_lock:
-                if not self.connected: return
+                if not self.connected or not self._cmd_valid: return
                 self.roboclaw.SpeedAccelM1M2(self.address, self.accel_qpps, ql, qr)
         except (serial.serialutil.SerialException, OSError) as e:
             self._handle_serial_exception("heartbeat", e)
