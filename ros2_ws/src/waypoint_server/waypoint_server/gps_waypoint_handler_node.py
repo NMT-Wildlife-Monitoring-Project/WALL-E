@@ -6,6 +6,7 @@ import time
 
 import rclpy
 from rclpy.node import Node
+from rclpy.executors import MultiThreadedExecutor
 
 from geometry_msgs.msg import PoseStamped
 from nav2_simple_commander.robot_navigator import BasicNavigator
@@ -104,6 +105,7 @@ class GpsWaypointFileFollower(Node):
         # Start once after setup
         self.started = False
         self.timer = self.create_timer(0.5, self._start_once)
+        self.feedback_timer = None
 
     # --- internal methods ---
 
@@ -147,7 +149,17 @@ class GpsWaypointFileFollower(Node):
             req.ll_point.altitude = alt
 
             future = self.fromll_client.call_async(req)
-            rclpy.spin_until_future_complete(self, future)
+            
+            # Wait for the future to complete using a spin loop that yields
+            timeout = 5.0
+            start_time = time.time()
+            while not future.done():
+                if time.time() - start_time > timeout:
+                    self.get_logger().warn(
+                        f"FromLL timeout for waypoint #{i} (lat={lat}, lon={lon}); skipping."
+                    )
+                    break
+                rclpy.spin_once(self, timeout_sec=0.1)
 
             if future.result() is None:
                 self.get_logger().warn(
@@ -180,6 +192,7 @@ class GpsWaypointFileFollower(Node):
     def _start_once(self):
         """
         Send the converted waypoints to Nav2 exactly once.
+        Uses a timer to poll feedback without blocking the executor.
         """
         if self.started:
             return
@@ -188,32 +201,48 @@ class GpsWaypointFileFollower(Node):
 
         self.get_logger().info("Sending waypoints to Nav2 Waypoint Follower...")
         self.navigator.followWaypoints(self.poses)
+        
+        # Start a non-blocking feedback poll timer
+        self.feedback_timer = self.create_timer(0.1, self._poll_navigation_feedback)
 
-        while not self.navigator.isTaskComplete():
+    def _poll_navigation_feedback(self):
+        """
+        Poll navigation task status and log feedback without blocking.
+        """
+        if not self.navigator.isTaskComplete():
             feedback = self.navigator.getFeedback()
             if feedback is not None:
                 self.get_logger().info(
                     f"Currently at waypoint index: {feedback.current_waypoint}"
                 )
-            time.sleep(0.1)
-
-        result = self.navigator.getResult()
-        missed = getattr(result, "missed_waypoints", [])
-        if missed:
-            self.get_logger().warn(
-                f"Navigation finished with {len(missed)} missed waypoint(s): {list(missed)}"
-            )
         else:
-            self.get_logger().info("Successfully reached all waypoints.")
+            # Task is complete, stop polling and process result
+            self.feedback_timer.cancel()
+            
+            result = self.navigator.getResult()
+            missed = getattr(result, "missed_waypoints", [])
+            if missed:
+                self.get_logger().warn(
+                    f"Navigation finished with {len(missed)} missed waypoint(s): {list(missed)}"
+                )
+            else:
+                self.get_logger().info("Successfully reached all waypoints.")
 
-        self.get_logger().info("GPS waypoint run complete; shutting down.")
-        rclpy.shutdown()
+            self.get_logger().info("GPS waypoint run complete; shutting down.")
+            rclpy.shutdown()
 
 
 def main(args=None):
     rclpy.init(args=args)
     node = GpsWaypointFileFollower()
-    rclpy.spin(node)
+    executor = MultiThreadedExecutor()
+    executor.add_node(node)
+    try:
+        executor.spin()
+    finally:
+        executor.shutdown()
+        node.destroy_node()
+        rclpy.shutdown()
 
 
 if __name__ == "__main__":
