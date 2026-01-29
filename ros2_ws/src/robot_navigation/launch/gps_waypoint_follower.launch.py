@@ -34,7 +34,7 @@ def generate_launch_description():
     params_dir = os.path.join(package_dir, "config")
     nav2_params = os.path.join(params_dir, "nav2_no_map_params.yaml")
     configured_params = RewrittenYaml(
-        source_file=nav2_params, root_key="", param_rewrites="", convert_types=True
+        source_file=nav2_params, root_key="", param_rewrites={}, convert_types=True
     )
 
     use_rviz = LaunchConfiguration('use_rviz')
