@@ -42,71 +42,134 @@ cd docker
 
 # USAGE
 
+## Quick Start: From Zero to First Launch
+
+### 1. Prerequisites
+- Docker installed and user added to docker group (see INSTALLATION section above)
+- Repository cloned: `cd WALL-E`
+- udev rules installed (see INSTALLATION section above)
+
+### 2. Build the Docker Image
+```bash
+cd docker
+./start_docker.sh -b
+```
+This builds the Docker image with all ROS 2 packages, dependencies, and robot software.
+**Note:** First build takes 10-20 minutes and requires internet access.
+
+### 3. Launch Robot Bringup (Sensors & Motors)
+Start all core robot processes (motors, LiDAR, IMU, GPS):
+```bash
+./start_docker.sh -r
+```
+This launches:
+- RoboClaw motor driver
+- LiDAR scanner
+- IMU sensor
+- GPS receiver
+- Robot state publisher
+
+### 4. Launch Navigation
+Start GPS-based waypoint navigation with localization:
+```bash
+./start_docker.sh -n
+```
+This launches:
+- Robot bringup (motors, sensors)
+- GPS waypoint follower
+- Nav2 navigation stack
+- EKF localization
+- RViz visualization (with X11 display forwarding)
+
+### 5. Access the Container Shell
+Open an interactive bash terminal to run custom commands:
+```bash
+./start_docker.sh
+```
+
+## Verification Checklist
+
+After launching with `-r` or `-n`, verify the robot is functioning:
+
+### List Active Topics
+```bash
+ros2 topic list
+```
+
+Expected topics:
+- `/scan` - LiDAR scanner data
+- `/odom` - Odometry from wheel encoders
+- `/imu/data` - IMU sensor data
+- `/fix` - GPS fix information
+- `/tf` - Transform tree (frame relationships)
+
+### Check TF Tree
+```bash
+ros2 run tf2_tools view_frames.py
+```
+
+Expected frames: `map` → `odom` → `base_link` → sensors
+
+### Monitor Motor Status
+```bash
+ros2 topic echo /roboclaw_status
+```
+
+Should show motor speeds, encoder values, and battery voltage.
+
+### Test Odometry
+```bash
+ros2 topic echo /odom
+```
+
+Should continuously update with robot position and velocity.
+
+## Docker Commands Reference
+
+### start_docker.sh Options
+```
+-r, --robot              Start robot bringup (sensors + motors)
+-n, --navigate           Start navigation (GPS waypoint following)
+-t, --teleop             Start joystick/teleop control
+-l, --lidar              Start LiDAR sensor only
+-c, --camera             Start USB camera
+--imu                    Start IMU sensor
+--gps                    Start GPS driver
+-R, --rviz               Start RViz visualization (requires -d)
+-w, --webapp             Start web control panel
+-B, --rosbridge          Start rosbridge server
+-d, --display            Enable X11 display forwarding (for RViz)
+-b, --build              Build Docker image
+-x, --stop               Stop running container
+-i, --ros-domain-id <id> Set ROS domain ID (default: 62)
+-h, --help               Show help message
+```
+
+### Common Usage Examples
+```bash
+# Build image
+./start_docker.sh -b
+
+# Start robot + RViz visualization
+./start_docker.sh -r -R -d
+
+# Start navigation + GPS
+./start_docker.sh -n
+
+# Start teleop control
+./start_docker.sh -t
+
+# Run custom command in container
+./start_docker.sh -c "ros2 topic list"
+
+# Interactive bash in container
+./start_docker.sh
+```
+
 ## Docker start script -- start_docker.sh
 This script handles building and running the docker container, running commands inside the container, and setting up ros networking and environment.
-WARNING: The following options are not implemented yet.
 ```
---start (-s)
---teleop (-t)
---usb-cam (-u)
---video-stream (-v)
---mapping (-M)
---view-map (-w)
---motors (-g)
---rosbridge (-B)
-```
-```
-Usage: ./start_docker.sh [ --start (-s) | --teleop (-t) | --usb-cam (-u)     | --video-stream (-v) | --mapping (-M) | --view-map (-w)     | --motors (-g) | --rosbridge (-B) --command (-c) <command>]      [ --ros-domain-id (-i) <id> | --copy (-C) <from> <to> | --display (-d)     | --build (-b) | --stop (-x) | --restart (-R) | --quiet (-q) | --help (-h) ]
-This script is used to start and manage a Docker container for WALL-E the wildlife monitoring robot.
-If no IP addresses are specified, the script will attempt to determine them from the hostname. If this fails, try setting the hostname or IP.
-If no action is specified, the script will open an interactive bash terminal in the container.
-Actions (pick ONE):
-  --start (-s)                Start all processes on the robot
-  --teleop (-t)               Run joystick control
-  --usb-cam (-u)              Run usb camera node
-  --video-stream (-v)         View the video stream
-  --mapping (-M)              Run mapping
-  --view-map (-w)             Run map view
-  --motors (-m)               Run motor control
-  --rosbridge (-B)            Run rosbridge server
-  --command (-c) <command>    Pass a command to be run in the container
-Options:
-  --ros-domain-id (-i) <id>   Set the ROS domain ID (default: 62)
-  --copy (-C) <from> <to>     Copy files from the container to the host
-  --display (-d)              Enable display support (forward X11 display)
-  --build (-b)                Build the Docker container (will stop the running container if any)
-  --stop (-x)                 Stop the running Docker container
-  --restart (-R)              Restart the Docker container if it is running
-  --quiet (-q)                Suppress output
-  --help (-h)                 Show this help message
-  ```
 
-# Ros Workspace
-TODO: Basically all of these
-
-## ros2_roboclaw_driver
-TODO: Configure this
-Separate ros workspace
-
-## robot_bringup
-
-## robot_description
-
-## robot_motors
-we might not need this one
-
-## robot_navigation
-
-## robot_teleop
-Run the teleop node
-'ros2 launch teleop teleop_launch.py'
-See <https://wiki.ros.org/joy> and <https://wiki.ros.org/teleop_twist_joy>. The documentation is for ros 1 but the parameters are the same for the most part. Use
-`ros2 param list` when running the node to see available parameters.
-
-## robot_web_interface
-
-## sllidar_ros2
-This package is for rplidar laserscan sensors.
 
 # Cellular
 <https://www.waveshare.com/wiki/SIM7600E-H_4G_HAT>
