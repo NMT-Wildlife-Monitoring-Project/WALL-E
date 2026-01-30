@@ -1,14 +1,8 @@
 # For parameter descriptions, please refer to the template parameter files for each node.
 
-#    sensor_config: [x, y, z,
-#                   roll, pitch, yaw,
-#                   vx, vy, vz,
-#                   vroll, vpitch, vyaw,
-#                   ax, ay, az]
-
 ekf_filter_node_odom:
   ros__parameters:
-    frequency: 20.0
+    frequency: 30.0
     two_d_mode: true # Recommended to use 2d mode for nav2 in mostly planar environments
     print_diagnostics: true
     debug: false
@@ -29,50 +23,38 @@ ekf_filter_node_odom:
     odom0_differential: false
     odom0_relative: false
 
-    # Scan matcher odometry (integrated into local frame)
-    odom1: odom_matched
-    odom1_config: [false, false, false,
-                  false, false, false,
-                  true,  true,  false,
-                  false, false, true,
-                  false, false, false]
-    odom1_queue_size: 5
-    odom1_differential: false
-    odom1_relative: false
-
     imu0: imu/data
     imu0_config: [false, false, false,
                   false,  false,  true,
                   false, false, false,
                   false,  false,  true,
                   true,  false,  false]
-    imu0_differential: false  # Use absolute yaw from IMU (geomagnetic-corrected)
+    imu0_differential: true  # If using a real robot you might want to set this to true, since usually absolute measurements from real imu's are not very accurate
     imu0_relative: false
     imu0_queue_size: 10
-    imu0_remove_gravitational_acceleration: false
+    imu0_remove_gravitational_acceleration: true
 
     use_control: false
 
-    # Slightly higher process noise on velocity/yaw-rate to soften wheel odom influence
     process_noise_covariance: [1e-3, 0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    1e-3,  0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    1e-3,  0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.3,   0.0,    0.0,     0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.0,    0.3,   0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.002,  0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.1,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.1,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.2,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.4,   0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.4,   0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.01,   0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.1,   0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.1,   0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.4]
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.01,  0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.5,    0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.5,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.1,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.3,   0.0,    0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.3,   0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.3,   0.0,    0.0,    0.0,
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.3,   0.0,    0.0,
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.3,   0.0,
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.3]
 
 ekf_filter_node_map:
   ros__parameters:
-    frequency: 20.0
+    frequency: 30.0
     two_d_mode: true  # Recommended to use 2d mode for nav2 in mostly planar environments
     print_diagnostics: true
     debug: false
@@ -83,9 +65,7 @@ ekf_filter_node_map:
     base_link_frame: base_link # the frame id used by the turtlebot's diff drive plugin
     world_frame: map
 
-    # Use the fused odom EKF output for prediction instead of raw wheel odom to
-    # keep the map frame stable and avoid mixing GPS feedback into the predictor.
-    odom0: odometry/local
+    odom0: odom
     odom0_config: [false, false, false,
                   false, false, false,
                   true,  true,  false,
@@ -111,10 +91,10 @@ ekf_filter_node_map:
                   false, false, false,
                   false,  false,  true,
                   true,  false,  false]
-    imu0_differential: false  # Use absolute yaw from IMU (geomagnetic-corrected)
+    imu0_differential: true  # If using a real robot you might want to set this to true, since usually absolute measurements from real imu's are not very accurate
     imu0_relative: false
     imu0_queue_size: 10
-    imu0_remove_gravitational_acceleration: false
+    imu0_remove_gravitational_acceleration: true
 
     use_control: false
 
@@ -136,17 +116,13 @@ ekf_filter_node_map:
 
 navsat_transform:
   ros__parameters:
-    frequency: 5.0
-    delay: 0.1
-    # Magnetic declination for New Mexico location (34.0658N, -106.908W)
-    # Approximately +8.5° East = 0.148 radians
-    # Verify current value at: https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml
-    magnetic_declination_radians: 0.148
+    frequency: 30.0
+    delay: 10.0  # Increased to allow GPS to stabilize before setting map origin
+    magnetic_declination_radians: 0.0
     yaw_offset: 0.0
     zero_altitude: true
     broadcast_cartesian_transform: true
     publish_filtered_gps: true
     use_odometry_yaw: true
-    wait_for_datum: false
-    # Set explicit datum for New Mexico location (lat, lon, altitude in degrees/meters)
-    datum: [34.0658, -106.908, 0.0]
+    wait_for_datum: true  # CRITICAL: Wait for first GPS fix before broadcasting transform
+    datum: [32.2996, -106.8175, 0.0]  # Set your robot's starting GPS coordinates here (latitude, longitude, altitude)
