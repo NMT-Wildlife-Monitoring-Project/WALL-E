@@ -170,6 +170,32 @@ Should continuously update with robot position and velocity.
 This script handles building and running the docker container, running commands inside the container, and setting up ros networking and environment.
 ```
 
+## RViz Visualization Troubleshooting
+
+### Map Appears Off-Screen at Startup
+
+If the RViz map shifts off-screen or appears too zoomed in when first launched:
+
+**What causes this:** The default RViz camera view was set with very tight zoom (10.24 units distance) and an unusual rotation angle (yaw ~358°).
+
+**How to fix it:** Update `rviz2/default.rviz` camera settings:
+- **Camera Distance:** Increased to 50.0 (provides 5x better viewing area)
+- **Yaw Rotation:** Normalized to 0.0 (removes odd angle)
+
+These changes are already included in the latest version. If you have an older configuration:
+
+```yaml
+# In rviz2/default.rviz, locate the Views section and set:
+Views:
+  Current:
+    Distance: 50.0              # Was: 10.235515594482422
+    Yaw: 0.0                    # Was: 6.263583660125732
+    Pitch: 1.5707963267948966   # Keep: 90° top-down view
+```
+
+**Result:** Map now displays centered on robot at startup with appropriate zoom level.
+
+---
 
 # Cellular
 <https://www.waveshare.com/wiki/SIM7600E-H_4G_HAT>
