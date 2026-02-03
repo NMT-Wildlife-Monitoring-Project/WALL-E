@@ -53,6 +53,7 @@ class Ros2NMEADriver(Node):
         self.time_ref_source = self.declare_parameter('time_ref_source', 'gps').value
         self.use_RMC = self.declare_parameter('useRMC', False).value
         self.use_GNSS_time = self.declare_parameter('use_GNSS_time', False).value
+        self.override_std_dev = self.declare_parameter('override_std_dev', False).value
         self.valid_fix = False
 
         if not self.use_GNSS_time:
@@ -68,9 +69,9 @@ class Ros2NMEADriver(Node):
 
         self.using_receiver_epe = False
 
-        self.lon_std_dev = float("nan")
-        self.lat_std_dev = float("nan")
-        self.alt_std_dev = float("nan")
+        self.lon_std_dev = self.declare_parameter('lon_std_dev', float("nan")).value
+        self.lat_std_dev = self.declare_parameter('lat_std_dev', float("nan")).value
+        self.alt_std_dev = self.declare_parameter('alt_std_dev', float("nan")).value
 
         """Format for this dictionary is the fix type from a GGA message as the key, with
         each entry containing a tuple consisting of a default estimated
@@ -184,13 +185,15 @@ class Ros2NMEADriver(Node):
             altitude = data['altitude'] + data['mean_sea_level']
             current_fix.altitude = altitude
 
-            # use default epe std_dev unless we've received a GST sentence with epes
-            if not self.using_receiver_epe or math.isnan(self.lon_std_dev):
-                self.lon_std_dev = default_epe
-            if not self.using_receiver_epe or math.isnan(self.lat_std_dev):
-                self.lat_std_dev = default_epe
-            if not self.using_receiver_epe or math.isnan(self.alt_std_dev):
-                self.alt_std_dev = default_epe * 2
+            # Prefer user-provided std_dev overrides; otherwise use GST EPE if available;
+            # else fall back to default EPE.
+            if not self.override_std_dev:
+                if not self.using_receiver_epe or math.isnan(self.lon_std_dev):
+                    self.lon_std_dev = default_epe
+                if not self.using_receiver_epe or math.isnan(self.lat_std_dev):
+                    self.lat_std_dev = default_epe
+                if not self.using_receiver_epe or math.isnan(self.alt_std_dev):
+                    self.alt_std_dev = default_epe * 2
 
             hdop = data['hdop']
             current_fix.position_covariance[0] = (hdop * self.lon_std_dev) ** 2
@@ -261,9 +264,10 @@ class Ros2NMEADriver(Node):
 
             # Use receiver-provided error estimate if available
             self.using_receiver_epe = True
-            self.lon_std_dev = data['lon_std_dev']
-            self.lat_std_dev = data['lat_std_dev']
-            self.alt_std_dev = data['alt_std_dev']
+            if not self.override_std_dev:
+                self.lon_std_dev = data['lon_std_dev']
+                self.lat_std_dev = data['lat_std_dev']
+                self.alt_std_dev = data['alt_std_dev']
         elif 'HDT' in parsed_sentence:
             data = parsed_sentence['HDT']
             if data['heading']:
