@@ -1,7 +1,7 @@
 [Unit]
 Description=Start ROS Docker Robot Stack
-After=network-online.target docker.service
-Wants=network-online.target docker.service
+After=network-online.target docker.service gps_start.service
+Wants=network-online.target docker.service gps_start.service
 
 [Service]
 ExecStart=/home/walle/WALL-E/start_docker.sh -r -B -q
