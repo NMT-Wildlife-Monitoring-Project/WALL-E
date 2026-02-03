@@ -95,8 +95,10 @@ ekf_filter_node_map:
     odom0_differential: false
     odom0_relative: false
 
+    # GPS fusion disabled (noisy fix causes map drift). Leave navsat_transform running
+    # for diagnostics/waypoints, but do not fuse into map EKF.
     odom1: odometry/gps
-    odom1_config: [true,  true,  false,
+    odom1_config: [false, false, false,
                   false, false, false,
                   false, false, false,
                   false, false, false,
