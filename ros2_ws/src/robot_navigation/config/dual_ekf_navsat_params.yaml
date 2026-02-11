@@ -19,8 +19,9 @@ ekf_filter_node_odom:
     base_link_frame: base_link
     world_frame: odom
 
+    # Use only scan-matched odometry to avoid conflicts with wheel odom.
     odom0: odom
-    odom0_config: [true,  true,  false,
+    odom0_config: [false, false, false,
                   false, false, false,
                   false, false, false,
                   false, false, false,
