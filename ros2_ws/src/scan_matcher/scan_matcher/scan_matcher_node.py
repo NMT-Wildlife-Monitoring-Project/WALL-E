@@ -7,6 +7,9 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose, PoseWithCovariance, Twist, Quaternion
 from builtin_interfaces.msg import Time
 from scipy.spatial import KDTree
+import rclpy.time
+import tf2_ros
+from tf_transformations import euler_from_quaternion
 
 
 class ScanMatcherNode(Node):
@@ -40,6 +43,10 @@ class ScanMatcherNode(Node):
         self.downsample_factor = self.get_parameter('downsample_factor').get_parameter_value().integer_value
         self.base_frame = self.get_parameter('base_frame').get_parameter_value().string_value
         self.odom_frame = self.get_parameter('odom_frame').get_parameter_value().string_value
+
+        # TF2 for transforming scan frame into base frame
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
 
         # Subscribers
         self.scan_sub = self.create_subscription(
@@ -79,6 +86,7 @@ class ScanMatcherNode(Node):
 
     def scan_callback(self, scan_msg):
         points = self.scan_to_points(scan_msg)
+        points = self.transform_points_to_base(points, scan_msg)
         points = self.trim_points(points)
 
         if self.prev_points is None or len(points) < 10:
@@ -156,6 +164,30 @@ class ScanMatcherNode(Node):
         x = ranges[mask] * np.cos(angles[mask])
         y = ranges[mask] * np.sin(angles[mask])
         return np.stack((x, y), axis=-1)
+
+    def transform_points_to_base(self, points, scan_msg: LaserScan):
+        scan_frame = scan_msg.header.frame_id
+        if not scan_frame or scan_frame == self.base_frame:
+            return points
+
+        try:
+            stamp = rclpy.time.Time.from_msg(scan_msg.header.stamp)
+            tf = self.tf_buffer.lookup_transform(
+                self.base_frame, scan_frame, stamp)
+        except Exception as exc:
+            self.get_logger().warn(
+                f'No TF from {scan_frame} to {self.base_frame}: {exc}')
+            return points
+
+        t = tf.transform.translation
+        q = tf.transform.rotation
+        _, _, yaw = euler_from_quaternion([q.x, q.y, q.z, q.w])
+        c, s = cos(yaw), sin(yaw)
+        rot = np.array([[c, -s], [s, c]])
+        translated = (rot @ points.T).T
+        translated[:, 0] += t.x
+        translated[:, 1] += t.y
+        return translated
 
     def trim_points(self, points):
         """Downsample points by the configured factor"""
