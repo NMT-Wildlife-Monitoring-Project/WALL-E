@@ -45,7 +45,7 @@ ekf_filter_node_odom:
     imu0_config: [false, false, false,
                   false,  false,  false,
                   false, false, false,
-                  false,  false,  true,
+                  false,  false,  false,
                   false,  false,  false]
     imu0_differential: false  # Use absolute yaw from IMU (geomagnetic-corrected)
     imu0_relative: false
@@ -112,7 +112,7 @@ ekf_filter_node_map:
     imu0_config: [false, false, false,
                   false,  false,  false,
                   false, false, false,
-                  false,  false,  true,
+                  false,  false,  false,
                   false,  false,  false]
     imu0_differential: false  # Use absolute yaw from IMU (geomagnetic-corrected)
     imu0_relative: false
