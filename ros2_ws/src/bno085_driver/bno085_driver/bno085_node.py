@@ -10,6 +10,7 @@ import numpy as np
 import json
 import os
 import time
+import threading
 from collections import deque
 from bno085_driver.bno085 import BNO085
 
@@ -177,24 +178,23 @@ class BNO085Node(Node):
         self.get_logger().info(f'Saved calibration to {self.cal_file}')
 
     def service_calibrate(self, request, response):
-        """Simple service wrapper for calibration."""
-        self.get_logger().info('Calibration service called')
+        """Simple service wrapper for calibration (non-blocking)."""
+        self.get_logger().info('Calibration service called - starting in background thread')
 
         # Default calibration parameters
         duration = 20.0  # 20 seconds
         rotation_speed = 0.3  # rad/s
 
-        try:
-            # Execute calibration synchronously
-            result = self.run_calibration(duration, rotation_speed)
+        # Run calibration in a background thread to avoid blocking the node
+        cal_thread = threading.Thread(
+            target=self.run_calibration,
+            args=(duration, rotation_speed),
+            daemon=False
+        )
+        cal_thread.start()
 
-            response.success = result['success']
-            response.message = result['message']
-        except Exception as e:
-            response.success = False
-            response.message = f'Calibration failed: {str(e)}'
-            self.get_logger().error(response.message)
-
+        response.success = True
+        response.message = f'Calibration started in background (duration: {duration}s). Watch /calibrate_mag_result for updates.'
         return response
 
     def execute_calibration(self, goal_handle):
@@ -285,55 +285,59 @@ class BNO085Node(Node):
         return result
 
     def run_calibration(self, duration, rotation_speed):
-        """Run calibration synchronously (for service calls)."""
-        # Clear samples
-        self.mag_samples.clear()
-        self.calibrating = True
+        """Run calibration in background (can be called from thread)."""
+        try:
+            # Clear samples
+            self.mag_samples.clear()
+            self.calibrating = True
 
-        # Start rotation
-        self.get_logger().info(f'Rotating for {duration}s at {rotation_speed} rad/s')
-        start_time = time.time()
+            # Start rotation
+            self.get_logger().info(f'Rotating for {duration}s at {rotation_speed} rad/s')
+            start_time = time.time()
 
-        twist = Twist()
-        twist.angular.z = rotation_speed
+            twist = Twist()
+            twist.angular.z = rotation_speed
 
-        # Collect samples
-        rate = self.create_rate(20)
-        while time.time() - start_time < duration:
+            # Collect samples
+            rate = self.create_rate(20)
+            while time.time() - start_time < duration:
+                self.cmd_vel_pub.publish(twist)
+                if self.bno.mag is not None and not np.any(np.isnan(self.bno.mag)):
+                    self.mag_samples.append(self.bno.mag.copy())
+                rate.sleep()
+
+            # Stop
+            twist.angular.z = 0.0
             self.cmd_vel_pub.publish(twist)
-            if self.bno.mag is not None and not np.any(np.isnan(self.bno.mag)):
-                self.mag_samples.append(self.bno.mag.copy())
-            rate.sleep()
+            self.calibrating = False
 
-        # Stop
-        twist.angular.z = 0.0
-        self.cmd_vel_pub.publish(twist)
-        self.calibrating = False
+            # Compute
+            if len(self.mag_samples) < 100:
+                self.get_logger().error(f'Insufficient samples: {len(self.mag_samples)}')
+                return
 
-        # Compute
-        if len(self.mag_samples) < 100:
-            return {
-                'success': False,
-                'message': f'Insufficient samples: {len(self.mag_samples)}'
-            }
+            mag_array = np.array(list(self.mag_samples))
+            mag_min = np.min(mag_array, axis=0)
+            mag_max = np.max(mag_array, axis=0)
+            hard_iron_offset = (mag_max + mag_min) / 2.0
 
-        mag_array = np.array(list(self.mag_samples))
-        mag_min = np.min(mag_array, axis=0)
-        mag_max = np.max(mag_array, axis=0)
-        hard_iron_offset = (mag_max + mag_min) / 2.0
+            mag_range = mag_max - mag_min
+            quality = np.min(mag_range) / 60.0
+            quality = min(1.0, max(0.0, quality))
 
-        mag_range = mag_max - mag_min
-        quality = np.min(mag_range) / 60.0
-        quality = min(1.0, max(0.0, quality))
+            # Apply and save
+            self.bno.set_mag_offset(hard_iron_offset)
+            self.save_mag_calibration(hard_iron_offset, quality)
 
-        # Apply and save
-        self.bno.set_mag_offset(hard_iron_offset)
-        self.save_mag_calibration(hard_iron_offset, quality)
+            msg = f'Calibration complete! Quality: {quality:.1%}, Offset: {hard_iron_offset}'
+            self.get_logger().info(msg)
 
-        return {
-            'success': True,
-            'message': f'Calibration complete! Quality: {quality:.1%}, Offset: {hard_iron_offset}'
-        }
+        except Exception as e:
+            self.get_logger().error(f'Calibration failed: {e}')
+            self.calibrating = False
+            # Ensure robot is stopped
+            twist = Twist()
+            self.cmd_vel_pub.publish(twist)
 
 def main(args=None):
     rclpy.init(args=args)
