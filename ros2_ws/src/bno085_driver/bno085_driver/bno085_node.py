@@ -83,6 +83,10 @@ class BNO085Node(Node):
         
     
     def publish(self):
+        # Skip publishing if sensor is not initialized
+        if self.bno is None:
+            return
+        
         try:
             self.bno.update()
         except Exception as e:
@@ -96,6 +100,7 @@ class BNO085Node(Node):
                 self.get_logger().error("Critical failure: Unable to recover BNO085. Shutting down node.")
                 if rclpy.ok():
                     rclpy.shutdown()
+            return
         
         imu_msg = self.imu_msg()
         self.imu_pub.publish(imu_msg)
@@ -179,6 +184,13 @@ class BNO085Node(Node):
 
     def service_calibrate(self, request, response):
         """Simple service wrapper for calibration (non-blocking)."""
+        # Check if sensor is initialized before starting calibration
+        if self.bno is None:
+            response.success = False
+            response.message = 'BNO085 sensor not initialized. Check I2C connection and try again.'
+            self.get_logger().error(response.message)
+            return response
+        
         self.get_logger().info('Calibration service called - starting in background thread')
 
         # Default calibration parameters
