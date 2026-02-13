@@ -47,7 +47,18 @@ class BNO085Node(Node):
 
         # Create BNO085 and calibrate
         self.bno = None
-        self.initialize()
+        self.initialization_failed = False
+        self.warning_timer = None
+        if not self.initialize():
+            self.initialization_failed = True
+            self.get_logger().error('=' * 60)
+            self.get_logger().error('BNO085 IMU NOT DETECTED ON I2C BUS')
+            self.get_logger().error(f'Expected: Bus {self.i2c_bus}, Address 0x{self.i2c_address:02X}')
+            self.get_logger().error('Check: Power, SDA/SCL wiring, PS0/PS1 pins')
+            self.get_logger().error('Node will remain active but publish NO DATA')
+            self.get_logger().error('=' * 60)
+            # Create a timer to periodically warn about missing IMU
+            self.warning_timer = self.create_timer(30.0, self.warn_no_imu)
 
         # Load saved magnetometer calibration if available
         self.load_mag_calibration()
@@ -82,13 +93,22 @@ class BNO085Node(Node):
         try:
             self.bno = BNO085(self.i2c_address, self.i2c_bus)
             self.bno.calibrate()
-            self.get_logger().info('BNO085 sensor successfully initialized')
+            self.get_logger().info('✓ BNO085 IMU connected and initialized successfully')
+            # Stop warning timer if it exists (IMU recovered)
+            if self.warning_timer is not None:
+                self.warning_timer.cancel()
+                self.warning_timer = None
             return True
         except Exception as e:
-            self.get_logger().error(f'Failed to initialize BNO085: {e}')
+            self.get_logger().error(f'✗ Failed to initialize BNO085: {e}')
             self.get_logger().error('IMU not detected on I2C bus. Node will not publish data.')
             self.bno = None
             return False
+        
+    def warn_no_imu(self):
+        """Periodic warning when IMU is not connected."""
+        if self.bno is None:
+            self.get_logger().warn('BNO085 IMU still not connected - no IMU data available')
         
     
     def publish(self):
@@ -100,15 +120,23 @@ class BNO085Node(Node):
         try:
             self.bno.update()
         except Exception as e:
-            self.get_logger().error(f"Error reading BNO085 data: {e}")
+            self.get_logger().error('=' * 60)
+            self.get_logger().error(f"I2C CONNECTION LOST: {e}")
+            self.get_logger().error('BNO085 IMU disconnected during operation')
+            self.get_logger().error('Attempting recovery...')
+            self.get_logger().error('=' * 60)
+            
             # Attempt to reinitialize the BNO085 sensor once
             if self.initialize():
-                self.get_logger().info("Successfully recovered BNO085 connection")
+                self.get_logger().info("✓ Successfully recovered BNO085 connection")
                 return
             else:
                 # Failed to recover - set to None to stop further attempts
-                self.get_logger().error("BNO085 recovery failed. Stopping data publishing to prevent false readings.")
+                self.get_logger().error('✗ BNO085 recovery failed. Stopping data publishing to prevent false readings.')
                 self.bno = None
+                # Start periodic warnings if not already running
+                if self.warning_timer is None:
+                    self.warning_timer = self.create_timer(30.0, self.warn_no_imu)
                 return
         
         imu_msg = self.imu_msg()
