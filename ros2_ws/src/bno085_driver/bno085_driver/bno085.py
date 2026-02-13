@@ -56,7 +56,7 @@ class BNO085:
             Updates sensor readings for quaternion, RPY, accelerometer, gyroscope, and magnetometer
             and subtracts bias.
     """
-    def __init__(self, i2c_addr, i2c_bus=1):
+    def __init__(self, i2c_addr, i2c_bus=2):
         """
         Initialize BNO085 sensor using I2C bus.
 
