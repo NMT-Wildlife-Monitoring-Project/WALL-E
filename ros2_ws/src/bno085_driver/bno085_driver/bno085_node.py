@@ -76,31 +76,40 @@ class BNO085Node(Node):
         self.get_logger().info('BNO085 Node initialized')
     
     def initialize(self):
+        """Initialize BNO085 sensor. Returns True on success, False on failure."""
         if self.bno is not None:
             del self.bno
-        self.bno = BNO085(self.i2c_address, self.i2c_bus)
-        self.bno.calibrate()
+        try:
+            self.bno = BNO085(self.i2c_address, self.i2c_bus)
+            self.bno.calibrate()
+            self.get_logger().info('BNO085 sensor successfully initialized')
+            return True
+        except Exception as e:
+            self.get_logger().error(f'Failed to initialize BNO085: {e}')
+            self.get_logger().error('IMU not detected on I2C bus. Node will not publish data.')
+            self.bno = None
+            return False
         
     
     def publish(self):
         # Skip publishing if sensor is not initialized
         if self.bno is None:
+            # Silently skip - sensor was never initialized
             return
         
         try:
             self.bno.update()
         except Exception as e:
             self.get_logger().error(f"Error reading BNO085 data: {e}")
-            # Attempt to reinitialize the BNO085 sensor
-            try:
-                self.get_logger().info("Attempting to reinitialize BNO085 sensor...")
-                self.initialize()
-            except Exception as reinit_e:
-                self.get_logger().error(f"Failed to reinitialize BNO085: {reinit_e}")
-                self.get_logger().error("Critical failure: Unable to recover BNO085. Shutting down node.")
-                if rclpy.ok():
-                    rclpy.shutdown()
-            return
+            # Attempt to reinitialize the BNO085 sensor once
+            if self.initialize():
+                self.get_logger().info("Successfully recovered BNO085 connection")
+                return
+            else:
+                # Failed to recover - set to None to stop further attempts
+                self.get_logger().error("BNO085 recovery failed. Stopping data publishing to prevent false readings.")
+                self.bno = None
+                return
         
         imu_msg = self.imu_msg()
         self.imu_pub.publish(imu_msg)
@@ -161,6 +170,11 @@ class BNO085Node(Node):
 
     def load_mag_calibration(self):
         """Load magnetometer calibration from file on startup."""
+        # Only load if sensor is initialized
+        if self.bno is None:
+            self.get_logger().warn('Skipping mag calibration load - sensor not initialized')
+            return
+            
         if os.path.exists(self.cal_file):
             try:
                 with open(self.cal_file, 'r') as f:
