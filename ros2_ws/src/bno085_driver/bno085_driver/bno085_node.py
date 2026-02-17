@@ -109,7 +109,7 @@ class BNO085Node(Node):
         """Periodic warning when IMU is not connected."""
         if self.bno is None:
             self.get_logger().warn('BNO085 IMU still not connected - no IMU data available')
-        
+
     
     def publish(self):
         # Skip publishing if sensor is not initialized
