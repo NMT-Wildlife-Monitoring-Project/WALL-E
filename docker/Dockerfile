@@ -160,6 +160,7 @@ RUN pip3 install --break-system-packages \
     adafruit-blinka \
     adafruit-circuitpython-bno08x \
     adafruit-extended-bus \
+    Jetson.GPIO \
     gps || true
 
 # Install web app backend dependencies
