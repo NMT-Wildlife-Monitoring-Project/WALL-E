@@ -132,7 +132,11 @@ class BNO085Node(Node):
         }
         edge = edge_lookup.get(str(self.int_edge).upper(), GPIO.FALLING)
 
-        GPIO.setmode(mode)
+        try:
+            GPIO.setmode(mode)
+        except RuntimeError as e:
+            self.get_logger().warn(f'GPIO mode already set: {e}. Continuing with existing mode.')
+        
         GPIO.setup(self.int_pin, GPIO.IN)
         if self.int_bouncetime_ms and int(self.int_bouncetime_ms) > 0:
             GPIO.add_event_detect(self.int_pin, edge, callback=self._int_callback,
