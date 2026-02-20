@@ -202,6 +202,7 @@ WORKDIR /home/$USER/ros2_ws
 COPY --chown=$USER:$USER rviz2 /home/$USER/.rviz2
 COPY --chown=$USER:$USER ros2_ws /home/$USER/ros2_ws/
 COPY --chown=$USER:$USER web_app /home/$USER/web_app/
+COPY --chown=$USER:$USER test_int.py /home/$USER/test_int.py
 
 # ============================================================================
 # Build ROS 2 Workspace
