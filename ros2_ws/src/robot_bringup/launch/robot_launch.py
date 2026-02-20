@@ -31,11 +31,12 @@ def generate_launch_description():
         'waypoints.yaml'
     ])
 
-    # Staged launch: Group 1 (Sensors) -> Group 2 (Localization/Scan Matcher) -> Group 3 (Heavy Navigation)
-    # This prevents CPU spike from all systems starting simultaneously
+    # Staged launch: Stage 0 (IMU first) -> Stage 1 (Sensors) -> Stage 2 (Localization/Scan Matcher) -> Stage 3 (Heavy Navigation)
+    # IMU runs first with interrupt mode enabled to ensure stable data before other hardware starts
+    # This prevents GPIO conflicts and ensures EKF has reliable orientation data from the start
 
-    # Stage 1: Sensors and basic nodes (start immediately)
-    stage1_sensors = [
+    # Stage 0: IMU initialization (start immediately with interrupt mode enabled)
+    stage0_imu = [
         DeclareLaunchArgument('launch_rplidar', default_value='true'),
         DeclareLaunchArgument('launch_bno085', default_value='true'),
         DeclareLaunchArgument('launch_gps', default_value='true'),
@@ -44,52 +45,61 @@ def generate_launch_description():
         DeclareLaunchArgument('launch_scan_matcher', default_value='true'),
         DeclareLaunchArgument('launch_waypoint_server', default_value='false'),
 
-        # LiDAR sensor
+        # IMU sensor (PRIORITY: starts first with interrupt mode)
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
-                FindPackageShare('sllidar_ros2'), '/launch/sllidar_s3_launch.py'
-            ]),
-            condition=IfCondition(launch_rplidar),
-        ),
-        # IMU sensor
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([
-                FindPackageShare('bno085_driver'), '/launch/bno085_launch.py'
+                FindPackageShare('bno085_driver'), '/launch/bno085_launch_int.py'
             ]),
             condition=IfCondition(launch_bno085)
         ),
-        # GPS sensor
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([
-                bringup_dir, '/launch/gps_launch.py'
-            ]),
-            condition=IfCondition(launch_gps)
-        ),
-        # Robot description
-        Node(
-            package='robot_state_publisher',
-            executable='robot_state_publisher',
-            name='robot_state_publisher',
-            output='screen',
-            parameters=[{
-                'robot_description': Command(['xacro ', robot_description_path])
-            }],
-            condition=IfCondition(LaunchConfiguration('launch_urdf'))
-        ),
-        # Motor driver (lightweight)
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([
-                FindPackageShare('roboclaw_driver'), '/launch/roboclaw_launch.py'
-            ]),
-            launch_arguments={
-                'serial_port': '/dev/roboclaw'
-            }.items()
+    ]
+
+    # Stage 1: Sensors and basic nodes (start after 2 seconds, after IMU is stable)
+    stage1_sensors = [
+        # LiDAR sensor
+        TimerAction(
+            period=2.0,
+            actions=[
+                IncludeLaunchDescription(
+                    PythonLaunchDescriptionSource([
+                        FindPackageShare('sllidar_ros2'), '/launch/sllidar_s3_launch.py'
+                    ]),
+                    condition=IfCondition(launch_rplidar),
+                ),
+                # GPS sensor
+                IncludeLaunchDescription(
+                    PythonLaunchDescriptionSource([
+                        bringup_dir, '/launch/gps_launch.py'
+                    ]),
+                    condition=IfCondition(launch_gps)
+                ),
+                # Robot description
+                Node(
+                    package='robot_state_publisher',
+                    executable='robot_state_publisher',
+                    name='robot_state_publisher',
+                    output='screen',
+                    parameters=[{
+                        'robot_description': Command(['xacro ', robot_description_path])
+                    }],
+                    condition=IfCondition(LaunchConfiguration('launch_urdf'))
+                ),
+                # Motor driver (lightweight)
+                IncludeLaunchDescription(
+                    PythonLaunchDescriptionSource([
+                        FindPackageShare('roboclaw_driver'), '/launch/roboclaw_launch.py'
+                    ]),
+                    launch_arguments={
+                        'serial_port': '/dev/roboclaw'
+                    }.items()
+                ),
+            ]
         ),
     ]
 
-    # Stage 2: Scan matcher (starts after 3 seconds to let sensors stabilize)
+    # Stage 2: Scan matcher (starts after 5 seconds total = 2s IMU delay + 3s buffer after sensors)
     stage2_scan_matcher = TimerAction(
-        period=3.0,
+        period=5.0,
         actions=[
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([
@@ -100,11 +110,11 @@ def generate_launch_description():
         ]
     )
 
-    # Stage 3: Heavy navigation stack (starts after 6 seconds - most computationally expensive)
+    # Stage 3: Heavy navigation stack (starts after 8 seconds - most computationally expensive)
     # This includes: dual EKF filters, navsat_transform, twist_mux, velocity_smoother,
     # controller_server (MPPI), planner_server, behavior_server, dual costmaps
     stage3_navigation = TimerAction(
-        period=6.0,
+        period=8.0,
         actions=[
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([
@@ -115,9 +125,9 @@ def generate_launch_description():
         ]
     )
 
-    # Stage 4: Waypoint server (starts after 8 seconds, waits for nav2)
+    # Stage 4: Waypoint server (starts after 10 seconds, waits for nav2)
     stage4_waypoint_server = TimerAction(
-        period=8.0,
+        period=10.0,
         actions=[
             Node(
                 package='waypoint_server',
@@ -136,6 +146,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription(
+        stage0_imu +
         stage1_sensors +
         [stage2_scan_matcher, stage3_navigation, stage4_waypoint_server]
     )

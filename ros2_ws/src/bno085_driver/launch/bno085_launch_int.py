@@ -10,7 +10,7 @@ def generate_launch_description():
             parameters=[{
                 'i2c_address': 0x4B,  # Default I2C address for BNO085
                 'i2c_bus': 7,  # I2C bus number on Jetson Orin Nano
-                'use_interrupt': False,  # Disabled by default for standalone use; use bno085_launch_int.py for interrupt mode
+                'use_interrupt': True,  # Interrupt mode ENABLED for Stage 0 (priority launch)
                 'int_pin': 15,
                 'int_pin_mode': 'BOARD',
                 'int_edge': 'FALLING',

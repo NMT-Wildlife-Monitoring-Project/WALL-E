@@ -32,7 +32,7 @@ class BNO085Node(Node):
         self.i2c_bus = self.get_parameter('i2c_bus').value
 
         # Interrupt-driven publishing
-        self.declare_parameter('use_interrupt', True)
+        self.declare_parameter('use_interrupt', False)  # Disabled by default for standalone use
         self.declare_parameter('int_pin', 15)
         self.declare_parameter('int_pin_mode', 'BOARD')
         self.declare_parameter('int_edge', 'FALLING')
