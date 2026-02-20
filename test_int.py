@@ -9,6 +9,7 @@ from adafruit_bno08x import BNO_REPORT_ROTATION_VECTOR
 INT_PIN = 15  # Physical Pin 15 (LCD_TE)
 
 # --- Setup GPIO ---
+GPIO.cleanup()
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(INT_PIN, GPIO.IN)
 
