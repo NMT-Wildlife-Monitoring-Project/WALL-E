@@ -20,6 +20,7 @@ setup(
         'setuptools',
         'adafruit-extended-bus',
         'adafruit-circuitpython-bno08x',
+        'Jetson.GPIO',
         'numpy',
     ],
     zip_safe=True,

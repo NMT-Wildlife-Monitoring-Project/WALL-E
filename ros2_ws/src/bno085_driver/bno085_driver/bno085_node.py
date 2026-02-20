@@ -14,6 +14,11 @@ import threading
 from collections import deque
 from bno085_driver.bno085 import BNO085
 
+try:
+    import Jetson.GPIO as GPIO
+except Exception:
+    GPIO = None
+
 
 class BNO085Node(Node):
     def __init__(self):
@@ -23,8 +28,26 @@ class BNO085Node(Node):
         self.i2c_address = self.get_parameter('i2c_address').value
 
         # Declare parameter for I2C bus number
-        self.declare_parameter('i2c_bus', 7)  # Default to bus 1 (Jetson/Pi standard)
+        self.declare_parameter('i2c_bus', 7)  # Default to bus 7 on Jetson Orin Nano
         self.i2c_bus = self.get_parameter('i2c_bus').value
+
+        # Interrupt-driven publishing
+        self.declare_parameter('use_interrupt', True)
+        self.declare_parameter('int_pin', 15)
+        self.declare_parameter('int_pin_mode', 'BOARD')
+        self.declare_parameter('int_edge', 'FALLING')
+        self.declare_parameter('int_bouncetime_ms', 0)
+        self.use_interrupt = self.get_parameter('use_interrupt').value
+        self.int_pin = self.get_parameter('int_pin').value
+        self.int_pin_mode = self.get_parameter('int_pin_mode').value
+        self.int_edge = self.get_parameter('int_edge').value
+        self.int_bouncetime_ms = self.get_parameter('int_bouncetime_ms').value
+
+        # Publish rate control (Hz)
+        self.declare_parameter('publish_rate_hz', 50.0)
+        self.publish_rate_hz = float(self.get_parameter('publish_rate_hz').value)
+        self.publish_period = 1.0 / self.publish_rate_hz if self.publish_rate_hz > 0.0 else 0.0
+        self._last_publish_time = 0.0
 
         # Declare parameter for frame ID
         self.declare_parameter('frame_id', 'imu_link')  # Default frame ID
@@ -43,7 +66,12 @@ class BNO085Node(Node):
         self.get_logger().info(f'Using I2C bus: {self.i2c_bus}, address: 0x{self.i2c_address:02X}')
 
         # Create timer for publishing
-        self.timer = self.create_timer(0.01, self.publish)  # 100Hz
+        self.timer = None
+
+        # Interrupt state
+        self._shutdown = False
+        self._int_event = threading.Event()
+        self._int_thread = None
 
         # Create BNO085 and calibrate
         self.bno = None
@@ -59,6 +87,11 @@ class BNO085Node(Node):
             self.get_logger().error('=' * 60)
             # Create a timer to periodically warn about missing IMU
             self.warning_timer = self.create_timer(30.0, self.warn_no_imu)
+
+        if self.use_interrupt:
+            self.setup_interrupt()
+        else:
+            self.timer = self.create_timer(self.publish_period or 0.02, self.publish_once)
 
         # Load saved magnetometer calibration if available
         self.load_mag_calibration()
@@ -85,6 +118,44 @@ class BNO085Node(Node):
         )
 
         self.get_logger().info('BNO085 Node initialized')
+
+    def setup_interrupt(self):
+        if GPIO is None:
+            self.get_logger().error('Jetson.GPIO not available; cannot use interrupt mode')
+            return
+
+        mode = GPIO.BOARD if str(self.int_pin_mode).upper() != 'BCM' else GPIO.BCM
+        edge_lookup = {
+            'FALLING': GPIO.FALLING,
+            'RISING': GPIO.RISING,
+            'BOTH': GPIO.BOTH,
+        }
+        edge = edge_lookup.get(str(self.int_edge).upper(), GPIO.FALLING)
+
+        GPIO.setmode(mode)
+        GPIO.setup(self.int_pin, GPIO.IN)
+        if self.int_bouncetime_ms and int(self.int_bouncetime_ms) > 0:
+            GPIO.add_event_detect(self.int_pin, edge, callback=self._int_callback,
+                                  bouncetime=int(self.int_bouncetime_ms))
+        else:
+            GPIO.add_event_detect(self.int_pin, edge, callback=self._int_callback)
+
+        self._int_thread = threading.Thread(target=self._interrupt_loop, daemon=True)
+        self._int_thread.start()
+        self.get_logger().info(
+            f'IMU interrupt enabled on pin {self.int_pin} ({self.int_pin_mode}, {self.int_edge})'
+        )
+
+    def _int_callback(self, channel):
+        self._int_event.set()
+
+    def _interrupt_loop(self):
+        while not self._shutdown and rclpy.ok():
+            self._int_event.wait()
+            if self._shutdown:
+                break
+            self._int_event.clear()
+            self.publish_once()
     
     def initialize(self):
         """Initialize BNO085 sensor. Returns True on success, False on failure."""
@@ -111,11 +182,17 @@ class BNO085Node(Node):
             self.get_logger().warn('BNO085 IMU still not connected - no IMU data available')
 
     
-    def publish(self):
+    def publish_once(self):
         # Skip publishing if sensor is not initialized
         if self.bno is None:
             # Silently skip - sensor was never initialized
             return
+
+        if self.publish_period > 0.0:
+            now = time.time()
+            if (now - self._last_publish_time) < self.publish_period:
+                return
+            self._last_publish_time = now
         
         try:
             self.bno.update()
@@ -145,6 +222,17 @@ class BNO085Node(Node):
         mag_msg = self.mag_msg()
         if mag_msg:
             self.mag_pub.publish(mag_msg)
+
+    def cleanup(self):
+        self._shutdown = True
+        self._int_event.set()
+        if self._int_thread is not None:
+            self._int_thread.join(timeout=1.0)
+        if GPIO is not None:
+            try:
+                GPIO.cleanup()
+            except Exception:
+                pass
         
     
     def imu_msg(self):
@@ -402,6 +490,7 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
+        node.cleanup()
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
