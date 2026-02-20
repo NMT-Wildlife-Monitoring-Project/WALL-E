@@ -174,18 +174,29 @@ local_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         observation_sources: scan
+<<<<<<< HEAD
         observation_persistence: 0.5
         footprint_clearing_enabled: True
+=======
+        observation_persistence: 0.3
+>>>>>>> parent of defdf0b3 (better maps)
         scan:
           topic: /scan
           max_obstacle_height: 2.0
           clearing: True
           marking: True
           data_type: "LaserScan"
+<<<<<<< HEAD
           raytrace_max_range: 5.0
           raytrace_min_range: 0.0
           obstacle_max_range: 4.5
           obstacle_min_range: 0.10
+=======
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 2.5
+          obstacle_min_range: 0.0
+>>>>>>> parent of defdf0b3 (better maps)
           # outdoors there will probably be more inf points
           inf_is_valid: true
       inflation_layer:
@@ -218,18 +229,29 @@ global_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         observation_sources: scan
+<<<<<<< HEAD
         observation_persistence: 5.0
         footprint_clearing_enabled: True
+=======
+        observation_persistence: 1.2
+>>>>>>> parent of defdf0b3 (better maps)
         scan:
           topic: /scan
           max_obstacle_height: 2.0
           clearing: True
           marking: True
           data_type: "LaserScan"
+<<<<<<< HEAD
           raytrace_max_range: 8.0
           raytrace_min_range: 0.0
           obstacle_max_range: 8.0
           obstacle_min_range: 0.10
+=======
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 2.5
+          obstacle_min_range: 0.0
+>>>>>>> parent of defdf0b3 (better maps)
           # outdoors there will probably be more inf points
           inf_is_valid: true
       inflation_layer:

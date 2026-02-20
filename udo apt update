@@ -1,0 +1,72 @@
+[32mwlP1p1s0: connected to NMT-Encrypted[0m
+	"Realtek RTL8822CE"
+	wifi (rtl88x2ce), 58:02:05:65:FF:B5, hw, mtu 1500
+	ip4 default
+	inet4 129.138.174.139/20
+	route4 129.138.160.0/20 metric 600
+	route4 default via 129.138.175.254 metric 600
+	inet6 fe80::a57a:5b56:c113:2c17/64
+	route6 fe80::/64 metric 1024
+
+[32;2mdocker0: connected (externally) to docker0[0m
+	"docker0"
+	bridge, FE:F4:DF:D0:CB:1A, sw, mtu 1500
+	inet4 172.17.0.1/16
+	route4 172.17.0.0/16 metric 0
+	inet6 fe80::fcf4:dfff:fed0:cb1a/64
+	route6 fe80::/64 metric 256
+
+[32;2mztklhqvf62: connected (externally) to ztklhqvf62[0m
+	"ztklhqvf62"
+	tun, A2:20:18:F0:BA:39, sw, mtu 2800
+	inet4 172.27.232.254/16
+	route4 172.27.0.0/16 metric 0
+	route4 169.254.0.0/16 metric 1000
+	inet6 fe80::a020:18ff:fef0:ba39/64
+	route6 fe80::/64 metric 256
+
+[31mttyUSB3: disconnected[0m
+	"Qualcomm SimTech Incorporated"
+	gsm (option), hw
+
+[31mp2p-dev-wlP1p1s0: disconnected[0m
+	"p2p-dev-wlP1p1s0"
+	wifi-p2p, hw
+
+[2meno1: unavailable[0m
+	"Realtek RTL8111/8168/8411"
+	ethernet (r8168), 3C:6D:66:1E:92:99, hw, mtu 1500
+
+[2ml4tbr0: unmanaged[0m
+	"l4tbr0"
+	bridge, 3E:C7:E7:79:F3:87, sw, mtu 1500
+
+[2mcan0: unmanaged[0m
+	"can0"
+	can (mttcan), hw, mtu 16
+
+[2musb0: unmanaged[0m
+	"usb0"
+	ethernet (tegra-xudc), 6A:9B:D9:93:39:0D, hw, mtu 1500
+
+[2musb1: unmanaged[0m
+	"usb1"
+	ethernet (tegra-xudc), 6A:9B:D9:93:39:0F, hw, mtu 1500
+
+[2mveth439c53f: unmanaged[0m
+	"veth439c53f"
+	ethernet (veth), 26:CF:5B:36:6B:4E, sw, mtu 1500
+
+[2mlo: unmanaged[0m
+	"lo"
+	loopback (unknown), 00:00:00:00:00:00, sw, mtu 65536
+
+DNS configuration:
+	servers: 129.138.4.63 129.138.250.10
+	domains: wl.nmt.edu
+	interface: wlP1p1s0
+
+Use "nmcli device show" to get complete information about known devices and
+"nmcli connection show" to get an overview on active connection profiles.
+
+Consult nmcli(1) and nmcli-examples(7) manual pages for complete usage details.
