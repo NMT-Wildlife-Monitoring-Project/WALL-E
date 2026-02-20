@@ -1,7 +1,6 @@
 import time
-import board
-import busio
 import Jetson.GPIO as GPIO
+from adafruit_extended_bus import ExtendedI2C
 from adafruit_bno08x.i2c import BNO08X_I2C
 from adafruit_bno08x import BNO_REPORT_ROTATION_VECTOR
 
@@ -28,12 +27,12 @@ except RuntimeError as e:
 
 # --- Setup Sensor ---
 try:
-    i2c = busio.I2C(board.SCL, board.SDA)
-    bno = BNO08X_I2C(i2c)
+    i2c = ExtendedI2C(7)
+    bno = BNO08X_I2C(i2c, address=0x4B)
     bno.enable_feature(BNO_REPORT_ROTATION_VECTOR)
     print(f"Sensor Connected. Waiting for INT on Pin {INT_PIN}...")
 except ValueError:
-    print("I2C Error: Sensor not found. Check wiring to Pins 3(SDA) & 5(SCL).")
+    print("I2C Error: Sensor not found. Check bus 7 at address 0x4B.")
 
 data_ready = False
 
