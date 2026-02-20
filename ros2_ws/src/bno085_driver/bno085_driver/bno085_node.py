@@ -121,34 +121,43 @@ class BNO085Node(Node):
 
     def setup_interrupt(self):
         if GPIO is None:
-            self.get_logger().error('Jetson.GPIO not available; cannot use interrupt mode')
+            self.get_logger().error('Jetson.GPIO not available; falling back to polling mode')
+            self.timer = self.create_timer(self.publish_period or 0.02, self.publish_once)
             return
 
-        mode = GPIO.BOARD if str(self.int_pin_mode).upper() != 'BCM' else GPIO.BCM
-        edge_lookup = {
-            'FALLING': GPIO.FALLING,
-            'RISING': GPIO.RISING,
-            'BOTH': GPIO.BOTH,
-        }
-        edge = edge_lookup.get(str(self.int_edge).upper(), GPIO.FALLING)
-
         try:
-            GPIO.setmode(mode)
-        except RuntimeError as e:
-            self.get_logger().warn(f'GPIO mode already set: {e}. Continuing with existing mode.')
-        
-        GPIO.setup(self.int_pin, GPIO.IN)
-        if self.int_bouncetime_ms and int(self.int_bouncetime_ms) > 0:
-            GPIO.add_event_detect(self.int_pin, edge, callback=self._int_callback,
-                                  bouncetime=int(self.int_bouncetime_ms))
-        else:
-            GPIO.add_event_detect(self.int_pin, edge, callback=self._int_callback)
+            # Force cleanup first in case GPIO was left in a bad state
+            try:
+                GPIO.cleanup()
+            except Exception:
+                pass
+            
+            mode = GPIO.BOARD if str(self.int_pin_mode).upper() != 'BCM' else GPIO.BCM
+            edge_lookup = {
+                'FALLING': GPIO.FALLING,
+                'RISING': GPIO.RISING,
+                'BOTH': GPIO.BOTH,
+            }
+            edge = edge_lookup.get(str(self.int_edge).upper(), GPIO.FALLING)
 
-        self._int_thread = threading.Thread(target=self._interrupt_loop, daemon=True)
-        self._int_thread.start()
-        self.get_logger().info(
-            f'IMU interrupt enabled on pin {self.int_pin} ({self.int_pin_mode}, {self.int_edge})'
-        )
+            GPIO.setmode(mode)
+            GPIO.setup(self.int_pin, GPIO.IN)
+            
+            if self.int_bouncetime_ms and int(self.int_bouncetime_ms) > 0:
+                GPIO.add_event_detect(self.int_pin, edge, callback=self._int_callback,
+                                      bouncetime=int(self.int_bouncetime_ms))
+            else:
+                GPIO.add_event_detect(self.int_pin, edge, callback=self._int_callback)
+
+            self._int_thread = threading.Thread(target=self._interrupt_loop, daemon=True)
+            self._int_thread.start()
+            self.get_logger().info(
+                f'IMU interrupt enabled on pin {self.int_pin} ({self.int_pin_mode}, {self.int_edge})'
+            )
+        except Exception as e:
+            self.get_logger().error(f'Failed to setup GPIO interrupt: {e}')
+            self.get_logger().warn('Falling back to polling mode')
+            self.timer = self.create_timer(self.publish_period or 0.02, self.publish_once)
 
     def _int_callback(self, channel):
         self._int_event.set()
