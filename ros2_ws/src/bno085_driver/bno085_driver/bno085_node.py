@@ -45,6 +45,10 @@ class BNO085Node(Node):
         
     
     def publish(self):
+        if self.bno is None:
+            self.get_logger().error("BNO085 not initialized; skipping publish cycle.")
+            return
+
         try:
             self.bno.update()
         except Exception as e:
@@ -58,6 +62,10 @@ class BNO085Node(Node):
                 self.get_logger().error("Critical failure: Unable to recover BNO085. Shutting down node.")
                 if rclpy.ok():
                     rclpy.shutdown()
+                return
+
+        if self.bno is None:
+            return
         
         imu_msg = self.imu_msg()
         self.imu_pub.publish(imu_msg)
@@ -103,7 +111,7 @@ class BNO085Node(Node):
             mag_msg = MagneticField()
             mag_msg.header = Header()
             mag_msg.header.stamp = self.get_clock().now().to_msg()
-            mag_msg.header.frame_id = 'imu_link'
+            mag_msg.header.frame_id = self.frame_id
 
             # Magnetic field (Tesla)
             mag_msg.magnetic_field.x = self.bno.mag[0] * 1e-6  # Convert µT to T
