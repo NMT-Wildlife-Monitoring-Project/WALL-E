@@ -69,8 +69,10 @@ RUN apt-get install -y \
 # Install ROS SLAM packages
 #RUN apt-get install -y \
 #    ros-$ROS_DISTRO-slam-toolbox
+ARG RF2O_GIT_REF=jazzy-devel
 RUN mkdir -p /home/$USER/ros2_ws/src && \
-    git clone https://github.com/Adlink-ROS/rf2o_laser_odometry.git -b jazzy-devel /home/$USER/ros2_ws/src/rf2o_laser_odometry
+    (git clone --branch ${RF2O_GIT_REF} https://github.com/Adlink-ROS/rf2o_laser_odometry.git /home/$USER/ros2_ws/src/rf2o_laser_odometry || \
+    (rm -rf /home/$USER/ros2_ws/src/rf2o_laser_odometry && git clone https://github.com/Adlink-ROS/rf2o_laser_odometry.git /home/$USER/ros2_ws/src/rf2o_laser_odometry))
 
 # Install ROS teleop packages
 RUN apt-get install -y \
