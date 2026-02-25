@@ -5,7 +5,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     waypoint_follower = Node(
         package='waypoint_server',
-        executable='gps_waypoint_handler_node',
+        executable='gps_waypoint_handler_node.py',
         name='waypoint_follower',
         output='screen',
     )
