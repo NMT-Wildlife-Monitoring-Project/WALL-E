@@ -19,9 +19,10 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.substitutions import LaunchConfiguration
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, GroupAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import IfCondition
+from launch_ros.actions import SetRemap
 from nav2_common.launch import RewrittenYaml
 
 
@@ -70,14 +71,17 @@ def generate_launch_description():
         parameters=[twist_mux_yaml]
     )
 
-    # Launch a standalone velocity_smoother that subscribes to /cmd_vel_raw
+    # Launch a standalone velocity_smoother that subscribes to /cmd_vel_out
     velocity_smoother_cmd = launch_ros.actions.Node(
         package='nav2_velocity_smoother',
         executable='velocity_smoother',
         name='velocity_smoother',
         output='screen',
         parameters=[configured_params],
-        remappings=[('cmd_vel', '/cmd_vel_out')]
+        remappings=[
+            ('cmd_vel', '/cmd_vel_out'),
+            ('cmd_vel_smoothed', '/cmd_vel'),
+        ]
     )
 
     # GPS waypoint handler node
@@ -95,14 +99,19 @@ def generate_launch_description():
         condition=IfCondition(launch_waypoint_follower)
     )
 
-    navigation2_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(bringup_dir, "launch", "navigation_launch.py")
-        ),
-        launch_arguments={
-            "params_file": configured_params,
-            "autostart": "True",
-        }.items(),
+    navigation2_cmd = GroupAction(
+        actions=[
+            SetRemap(src='/cmd_vel', dst='/cmd_vel_nav'),
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(bringup_dir, "launch", "navigation_launch.py")
+                ),
+                launch_arguments={
+                    "params_file": configured_params,
+                    "autostart": "True",
+                }.items(),
+            ),
+        ]
     )
 
     rviz_cmd = IncludeLaunchDescription(
