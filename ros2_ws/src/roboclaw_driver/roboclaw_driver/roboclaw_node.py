@@ -125,6 +125,7 @@ class RoboclawNode(Node):
 
         # Track last cmd_vel time
         self.last_cmd_vel_time = self.get_clock().now()
+        self._timed_out = False
 
         # Timers
         self.create_timer(1/self.odom_publish_rate, self.update_odom)
@@ -202,6 +203,7 @@ class RoboclawNode(Node):
         if self.m2_reverse:
             qpps_right = -qpps_right
         self._last_cmd = (qpps_left, qpps_right)
+        self._timed_out = False
         if not self.connected:
             return
         try:
@@ -217,7 +219,11 @@ class RoboclawNode(Node):
         dt = (now - self.last_cmd_vel_time).nanoseconds / 1e9
         if dt > self.cmd_vel_timeout:
             # Stop motors if timeout exceeded
+            self._timed_out = True
+            self._last_cmd = (0, 0)
             self.stop_motors()
+        else:
+            self._timed_out = False
     
     def stop_motors(self):
         if not self.connected:
@@ -234,6 +240,8 @@ class RoboclawNode(Node):
 
     def _heartbeat(self):
         if not self.connected:
+            return
+        if self._timed_out:
             return
         try:
             ql, qr = self._last_cmd
