@@ -13,6 +13,7 @@ def generate_launch_description():
     launch_gps = LaunchConfiguration('launch_gps')
     launch_urdf = LaunchConfiguration('launch_urdf')
     launch_nav = LaunchConfiguration('launch_nav')
+    launch_waypoint_follower = LaunchConfiguration('launch_waypoint_follower')
 
     bringup_dir = FindPackageShare('robot_bringup')
 
@@ -28,6 +29,7 @@ def generate_launch_description():
         DeclareLaunchArgument('launch_gps', default_value='true'),
         DeclareLaunchArgument('launch_urdf', default_value='true'),
         DeclareLaunchArgument('launch_nav', default_value='true'),
+        DeclareLaunchArgument('launch_waypoint_follower', default_value='false'),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
@@ -69,6 +71,9 @@ def generate_launch_description():
             PythonLaunchDescriptionSource([
                 FindPackageShare('robot_navigation'), '/launch/gps_waypoint_follower.launch.py'
             ]),
-            condition=IfCondition(launch_nav)
+            condition=IfCondition(launch_nav),
+            launch_arguments={
+                'launch_waypoint_follower': launch_waypoint_follower,
+            }.items()
         )
     ])

@@ -39,6 +39,7 @@ def generate_launch_description():
 
     use_rviz = LaunchConfiguration('use_rviz')
     use_mapviz = LaunchConfiguration('use_mapviz')
+    launch_waypoint_follower = LaunchConfiguration('launch_waypoint_follower')
 
     declare_use_rviz_cmd = DeclareLaunchArgument(
         'use_rviz',
@@ -49,6 +50,10 @@ def generate_launch_description():
         'use_mapviz',
         default_value='False',
         description='Whether to start mapviz')
+    declare_launch_waypoint_follower_cmd = DeclareLaunchArgument(
+        'launch_waypoint_follower',
+        default_value='False',
+        description='Whether to auto-start GPS waypoint following')
 
     robot_localization_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -86,7 +91,8 @@ def generate_launch_description():
             'frame_id': 'map',
             'wait_for_nav2': True,
             'fromll_service': '/fromLL'
-        }]
+        }],
+        condition=IfCondition(launch_waypoint_follower)
     )
 
     navigation2_cmd = IncludeLaunchDescription(
@@ -134,5 +140,6 @@ def generate_launch_description():
     ld.add_action(rviz_cmd)
     ld.add_action(declare_use_mapviz_cmd)
     ld.add_action(mapviz_cmd)
+    ld.add_action(declare_launch_waypoint_follower_cmd)
 
     return ld
