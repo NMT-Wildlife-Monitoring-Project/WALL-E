@@ -12,6 +12,7 @@ from adafruit_bno08x import (
     BNO_REPORT_GYROSCOPE,
     BNO_REPORT_MAGNETOMETER,
     BNO_REPORT_ROTATION_VECTOR,
+    BNO_REPORT_GRAVITY,
 )
 
 class BNO085:
@@ -69,6 +70,8 @@ class BNO085:
             BNO_REPORT_MAGNETOMETER,
             # rotation vector (fused orientation)
             BNO_REPORT_ROTATION_VECTOR,
+            # gravity vector (needed to add back to accel for ROS compliance)
+            BNO_REPORT_GRAVITY,
         ]
         for feature in features:
             for attempt in range(1, 4):
@@ -89,6 +92,7 @@ class BNO085:
             0,          0,      1.615e-5,
         ])
         self.accel = np.zeros(3)
+        self.gravity = np.zeros(3)
         self.accel_covariance = np.array([
             0.0003155, 0, 0,
             0,  0.001256, 0,
@@ -145,7 +149,11 @@ class BNO085:
     def update(self):
         self.quat = np.array(self.bno.quaternion)
         self.rpy = np.array(euler_from_quaternion(self.quat))
-        self.accel = np.array(self.bno.acceleration) - self.accel_bias
+        # Read linear acceleration (gravity removed) and gravity separately
+        linear_accel = np.array(self.bno.acceleration)
+        self.gravity = np.array(self.bno.gravity)
+        # Add gravity back to comply with ROS REP-145 (IMU linear_acceleration must include gravity)
+        self.accel = (linear_accel + self.gravity) - self.accel_bias
         self.gyro = np.array(self.bno.gyro) - self.gryo_bias
         self.mag = np.array(self.bno.magnetic)
 
