@@ -13,6 +13,7 @@ from adafruit_bno08x import (
     BNO_REPORT_MAGNETOMETER,
     BNO_REPORT_ROTATION_VECTOR,
     BNO_REPORT_GRAVITY,
+    BNO_REPORT_LINEAR_ACCELERATION,
 )
 
 class BNO085:
@@ -72,6 +73,8 @@ class BNO085:
             BNO_REPORT_ROTATION_VECTOR,
             # gravity vector (needed to add back to accel for ROS compliance)
             BNO_REPORT_GRAVITY,
+            # linear acceleration (gravity removed)
+            BNO_REPORT_LINEAR_ACCELERATION,
         ]
         for feature in features:
             for attempt in range(1, 4):
@@ -150,7 +153,7 @@ class BNO085:
         self.quat = np.array(self.bno.quaternion)
         self.rpy = np.array(euler_from_quaternion(self.quat))
         # Read linear acceleration (gravity removed) and gravity separately
-        linear_accel = np.array(self.bno.acceleration)
+        linear_accel = np.array(self.bno.linear_acceleration)
         self.gravity = np.array(self.bno.gravity)
         # Add gravity back to comply with ROS REP-145 (IMU linear_acceleration must include gravity)
         self.accel = (linear_accel + self.gravity) - self.accel_bias
