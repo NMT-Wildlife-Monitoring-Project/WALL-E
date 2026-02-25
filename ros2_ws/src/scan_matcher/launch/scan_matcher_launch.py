@@ -16,65 +16,64 @@ def generate_launch_description():
             'config',
             'scan_matcher_params.yaml'
         ]),
-        description='Path to the scan matcher configuration file'
+        description='Path to the rf2o odometry configuration file'
     )
-    
-    use_wheel_odom_arg = DeclareLaunchArgument(
-        'use_wheel_odometry',
-        default_value='true',
-        description='Whether to use wheel odometry as initial guess'
+
+    scan_topic_arg = DeclareLaunchArgument(
+        'scan_topic',
+        default_value='/scan',
+        description='Topic for input laser scans'
     )
-    
-    wheel_odom_topic_arg = DeclareLaunchArgument(
-        'wheel_odom_topic',
-        default_value='/odom',
-        description='Topic for input wheel odometry'
+
+    publish_tf_arg = DeclareLaunchArgument(
+        'publish_tf',
+        default_value='false',
+        description='Whether rf2o should publish odom->base_link TF'
     )
-    
+
     output_odom_topic_arg = DeclareLaunchArgument(
         'output_odom_topic',
-        default_value='/odom_matched',
-        description='Topic for output scan-matched odometry'
+        default_value='/odom_rf2o',
+        description='Topic for output rf2o odometry'
     )
-    
+
     use_sim_time_arg = DeclareLaunchArgument(
         'use_sim_time',
         default_value='false',
         description='Use simulation time'
     )
-    
+
     log_level_arg = DeclareLaunchArgument(
         'log_level',
         default_value='INFO',
         description='Log level (DEBUG, INFO, WARN, ERROR)',
         choices=['DEBUG', 'INFO', 'WARN', 'ERROR']
     )
-    
-    # Scan matcher node
-    scan_matcher_node = Node(
-        package='scan_matcher',
-        executable='scan_matcher_node',
-        name='scan_matcher_node',
+
+    rf2o_node = Node(
+        package='rf2o_laser_odometry',
+        executable='rf2o_laser_odometry_node',
+        name='rf2o_laser_odometry',
         parameters=[
             LaunchConfiguration('config_file'),
             {
                 'use_sim_time': LaunchConfiguration('use_sim_time'),
-                'use_wheel_odometry': LaunchConfiguration('use_wheel_odometry'),
-                'wheel_odom_topic': LaunchConfiguration('wheel_odom_topic'),
-                'output_odom_topic': LaunchConfiguration('output_odom_topic'),
+                'laser_scan_topic': LaunchConfiguration('scan_topic'),
+                'odom_topic': LaunchConfiguration('output_odom_topic'),
+                'publish_tf': LaunchConfiguration('publish_tf'),
             }
         ],
-        arguments=['--ros-args', '--log-level', ['scan_matcher_node:=', LaunchConfiguration('log_level')]],
+        arguments=['--ros-args', '--log-level', ['rf2o_laser_odometry:=', LaunchConfiguration('log_level')]],
         output='screen',
         emulate_tty=True
     )
-    
+
     return LaunchDescription([
         config_file_arg,
-        use_wheel_odom_arg,
-        wheel_odom_topic_arg,
+        scan_topic_arg,
+        publish_tf_arg,
         output_odom_topic_arg,
         use_sim_time_arg,
         log_level_arg,
-        scan_matcher_node
+        rf2o_node
     ])

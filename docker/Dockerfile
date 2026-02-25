@@ -67,8 +67,10 @@ RUN apt-get install -y \
     ros-$ROS_DISTRO-nav2-bringup
 
 # Install ROS SLAM packages
-RUN apt-get install -y \
-    ros-$ROS_DISTRO-slam-toolbox
+#RUN apt-get install -y \
+#    ros-$ROS_DISTRO-slam-toolbox
+RUN mkdir -p /home/$USER/ros2_ws/src && \
+    git clone https://github.com/Adlink-ROS/rf2o_laser_odometry.git -b jazzy-devel /home/$USER/ros2_ws/src/rf2o_laser_odometry
 
 # Install ROS teleop packages
 RUN apt-get install -y \

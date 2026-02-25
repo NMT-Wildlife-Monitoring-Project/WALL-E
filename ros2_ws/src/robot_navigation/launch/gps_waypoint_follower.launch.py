@@ -40,6 +40,8 @@ def generate_launch_description():
     use_rviz = LaunchConfiguration('use_rviz')
     use_mapviz = LaunchConfiguration('use_mapviz')
     launch_waypoint_follower = LaunchConfiguration('launch_waypoint_follower')
+    rf2o_scan_topic = LaunchConfiguration('rf2o_scan_topic')
+    rf2o_odom_topic = LaunchConfiguration('rf2o_odom_topic')
 
     declare_use_rviz_cmd = DeclareLaunchArgument(
         'use_rviz',
@@ -54,6 +56,29 @@ def generate_launch_description():
         'launch_waypoint_follower',
         default_value='False',
         description='Whether to auto-start GPS waypoint following')
+    declare_rf2o_scan_topic_cmd = DeclareLaunchArgument(
+        'rf2o_scan_topic',
+        default_value='/scan',
+        description='Laser scan topic consumed by rf2o_laser_odometry')
+    declare_rf2o_odom_topic_cmd = DeclareLaunchArgument(
+        'rf2o_odom_topic',
+        default_value='odom_rf2o',
+        description='Output odometry topic published by rf2o_laser_odometry')
+
+    rf2o_odometry_cmd = launch_ros.actions.Node(
+        package='rf2o_laser_odometry',
+        executable='rf2o_laser_odometry_node',
+        name='rf2o_laser_odometry',
+        output='screen',
+        parameters=[{
+            'laser_scan_topic': rf2o_scan_topic,
+            'odom_topic': rf2o_odom_topic,
+            # EKF publishes odom->base_link TF; avoid duplicate TF publishers.
+            'publish_tf': False,
+            'base_frame_id': 'base_link',
+            'odom_frame_id': 'odom',
+        }]
+    )
 
     robot_localization_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -121,6 +146,9 @@ def generate_launch_description():
     ld = LaunchDescription()
 
     # robot localization launch
+    ld.add_action(declare_rf2o_scan_topic_cmd)
+    ld.add_action(declare_rf2o_odom_topic_cmd)
+    ld.add_action(rf2o_odometry_cmd)
     ld.add_action(robot_localization_cmd)
 
     # twist_mux
