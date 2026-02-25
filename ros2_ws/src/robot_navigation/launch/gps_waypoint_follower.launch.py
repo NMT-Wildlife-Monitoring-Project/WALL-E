@@ -73,6 +73,8 @@ def generate_launch_description():
         parameters=[{
             'laser_scan_topic': rf2o_scan_topic,
             'odom_topic': rf2o_odom_topic,
+            # Don't block scan processing waiting for an external init pose topic.
+            'init_pose_from_topic': '',
             # EKF publishes odom->base_link TF; avoid duplicate TF publishers.
             'publish_tf': False,
             'base_frame_id': 'base_link',

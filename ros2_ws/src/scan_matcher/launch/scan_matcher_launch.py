@@ -60,6 +60,7 @@ def generate_launch_description():
                 'use_sim_time': LaunchConfiguration('use_sim_time'),
                 'laser_scan_topic': LaunchConfiguration('scan_topic'),
                 'odom_topic': LaunchConfiguration('output_odom_topic'),
+                'init_pose_from_topic': '',
                 'publish_tf': LaunchConfiguration('publish_tf'),
             }
         ],

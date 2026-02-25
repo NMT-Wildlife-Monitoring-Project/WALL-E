@@ -14,6 +14,8 @@ def generate_launch_description():
     launch_urdf = LaunchConfiguration('launch_urdf')
     launch_nav = LaunchConfiguration('launch_nav')
     launch_waypoint_follower = LaunchConfiguration('launch_waypoint_follower')
+    rf2o_scan_topic = LaunchConfiguration('rf2o_scan_topic')
+    rf2o_odom_topic = LaunchConfiguration('rf2o_odom_topic')
 
     bringup_dir = FindPackageShare('robot_bringup')
 
@@ -30,6 +32,8 @@ def generate_launch_description():
         DeclareLaunchArgument('launch_urdf', default_value='true'),
         DeclareLaunchArgument('launch_nav', default_value='true'),
         DeclareLaunchArgument('launch_waypoint_follower', default_value='false'),
+        DeclareLaunchArgument('rf2o_scan_topic', default_value='/scan'),
+        DeclareLaunchArgument('rf2o_odom_topic', default_value='odom_rf2o'),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
@@ -74,6 +78,8 @@ def generate_launch_description():
             condition=IfCondition(launch_nav),
             launch_arguments={
                 'launch_waypoint_follower': launch_waypoint_follower,
+                'rf2o_scan_topic': rf2o_scan_topic,
+                'rf2o_odom_topic': rf2o_odom_topic,
             }.items()
         )
     ])
