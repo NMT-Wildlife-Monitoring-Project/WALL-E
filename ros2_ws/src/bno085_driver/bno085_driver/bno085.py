@@ -155,8 +155,8 @@ class BNO085:
         # Read linear acceleration (gravity removed) and gravity separately
         linear_accel = np.array(self.bno.linear_acceleration)
         self.gravity = np.array(self.bno.gravity)
-        # Add gravity back to comply with ROS REP-145 (IMU linear_acceleration must include gravity)
-        self.accel = (linear_accel + self.gravity) - self.accel_bias
+        # Remove bias from linear acceleration only, then add gravity back for ROS compliance
+        self.accel = (linear_accel - self.accel_bias) + self.gravity
         self.gyro = np.array(self.bno.gyro) - self.gryo_bias
         self.mag = np.array(self.bno.magnetic)
 
