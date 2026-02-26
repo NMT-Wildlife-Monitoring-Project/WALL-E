@@ -61,7 +61,8 @@ class BNO085:
         """
         # Initialize I2C using ExtendedI2C which directly accesses /dev/i2c-{i2c_bus}
         # This works on Jetson, Raspberry Pi, and other Linux SBCs
-        self.i2c = ExtendedI2C(i2c_bus)
+        # Set frequency to 100 kHz for better noise immunity during high motor current switching
+        self.i2c = ExtendedI2C(i2c_bus, frequency=100000)
 
         # Initialize BNO085 sensor
         self.bno = BNO08X_I2C(self.i2c, address=i2c_addr)
