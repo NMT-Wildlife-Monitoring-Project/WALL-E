@@ -11,7 +11,7 @@ def generate_launch_description():
         DeclareLaunchArgument('address', default_value='128'),
         DeclareLaunchArgument('qppr', default_value='6533'),
         DeclareLaunchArgument('accel', default_value='1.5'),
-        DeclareLaunchArgument('max_speed', default_value='0.2'),
+        DeclareLaunchArgument('max_speed', default_value='0.4'),
         DeclareLaunchArgument('max_speed_qpps', default_value='10560'),
         DeclareLaunchArgument('accel_qpps', default_value='-1'),
         DeclareLaunchArgument('wheel_separation', default_value='0.39'),
