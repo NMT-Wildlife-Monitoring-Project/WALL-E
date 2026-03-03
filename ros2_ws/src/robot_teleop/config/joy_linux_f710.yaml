@@ -21,9 +21,9 @@ teleop_twist_joy:
     
     # Velocity scaling - matches motor driver limits
     scale_linear:
-      x: 0.55      # Maximum linear velocity (m/s)
+      x: 0.1      # Maximum linear velocity (m/s)
     scale_angular:
-      yaw: 1.65    # Maximum angular velocity (rad/s)
+      yaw: 0.3    # Maximum angular velocity (rad/s)
 
     # Button configuration for Logitech F710
     # A: 0, B: 1, X: 2, Y: 3
