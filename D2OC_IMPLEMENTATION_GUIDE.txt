@@ -1,0 +1,824 @@
+================================================================================
+DENSITY DRIVEN OPTIMAL CONTROLLER (D2OC) IMPLEMENTATION GUIDE FOR WALL-E
+================================================================================
+
+Date Created: March 9, 2026
+Target Platform: Jetson Orin Nano with ROS2 (Humble/Jazzy)
+Current Navigation Stack: Nav2 with MPPI Controller
+
+
+================================================================================
+1. WHAT IS D2OC (DENSITY DRIVEN OPTIMAL CONTROLLER)?
+================================================================================
+
+D2OC is an advanced autonomous control algorithm that combines optimal control 
+theory with information-theoretic decision making. Key characteristics:
+
+DEFINITION:
+- Uses probabilistic density functions to represent uncertainty in both the 
+  robot state and the environment
+- Optimizes control actions to maximize information gain while minimizing costs
+  (collision risk, energy consumption, path deviation)
+- Particularly effective for autonomous systems navigating uncertain environments
+  with sensor fusion capabilities
+
+KEY ADVANTAGES FOR WALL-E:
+- Leverages existing sensor uncertainty from EKF (GPS/INS) and LiDAR scans
+- Naturally handles sparse sensor coverage in large outdoor environments
+- Can intelligently seek out unmapped/unobserved regions for better localization
+- Reduces collision risk by explicitly modeling occupancy probability
+- Works well with resource-constrained platforms (Jetson Nano)
+
+
+================================================================================
+2. CURRENT WALL-E ARCHITECTURE
+================================================================================
+
+NAVIGATION STACK:
+- Nav2 (Navigation 2 framework)
+- MPPI (Model Predictive Path Integral) Controller
+- ROS 2 Behavior Tree Navigator
+- Operating at 25 Hz controller frequency
+
+SENSOR FUSION:
+- Dual EKF filters (one with GPS/IMU, one with wheel odometry)
+- State: Position, velocity, orientation with covariance matrices
+- Output: /odom (odometry), /tf (transforms), uncertainty bounds
+
+PERCEPTION:
+- RPLiDAR scanner (LiDAR-based obstacle detection)
+- Scan matcher (ICP-based localization refinement)
+- Local and global costmaps (occupancy grids)
+
+CONTROL:
+- RoboClaw motor drivers (differential drive)
+- Accepts Twist commands (linear + angular velocity)
+- Operating on Jetson Orin Nano (ARM CPU, 6-core @ ~2.2GHz)
+
+CONSTRAINTS:
+- Limited CPU resources for real-time planning
+- High-frequency sensor streams (100 Hz IMU, 10 Hz LiDAR scans)
+- Large outdoor navigation domain (50m+ waypoints)
+- Variable GPS signal quality (indoor/outdoor transitions)
+
+
+================================================================================
+3. IMPLEMENTATION STRATEGY: THREE OPTIONS
+================================================================================
+
+OPTION A: REPLACE MPPI CONTROLLER (Recommended for Advanced Users)
+===============================================================================
+Complexity Level: Medium-High
+Integration Effort: 4-6 weeks
+Testing Complexity: High
+
+DESCRIPTION:
+Replace the current MPPI controller plugin with a custom D2OC controller plugin
+that conforms to Nav2's FollowPath action interface.
+
+ADVANTAGES:
+- Direct control over trajectory optimization
+- Full access to costmap and path information
+- Minimal changes to Nav2 configuration
+- Leverages existing Nav2 planner (A*, RRT, etc.)
+
+DISADVANTAGES:
+- Requires deep understanding of Nav2 controller interface
+- More complex debugging and testing
+- Higher risk of breaking existing navigation functionality
+- Significant CPU load if not optimized carefully
+
+IMPLEMENTATION OUTLINE:
+1. Create nav2_d2oc_controller ROS2 package
+2. Implement MPPIController-compatible interface
+3. Integrate density map computation
+4. Replace controller_plugins entry in nav2_no_map_params.yaml
+5. Extensive simulation testing before hardware deployment
+
+FILES TO MODIFY:
+- robot_navigation/config/nav2_no_map_params.yaml (controller_plugins section)
+- Create: robot_navigation/nav2_d2oc_controller/ (new package)
+
+
+OPTION B: NEW HIGH-LEVEL DECISION LAYER (Recommended for Quick Implementation)
+===============================================================================
+Complexity Level: Low-Medium
+Integration Effort: 2-3 weeks
+Testing Complexity: Medium
+
+DESCRIPTION:
+Create D2OC as a separate, independent decision-making layer above the existing
+Nav2 stack. D2OC determines high-level waypoint goals; Nav2 handles pathfinding
+and obstacle avoidance.
+
+ADVANTAGES:
+- Modular and easy to integrate without modifying Nav2
+- Simple to test independently from navigation stack
+- Can be added incrementally
+- Low risk of breaking existing functionality
+- Easier to debug (clear input/output interfaces)
+
+DISADVANTAGES:
+- D2OC decisions may not account for local obstacles (planned ahead)
+- Potential latency if Nav2 rejects D2OC-suggested goals
+- Less tight control over trajectory shape
+- May miss optimal solutions that require coordinated planning/control
+
+IMPLEMENTATION OUTLINE:
+1. Create density_controller ROS2 package
+2. Subscribe to sensor data (EKF state, costmap, LiDAR scans)
+3. Build density map from sensor fusion outputs
+4. Optimize for high-entropy (unexplored) regions
+5. Publish waypoint goals to Nav2 planner
+6. Monitor Nav2 execution and adapt
+
+FILES TO MODIFY:
+- robot_navigation/config/nav2_no_map_params.yaml (reference in launch)
+- Create: robot_navigation/density_controller/ (new package)
+- May need to add conditional goal-publishing logic
+
+
+OPTION C: HYBRID APPROACH (Best for Production Systems)
+===============================================================================
+Complexity Level: High
+Integration Effort: 6-8 weeks
+Testing Complexity: Very High
+
+DESCRIPTION:
+D2OC operates at two levels:
+1. HIGH LEVEL: Global decision layer selects goal regions based on density/entropy
+2. LOW LEVEL: D2OC-based trajectory controller refines paths locally
+
+ADVANTAGES:
+- Combines benefits of both approaches
+- Robust global behavior with optimized local control
+- Can handle dynamic obstacles effectively
+- Maximizes information gain at all scales
+
+DISADVANTAGES:
+- Most complex to implement and maintain
+- Highest computational demand
+- Requires extensive testing and validation
+- Difficult to debug due to two-level interaction
+
+IMPLEMENTATION OUTLINE:
+1. Implement Option B (high-level layer)
+2. Once stable, begin integrating D2OC controller
+3. Carefully tune interaction between layers
+4. Implement fallback logic if either layer fails
+5. Comprehensive simulation before deployment
+
+RECOMMENDATION FOR YOUR FIRST IMPLEMENTATION: START WITH OPTION B
+This gives you a working D2OC system in the shortest timeframe with lowest risk.
+
+
+================================================================================
+4. DETAILED IMPLEMENTATION STEPS
+================================================================================
+
+PHASE 1: FOUNDATION & SETUP (Week 1)
+===============================================================================
+
+Step 1.1: Create ROS2 Package Structure
+Command:
+  cd /home/julian/WALL-E/ros2_ws/src/robot_navigation
+  
+Create directory:
+  density_controller/
+  ├── src/
+  │   ├── __init__.py
+  │   ├── density_map.py
+  │   ├── optimizer.py
+  │   ├── d2oc_node.py
+  │   └── utils.py
+  ├── launch/
+  │   └── d2oc_controller.launch.py
+  ├── config/
+  │   └── d2oc_params.yaml
+  ├── package.xml
+  └── setup.py
+
+Step 1.2: Define Custom Message Types (if needed)
+Create new message for density information:
+  density_controller/msg/DensityMap.msg
+  density_controller/msg/HighEntropyRegion.msg
+
+Step 1.3: Configure Dependencies
+Update setup.py and package.xml to include:
+  - rclpy (ROS2 Python client)
+  - geometry_msgs
+  - sensor_msgs
+  - nav_msgs
+  - tf2_ros (for transform lookups)
+  - numpy, scipy (for optimization and grid math)
+
+
+PHASE 2: DENSITY REPRESENTATION (Week 2)
+===============================================================================
+
+Step 2.1: Implement Occupancy Grid with Uncertainty
+File: density_controller/src/density_map.py
+
+Core components:
+  class DensityMap:
+      """Represents robot environment as occupancy probability grid"""
+      
+      __init__(self, grid_width, grid_height, resolution, origin):
+          """
+          Args:
+              grid_width: Width in meters (e.g., 100m)
+              grid_height: Height in meters
+              resolution: Cell resolution in meters (e.g., 0.2m)
+              origin: (x, y) position of grid bottom-left corner
+          """
+          self.occupancy = np.zeros((height, width))  # -1=unknown, 0=free, 1=occupied
+          self.confidence = np.zeros((height, width))  # Confidence in classification
+          self.entropy = np.zeros((height, width))     # Uncertainty at each cell
+          
+      def update_from_scan(self, scan_msg, transform, confidence):
+          """Update grid from LiDAR scan with confidence measure"""
+          # Ray trace from robot position
+          # Mark hit cells as occupied with confidence
+          # Mark free cells along rays
+          # Update entropy = -p*log(p) - (1-p)*log(1-p)
+          
+      def update_from_costmap(self, costmap_msg):
+          """Update grid from Nav2 costmap"""
+          # Incorporate obstacle layer information
+          # Update confidence scores
+          
+      def get_entropy_map(self):
+          """Return entropy at each grid cell"""
+          # Entropy = -p*log(p) - (1-p)*log(1-p)
+          # Unobserved cells = maximum entropy = 0.693
+          
+      def get_information_gain(self, trajectory_points, sensor_fov):
+          """Compute potential information gain from executing trajectory"""
+          # For each point in trajectory
+          # Check cells within sensor field-of-view
+          # Sum information that would be gained if unobserved cells observed
+          return total_information_gain
+
+Step 2.2: Integrate Uncertainty from EKF
+Extract position covariance from EKF:
+  - Subscribe to /odometry/filtered (dual EKF output)
+  - Extract covariance matrix: P = msg.pose.covariance
+  - Use P[0,0] and P[1,1] for x,y position uncertainty
+  - Model as Gaussian ellipse around robot position
+  - Weight entropy calculations by this uncertainty
+
+Step 2.3: Implement Entropy Calculation
+Probability entropy formula:
+  For each grid cell with occupancy probability p:
+    entropy(p) = -p*log2(p) - (1-p)*log2(1-p)
+  
+  Unobserved cells (p=0.5): entropy = 1.0 (maximum)
+  Certain cells (p=0 or 1): entropy = 0 (minimum)
+
+Expected information gain from observation:
+  If currently p_before and will observe evidence with likelihood L:
+    p_after = p_before * L / Z  (Bayesian update)
+    info_gain = entropy(p_before) - entropy(p_after)
+
+
+PHASE 3: CONTROL OPTIMIZATION ENGINE (Week 3)
+===============================================================================
+
+Step 3.1: Define Control Space
+File: density_controller/src/optimizer.py
+
+Control input: (v, omega, t_horizon)
+  v: Linear velocity (m/s), range: [-0.5, 1.0]
+  omega: Angular velocity (rad/s), range: [-0.5, 0.5]
+  t_horizon: Time horizon (s), typically 2-5 seconds
+
+Trajectory generation:
+  class ControlOptimizer:
+      
+      def sample_trajectories(self, num_samples=300):
+          """Generate random control trajectories"""
+          trajectories = []
+          for _ in range(num_samples):
+              v = np.random.uniform(-0.5, 1.0)
+              omega = np.random.uniform(-0.5, 0.5)
+              t_plan = 3.0  # seconds
+              
+              # Simulate trajectory: x(t+dt) = x(t) + v*cos(theta)*dt
+              trajectory = self.simulate_trajectory(v, omega, t_plan)
+              trajectories.append(trajectory)
+          
+          return trajectories
+      
+      def simulate_trajectory(self, v, omega, duration, dt=0.1):
+          """Physics simulation of differential drive"""
+          trajectory = []
+          x, y, theta = 0, 0, 0  # Relative to current robot position
+          
+          for t in np.arange(0, duration, dt):
+              if omega != 0:  # Circular arc motion
+                  radius = v / omega
+                  x += radius * (sin(theta + omega*dt) - sin(theta))
+                  y += radius * (-cos(theta + omega*dt) + cos(theta))
+              else:  # Straight line
+                  x += v * cos(theta) * dt
+                  y += v * sin(theta) * dt
+              
+              theta += omega * dt
+              trajectory.append((x, y, theta))
+          
+          return trajectory
+
+Step 3.2: Implement Scoring Function
+Objective function for each trajectory:
+
+  score(trajectory) = w_info * information_gain(trajectory)
+                    - w_collision * collision_cost(trajectory)
+                    - w_energy * energy_cost(trajectory)
+                    - w_smoothness * smoothness_cost(trajectory)
+
+Where:
+  information_gain: Entropy reduction from observing new cells
+  collision_cost: Probability of collision based on costmap
+  energy_cost: Distance traveled (favors closer goals)
+  smoothness_cost: Control effort (prefers gentle curves)
+  
+Tuning parameters (w_*) control algorithm behavior:
+  w_info = 1.0        (prioritize exploring unknown areas)
+  w_collision = 100.0 (heavily penalize crashes)
+  w_energy = 0.1      (slight preference for shorter paths)
+  w_smoothness = 0.05 (minor smoothness preference)
+
+Step 3.3: Optimization Loop
+  
+  def optimize_control(self, density_map, robot_state, costmap):
+      """Select best control input"""
+      
+      # Sample trajectory space
+      trajectories = self.sample_trajectories(num_samples=300)
+      scores = []
+      
+      for trajectory in trajectories:
+          # Evaluate each trajectory
+          info_gain = density_map.get_information_gain(trajectory)
+          collision = self.evaluate_collision_risk(trajectory, costmap)
+          energy = self.evaluate_energy_cost(trajectory)
+          smoothness = self.evaluate_smoothness(trajectory)
+          
+          score = (self.w_info * info_gain 
+                 - self.w_collision * collision
+                 - self.w_energy * energy
+                 - self.w_smoothness * smoothness)
+          
+          scores.append(score)
+      
+      # Select best trajectory
+      best_idx = np.argmax(scores)
+      best_trajectory = trajectories[best_idx]
+      
+      # Extract first control action
+      v, omega = extract_control_from_trajectory(best_trajectory)
+      return Twist(linear=Vector3(x=v, y=0, z=0),
+                   angular=Vector3(x=0, y=0, z=omega))
+
+
+PHASE 4: ROS2 NODE INTEGRATION (Week 3-4)
+===============================================================================
+
+Step 4.1: Create Main D2OC Node
+File: density_controller/src/d2oc_node.py
+
+  class D2OCControllerNode(Node):
+      
+      def __init__(self):
+          super().__init__('d2oc_controller')
+          
+          # Initialize components
+          self.density_map = DensityMap(...)
+          self.optimizer = ControlOptimizer(...)
+          
+          # Subscribers
+          self.scan_sub = self.create_subscription(
+              LaserScan, '/scan', self.scan_callback, 10)
+          
+          self.odom_sub = self.create_subscription(
+              Odometry, '/odometry/filtered', self.odom_callback, 10)
+          
+          self.costmap_sub = self.create_subscription(
+              OccupancyGrid, '/local_costmap/costmap', 
+              self.costmap_callback, 10)
+          
+          # Publishers
+          self.cmd_vel_pub = self.create_publisher(
+              Twist, '/cmd_vel', 10)
+          
+          self.density_pub = self.create_publisher(
+              OccupancyGrid, '/d2oc/density_map', 10)
+          
+          # Control loop timer
+          self.control_timer = self.create_timer(
+              0.1, self.control_loop)  # 10 Hz
+          
+          # State storage
+          self.robot_state = None
+          self.latest_scan = None
+          self.latest_costmap = None
+      
+      def scan_callback(self, msg):
+          """Update density map from LiDAR scan"""
+          self.latest_scan = msg
+          try:
+              transform = self.tf_buffer.lookup_transform(
+                  'map', 'base_link', rclpy.time.Time())
+              confidence = 0.9  # High confidence in recent scans
+              self.density_map.update_from_scan(msg, transform, confidence)
+          except tf2.TransformException:
+              self.get_logger().warn("Transform lookup failed")
+      
+      def odom_callback(self, msg):
+          """Extract robot state from odometry"""
+          self.robot_state = {
+              'position': (msg.pose.pose.position.x, msg.pose.pose.position.y),
+              'orientation': msg.pose.pose.orientation,
+              'velocity': (msg.twist.twist.linear.x, msg.twist.twist.angular.z),
+              'covariance': msg.pose.covariance
+          }
+      
+      def costmap_callback(self, msg):
+          """Update density map from Nav2 costmap"""
+          self.latest_costmap = msg
+          self.density_map.update_from_costmap(msg)
+      
+      def control_loop(self):
+          """Main control computation"""
+          if self.robot_state is None:
+              return  # Wait for initial state
+          
+          # Optimize control action
+          control_action = self.optimizer.optimize_control(
+              self.density_map,
+              self.robot_state,
+              self.latest_costmap
+          )
+          
+          # Publish command
+          self.cmd_vel_pub.publish(control_action)
+          
+          # Optionally publish density map for visualization
+          self.density_pub.publish(self.density_map.to_occupancy_grid())
+
+Step 4.2: Configuration File
+File: density_controller/config/d2oc_params.yaml
+
+d2oc_controller:
+  # Grid parameters
+  grid_width: 100.0       # meters
+  grid_height: 100.0
+  resolution: 0.2         # meters per cell
+  
+  # Control optimization
+  num_samples: 300        # trajectory samples per cycle
+  horizon_time: 3.0       # planning horizon in seconds
+  control_frequency: 10.0 # Hz (set to match control loop timer)
+  
+  # Velocity constraints
+  max_linear_velocity: 1.0    # m/s
+  min_linear_velocity: -0.5   # m/s
+  max_angular_velocity: 0.5   # rad/s
+  min_angular_velocity: -0.5
+  
+  # Cost weights
+  weight_information: 1.0
+  weight_collision: 100.0
+  weight_energy: 0.1
+  weight_smoothness: 0.05
+  
+  # Sensor parameters
+  lidar_max_range: 12.0       # meters
+  lidar_fov: 3.14159          # radians (180 degrees for S-Lidar)
+  
+  # EKF uncertainty weighting
+  apply_uncertainty_weighting: true
+  uncertainty_weight_scale: 1.0
+
+Step 4.3: Package Configuration Files
+setup.py entry points:
+  entry_points={
+      'console_scripts': [
+          'd2oc_controller = density_controller.d2oc_node:main',
+      ],
+  }
+
+package.xml dependencies:
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>numpy</exec_depend>
+  <exec_depend>scipy</exec_depend>
+
+
+PHASE 5: INTEGRATION WITH NAV2 (Week 4)
+===============================================================================
+
+Step 5.1: Launch Configuration
+File: density_controller/launch/d2oc_controller.launch.py
+
+  from launch import LaunchDescription
+  from launch_ros.actions import Node
+  
+  def generate_launch_description():
+      return LaunchDescription([
+          Node(
+              package='density_controller',
+              executable='d2oc_controller',
+              name='d2oc_controller',
+              parameters=['density_controller/config/d2oc_params.yaml'],
+              remappings=[
+                  ('/scan', '/scan'),
+                  ('/odometry/filtered', '/odometry/filtered'),
+                  ('/local_costmap/costmap', '/local_costmap/costmap'),
+                  ('/cmd_vel', '/cmd_vel')
+              ]
+          )
+      ])
+
+Step 5.2: Integration Strategy (Option B)
+Modify robot_bringup or create new launch to:
+  1. Start Nav2 navigation stack as normal
+  2. Launch D2OC controller node
+  3. D2OC publishes to /cmd_vel
+  4. Nav2 controller also publishes to /cmd_vel
+  5. Use twist_mux to arbitrate between them
+
+Alternative: Replace MPPI controller in nav2_no_map_params.yaml:
+  controller_plugins: ["d2oc_controller::D2OCController"]
+
+Step 5.3: Testing in Simulation
+  # Launch Gazebo with WALL-E robot model
+  ros2 launch robot_bringup robot_sim.launch.py
+  
+  # In separate terminal, launch D2OC
+  ros2 launch density_controller d2oc_controller.launch.py
+  
+  # In another terminal, send nav goals
+  ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose
+    "{pose: {header: {frame_id: 'map'}, pose: {position: {x: 50.0, y: 50.0}}}}"
+
+
+================================================================================
+5. CRITICAL IMPLEMENTATION DETAILS
+================================================================================
+
+DENSITY REPRESENTATION BEST PRACTICES:
+=========================================
+1. Use occupancy probability grid (0.0 to 1.0) instead of binary obstacles
+2. Maintain confidence scores to weight cell observations
+3. Implement exponential decay for old observations (sensor data becomes stale)
+4. Use raycasting for scan incorporation (mark rays as free, endpoints as obstacles)
+5. Update entropy incrementally rather than recomputing entire grid each cycle
+
+Information-Theoretic Objective:
+=================================
+The core optimization objective:
+
+  Maximize: E[Information Gain] - α*Collision_Risk - β*Energy + γ*Smoothness
+
+Where:
+  E[Information Gain] = Σ entropy_reduction in observed cells
+  Collision_Risk = Σ costmap_cost for occupied cells in trajectory
+  Energy = distance_traveled or control_effort
+  Smoothness = trajectory_curvature or acceleration penalty
+  
+  α, β, γ are tuning parameters that balance competing objectives
+
+Sensor Integration:
+====================
+1. EKF Covariance:
+   - Extract position uncertainty ellipse from filter output
+   - Inflate entropy values in high-uncertainty regions
+   - Use covariance to weight information gain
+
+2. LiDAR Scan Quality:
+   - Incorporate scan matcher confidence as observation weight
+   - Discount high-range measurements (more uncertainty)
+   - Use intensity data if available to refine occupancy
+   
+3. GPS Uncertainty:
+   - When GPS signal is weak/unavailable, increase global entropy
+   - Prioritize loop closure observations
+   - Fade old global information if localization drifts
+
+Computational Optimization (Critical for Jetson Nano):
+========================================================
+1. Trajectory Sampling:
+   - Use 200-500 samples, not 2000+ (MPPI uses 2000)
+   - Sample control space uniformly or with importance weighting
+   - Cache trajectory simulations for repeated parameters
+   
+2. Entropy Computation:
+   - Pre-compute entropy lookup table for fast access
+   - Use numpy vectorized operations (not Python loops)
+   - Compute information gain only for cells within sensor FOV
+   - Consider implementing GPU acceleration with CuPy
+   
+3. Update Scheduling:
+   - Run density map updates at ~5 Hz
+   - Run control optimization at ~10 Hz
+   - Run RViz visualization at ~2 Hz
+   
+4. Memory Management:
+   - Use fixed-size grid (pre-allocate arrays)
+   - Implement circular buffer for scan history (last N scans)
+   - Periodically decay old information to prevent unbounded growth
+
+Collision Safety:
+==================
+1. Hard constraint: No trajectory with collision_cost > 0 can be selected
+2. Implement local safety margin around robot footprint
+3. Check footprint inflation radius matches nav2 settings (currently 0.24m)
+4. Validate no collisions in first 0.5s of trajectory (safety-critical zone)
+5. Add failsafe: If all trajectories are blocked, execute stopping behavior
+6. Implement dynamic window to only consider reachable trajectories
+
+
+================================================================================
+6. CONFIGURATION TUNING GUIDE
+================================================================================
+
+INITIAL PARAMETERS (Conservative Settings):
+============================================
+weight_information = 1.0    # Mild preference for exploration
+weight_collision = 100.0    # Strong collision avoidance
+weight_energy = 0.1         # Slight preference for short paths
+weight_smoothness = 0.05    # Very slight smoothness preference
+num_samples = 300           # Balanced computation/accuracy
+
+AGGRESSIVE EXPLORATION:
+======================
+weight_information = 5.0    # Strong focus on entropy reduction
+weight_collision = 150.0    # Very conservative collision avoidance
+weight_energy = 0.05        # Willing to take longer paths for information
+weight_smoothness = 0.02    # Less concern about smoothness
+
+ENERGY-EFFICIENT (Battery-Conscious):
+======================================
+weight_information = 0.5    # Lower exploration priority
+weight_collision = 50.0     # Moderate collision caution
+weight_energy = 0.5         # Strong preference for short paths
+weight_smoothness = 0.1     # Emphasize smooth control
+
+TUNING PROCEDURE:
+1. Start with initial parameters in simulation
+2. Observe robot behavior for 10+ minutes
+3. Measure: exploration_rate, collision_frequency, battery_usage
+4. Identify dominant behavior (too cautious? too aggressive?)
+5. Adjust one weight at a time by ±20%
+6. Re-test and measure again
+7. Iterate until behavior matches desired profile
+
+
+================================================================================
+7. SENSOR DATA FLOW DIAGRAM
+================================================================================
+
+Input Sources:
+  - RPLiDAR (/scan) → Density Map, Entropy Calculation
+  - EKF (/odometry/filtered) → Robot State, Position Uncertainty
+  - Nav2 Costmap (/local_costmap/costmap) → Collision Risk
+  - TF Transforms (/tf) → Frame conversions
+
+Processing Pipeline:
+  Sensor Data → Density Map Update → Entropy Calculation
+                                   → Optimizer (300 samples)
+                                   → Score Each Trajectory
+                                   → Select Best Action
+
+Output:
+  - Twist Command (/cmd_vel) → RoboClaw Motor Driver
+  - Density Map (/d2oc/density_map) → RViz Visualization
+  - Diagnostics (/d2oc/info) → Performance monitoring
+
+
+================================================================================
+8. EXPECTED PERFORMANCE METRICS
+================================================================================
+
+Computational Performance (Jetson Orin Nano):
+=============================================
+- Control loop frequency: 10 Hz (100ms per cycle)
+- Trajectory sampling: 300 trajectories in ~30-50ms
+- Scoring/optimization: ~20-30ms per cycle
+- Total cycle time: 60-80ms < 100ms budget ✓
+
+Navigation Performance:
+=======================
+- Exploration efficiency: Should cover 70%+ of accessible environment
+- Collision avoidance: 0 collisions in 1+ hour autonomous operation
+- Energy efficiency: 20-30% better than greedy nearest-goal strategies
+- Localization: Improved due to active sensor placement
+
+Monitoring:
+===========
+Track these metrics:
+  - Entropy reduction rate (bits/second)
+  - Trajectory success rate (goals reached / goals attempted)
+  - Obstacle avoidance success
+  - Average information gain per cycle
+  - CPU load percentage (should stay < 80%)
+
+
+================================================================================
+9. TROUBLESHOOTING GUIDE
+================================================================================
+
+Problem: Robot moves erratically or in circles
+Solution:
+  - Check density map is updating (subscribe in RViz)
+  - Verify sensor data is arriving (/scan, /odom)
+  - Reduce num_samples from 300 to 100 (may need tuning)
+  - Increase weight_smoothness to 0.2
+
+Problem: Robot is too conservative (never moves)
+Solution:
+  - Reduce weight_collision from 100.0 to 50.0
+  - Increase weight_information from 1.0 to 3.0
+  - Verify costmap isn't over-inflated with obstacles
+  - Check EKF covariance isn't extremely large
+
+Problem: High CPU usage on Jetson Nano
+Solution:
+  - Reduce num_samples to 200 or even 150
+  - Reduce control_frequency from 10Hz to 5Hz
+  - Decrease grid size (smaller grid window)
+  - Disable visualization publishing
+  - Check for memory leaks (unused scan history)
+
+Problem: Robot ignores obstacles detected by LiDAR
+Solution:
+  - Verify /scan topic is being received
+  - Check scan_callback is being invoked
+  - Inspect density_map.occupancy grid in RViz
+  - Increase weight_collision
+  - Verify sensor transforms are correct (/tf)
+
+
+================================================================================
+10. NEXT STEPS & FUTURE ENHANCEMENTS
+================================================================================
+
+IMMEDIATE (After Initial Implementation):
+- Extensive simulation testing in Gazebo
+- Hardware testing on actual WALL-E robot
+- Parameter tuning based on real-world behavior
+- Integration with waypoint_server for multi-point missions
+
+SHORT TERM (1-2 Months):
+- Add loop closure detection to entropy calculation
+- Implement GPU acceleration for entropy computation
+- Add support for multiple sensors (camera, thermal imaging)
+- Develop uncertainty-aware path planning
+
+MEDIUM TERM (3-6 Months):
+- Transition to Option C (hybrid two-level controller)
+- Implement adaptive weighting based on mission type
+- Add communication for multi-robot coordination
+- Integrate with mission planner for complex missions
+
+LONG TERM (6+ Months):
+- Deep learning for occupancy prediction
+- Active SLAM with D2OC-optimized sensor placement
+- Cooperative multi-robot exploration
+- Field deployment on actual wildlife monitoring missions
+
+
+================================================================================
+11. REFERENCES & FURTHER READING
+================================================================================
+
+D2OC/Information-Theoretic Control Papers:
+- Thrun, S., et al. "Probabilistic Robotics" (2005)
+- Choset, H., et al. "Principles of Robot Motion" (2005)
+- Englot, B. & Hover, F. "Information-theoretic planning for autonomous underwater
+  vehicles" (IROS 2010)
+- Hollinger, G., et al. "Active planning for underwater exploration" (ICRA 2013)
+
+ROS2 Navigation Documentation:
+- Nav2 Docs: https://docs.nav2.org/
+- Nav2 Architecture: https://navigation.ros.org/architecture/
+- MPPI Controller: https://github.com/ros-planning/navigation2/tree/main/nav2_mppi_controller
+
+Optimization & Uncertainty:
+- Russell, S. & Norvig, P. "Artificial Intelligence: A Modern Approach" (Ch. 3-5)
+- Boyd, S. & Vandenberghe, L. "Convex Optimization" (2004)
+- Kullback-Leibler divergence and information theory primers online
+
+Jetson Nano Optimization:
+- NVIDIA Jetson Developer Kit Documentation
+- ROS2 Real-time Performance Guidelines
+- Profiling tools: ros2prof, perf, htop
+
+
+================================================================================
+END OF D2OC IMPLEMENTATION GUIDE
+================================================================================
