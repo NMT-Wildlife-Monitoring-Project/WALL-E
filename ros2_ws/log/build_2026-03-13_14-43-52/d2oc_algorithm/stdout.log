@@ -1,0 +1,20 @@
+running egg_info
+writing ../../build/d2oc_algorithm/d2oc_algorithm.egg-info/PKG-INFO
+writing dependency_links to ../../build/d2oc_algorithm/d2oc_algorithm.egg-info/dependency_links.txt
+writing entry points to ../../build/d2oc_algorithm/d2oc_algorithm.egg-info/entry_points.txt
+writing requirements to ../../build/d2oc_algorithm/d2oc_algorithm.egg-info/requires.txt
+writing top-level names to ../../build/d2oc_algorithm/d2oc_algorithm.egg-info/top_level.txt
+reading manifest file '../../build/d2oc_algorithm/d2oc_algorithm.egg-info/SOURCES.txt'
+writing manifest file '../../build/d2oc_algorithm/d2oc_algorithm.egg-info/SOURCES.txt'
+running build
+running build_py
+running install
+running install_lib
+running install_data
+copying package.xml -> /home/julian/WALL-E/ros2_ws/install/d2oc_algorithm/share/d2oc_algorithm
+running install_egg_info
+removing '/home/julian/WALL-E/ros2_ws/install/d2oc_algorithm/lib/python3.12/site-packages/d2oc_algorithm-0.1.0-py3.12.egg-info' (and everything under it)
+Copying ../../build/d2oc_algorithm/d2oc_algorithm.egg-info to /home/julian/WALL-E/ros2_ws/install/d2oc_algorithm/lib/python3.12/site-packages/d2oc_algorithm-0.1.0-py3.12.egg-info
+running install_scripts
+Installing d2oc script to /home/julian/WALL-E/ros2_ws/install/d2oc_algorithm/bin
+writing list of installed files to '/home/julian/WALL-E/ros2_ws/build/d2oc_algorithm/install.log'
