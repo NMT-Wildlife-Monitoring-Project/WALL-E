@@ -5,8 +5,10 @@ import math
 import rclpy
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import OccupancyGrid, Odometry
+from rclpy.duration import Duration
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
+from tf2_ros import Buffer, TransformException, TransformListener
 
 from .d2oc_algorithm import D2OCAlgorithm
 from .density_map import DensityMap
@@ -48,6 +50,8 @@ class D2OCNode(Node):
 		self.robot_x = None
 		self.robot_y = None
 		self.robot_theta = None
+		self.tf_buffer = Buffer()
+		self.tf_listener = TransformListener(self.tf_buffer, self)
 
 		self.create_subscription(LaserScan, self.scan_topic, self.scan_callback, 20)
 		self.create_subscription(Odometry, self.odom_topic, self.odom_callback, 20)
@@ -71,7 +75,7 @@ class D2OCNode(Node):
 		self.declare_parameter('algorithm.distance_weight', 0.1)
 		self.declare_parameter('algorithm.min_confidence', 0.3)
 
-		self.declare_parameter('sensor.scan_confidence', 0.9)
+		self.declare_parameter('sensor.scan_confidence', 0.7)
 
 		self.declare_parameter('publish.frequency', 1.0)
 		self.declare_parameter('publish.enable_density_map', True)
@@ -104,14 +108,31 @@ class D2OCNode(Node):
 		self.density_map_topic = str(self.get_parameter('topics.density_map').value)
 
 	def scan_callback(self, msg: LaserScan):
-		if self.robot_x is None or self.robot_y is None or self.robot_theta is None:
+		target_frame = 'map'
+		source_frame = msg.header.frame_id if msg.header.frame_id else 'base_link'
+
+		try:
+			transform = self.tf_buffer.lookup_transform(
+				target_frame,
+				source_frame,
+				msg.header.stamp,
+				timeout=Duration(seconds=0.1),
+			)
+		except TransformException as exc:
+			self.get_logger().debug(f'TF lookup failed for scan integration: {exc}')
 			return
+
+		t = transform.transform.translation
+		q = transform.transform.rotation
+		scan_x = float(t.x)
+		scan_y = float(t.y)
+		scan_theta = quaternion_to_yaw(q.x, q.y, q.z, q.w)
 
 		self.density_map.update_from_scan(
 			msg,
-			robot_x=self.robot_x,
-			robot_y=self.robot_y,
-			robot_theta=self.robot_theta,
+			robot_x=scan_x,
+			robot_y=scan_y,
+			robot_theta=scan_theta,
 			confidence=self.scan_confidence,
 		)
 
