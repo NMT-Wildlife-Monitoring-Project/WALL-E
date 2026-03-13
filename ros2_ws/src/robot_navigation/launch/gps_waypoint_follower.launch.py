@@ -33,6 +33,7 @@ def generate_launch_description():
     launch_dir = os.path.join(package_dir, 'launch')
     params_dir = os.path.join(package_dir, "config")
     nav2_params = os.path.join(params_dir, "nav2_no_map_params.yaml")
+    rviz_config = os.path.join(params_dir, 'walle_default.rviz')
     configured_params = RewrittenYaml(
         source_file=nav2_params, root_key="", param_rewrites="", convert_types=True
     )
@@ -135,7 +136,10 @@ def generate_launch_description():
     rviz_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(bringup_dir, "launch", 'rviz_launch.py')),
-        condition=IfCondition(use_rviz)
+        condition=IfCondition(use_rviz),
+        launch_arguments={
+            'rviz_config': rviz_config,
+        }.items()
     )
 
     mapviz_cmd = IncludeLaunchDescription(

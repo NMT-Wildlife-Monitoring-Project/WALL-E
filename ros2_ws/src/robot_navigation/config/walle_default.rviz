@@ -1,0 +1,99 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Selection
+    Name: Selection
+  - Class: rviz_common/Tool Properties
+    Name: Tool Properties
+  - Class: rviz_common/Views
+    Name: Views
+  - Class: rviz_common/Time
+    Name: Time
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Enabled: true
+      Name: Grid
+      Plane: XY
+      Plane Cell Count: 20
+      Cell Size: 1
+      Color: 160; 160; 164
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: false
+    - Class: rviz_default_plugins/LaserScan
+      Enabled: true
+      Name: LaserScan
+      Topic:
+        Value: /scan
+      Size (Pixels): 3
+      Style: Flat Squares
+      Color Transformer: Intensity
+      Use Fixed Frame: true
+    - Class: rviz_default_plugins/Map
+      Enabled: true
+      Name: Local Costmap
+      Alpha: 0.5
+      Topic:
+        Value: /local_costmap/costmap
+      Update Topic:
+        Value: /local_costmap/costmap_updates
+    - Class: rviz_default_plugins/Map
+      Enabled: true
+      Name: D2OC Density Map
+      Alpha: 0.8
+      Topic:
+        Value: /d2oc/density_map
+    - Class: rviz_default_plugins/Pose
+      Enabled: true
+      Name: Nav2 Goal Pose
+      Color: 255; 25; 0
+      Topic:
+        Value: /goal_pose
+    - Class: rviz_default_plugins/Pose
+      Enabled: true
+      Name: D2OC Goal
+      Color: 0; 255; 255
+      Topic:
+        Value: /exploration/goal
+    - Class: rviz_default_plugins/Path
+      Enabled: true
+      Name: Global Plan
+      Topic:
+        Value: /plan
+  Enabled: true
+  Global Options:
+    Fixed Frame: map
+    Frame Rate: 30
+    Background Color: 48; 48; 48
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+    - Class: rviz_default_plugins/SetInitialPose
+      Topic:
+        Value: /initialpose
+    - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Value: /goal_pose
+    - Class: rviz_default_plugins/PublishPoint
+      Topic:
+        Value: /clicked_point
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Current View
+      Target Frame: <Fixed Frame>
+      Distance: 25
+      Pitch: 1.2
+      Yaw: 0
+Window Geometry:
+  Height: 1000
+  Width: 1600

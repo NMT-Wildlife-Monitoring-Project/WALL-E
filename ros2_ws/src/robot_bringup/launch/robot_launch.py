@@ -13,9 +13,14 @@ def generate_launch_description():
     launch_gps = LaunchConfiguration('launch_gps')
     launch_urdf = LaunchConfiguration('launch_urdf')
     launch_nav = LaunchConfiguration('launch_nav')
+    launch_d2oc = LaunchConfiguration('launch_d2oc')
+    use_rviz = LaunchConfiguration('use_rviz')
     launch_waypoint_follower = LaunchConfiguration('launch_waypoint_follower')
     rf2o_scan_topic = LaunchConfiguration('rf2o_scan_topic')
     rf2o_odom_topic = LaunchConfiguration('rf2o_odom_topic')
+    d2oc_scan_topic = LaunchConfiguration('d2oc_scan_topic')
+    d2oc_odom_topic = LaunchConfiguration('d2oc_odom_topic')
+    d2oc_costmap_topic = LaunchConfiguration('d2oc_costmap_topic')
 
     bringup_dir = FindPackageShare('robot_bringup')
 
@@ -31,9 +36,14 @@ def generate_launch_description():
         DeclareLaunchArgument('launch_gps', default_value='true'),
         DeclareLaunchArgument('launch_urdf', default_value='true'),
         DeclareLaunchArgument('launch_nav', default_value='true'),
+        DeclareLaunchArgument('launch_d2oc', default_value='true'),
+        DeclareLaunchArgument('use_rviz', default_value='true'),
         DeclareLaunchArgument('launch_waypoint_follower', default_value='false'),
         DeclareLaunchArgument('rf2o_scan_topic', default_value='/scan'),
         DeclareLaunchArgument('rf2o_odom_topic', default_value='odom_rf2o'),
+        DeclareLaunchArgument('d2oc_scan_topic', default_value='/scan'),
+        DeclareLaunchArgument('d2oc_odom_topic', default_value='/odometry/filtered'),
+        DeclareLaunchArgument('d2oc_costmap_topic', default_value='/local_costmap/costmap'),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
@@ -77,9 +87,21 @@ def generate_launch_description():
             ]),
             condition=IfCondition(launch_nav),
             launch_arguments={
+                'use_rviz': use_rviz,
                 'launch_waypoint_follower': launch_waypoint_follower,
                 'rf2o_scan_topic': rf2o_scan_topic,
                 'rf2o_odom_topic': rf2o_odom_topic,
+            }.items()
+        ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([
+                FindPackageShare('d2oc_algorithm'), '/launch/d2oc.launch.py'
+            ]),
+            condition=IfCondition(launch_d2oc),
+            launch_arguments={
+                'scan_topic': d2oc_scan_topic,
+                'odometry_topic': d2oc_odom_topic,
+                'costmap_topic': d2oc_costmap_topic,
             }.items()
         )
     ])
