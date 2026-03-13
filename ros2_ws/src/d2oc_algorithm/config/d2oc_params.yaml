@@ -22,7 +22,7 @@ d2oc_explorer:
 
     topics:
       scan: /scan
-      odometry: /odometry/filtered
+      odometry: /odometry/global
       costmap: /local_costmap/costmap
       exploration_goal: /exploration/goal
       density_map: /d2oc/density_map

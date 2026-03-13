@@ -203,11 +203,18 @@ class DensityMap:
         for r in scan_msg.ranges:
 
             # ----------------------------------------------------------
-            # Skip invalid readings
+            # Handle invalid and max-range readings
             # ----------------------------------------------------------
-            if math.isnan(r) or math.isinf(r) or r < range_min or r > range_max:
+            if math.isnan(r) or r < range_min:
                 angle += angle_inc
                 continue
+
+            # LiDAR no-return (inf) or clipped values beyond max range should
+            # still contribute free-space evidence up to range_max.
+            hit_is_obstacle = True
+            if math.isinf(r) or r > range_max:
+                r = range_max
+                hit_is_obstacle = False
 
             # ----------------------------------------------------------
             # Step 1: angle of this ray in the WORLD frame
@@ -238,9 +245,13 @@ class DensityMap:
                     self._bayesian_update(c, rw, occupied=False,
                                           confidence=confidence)
 
-                # The final cell is where the obstacle was detected
-                self._bayesian_update(hit_col, hit_row, occupied=True,
-                                      confidence=confidence)
+                # The final cell is occupied only when we truly hit an obstacle.
+                if hit_is_obstacle:
+                    self._bayesian_update(hit_col, hit_row, occupied=True,
+                                          confidence=confidence)
+                else:
+                    self._bayesian_update(hit_col, hit_row, occupied=False,
+                                          confidence=confidence)
             else:
                 # Hit point is outside the grid – still mark free cells
                 free_cells = self._bresenham_to_edge(

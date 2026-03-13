@@ -42,7 +42,7 @@ def generate_launch_description():
         DeclareLaunchArgument('rf2o_scan_topic', default_value='/scan'),
         DeclareLaunchArgument('rf2o_odom_topic', default_value='odom_rf2o'),
         DeclareLaunchArgument('d2oc_scan_topic', default_value='/scan'),
-        DeclareLaunchArgument('d2oc_odom_topic', default_value='/odometry/filtered'),
+        DeclareLaunchArgument('d2oc_odom_topic', default_value='/odometry/global'),
         DeclareLaunchArgument('d2oc_costmap_topic', default_value='/local_costmap/costmap'),
 
         IncludeLaunchDescription(
