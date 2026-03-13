@@ -1,0 +1,28 @@
+d2oc_explorer:
+  ros__parameters:
+    grid:
+      width: 100.0
+      height: 100.0
+      resolution: 0.2
+
+    algorithm:
+      entropy_threshold: 0.8
+      max_goal_distance: 20.0
+      distance_weight: 0.1
+      min_confidence: 0.3
+
+    sensor:
+      lidar_max_range: 12.0
+      lidar_min_range: 0.2
+      scan_confidence: 0.9
+
+    publish:
+      frequency: 1.0
+      enable_density_map: true
+
+    topics:
+      scan: /scan
+      odometry: /odometry/filtered
+      costmap: /local_costmap/costmap
+      exploration_goal: /exploration/goal
+      density_map: /d2oc/density_map
