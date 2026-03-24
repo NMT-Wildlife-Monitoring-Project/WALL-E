@@ -54,6 +54,7 @@ class D2OCNode(Node):
 		self.tf_buffer = Buffer()
 		self.tf_listener = TransformListener(self.tf_buffer, self)
 		self._last_scan_tf_warning_time = None
+		self._last_scan_drop_warning_time = None
 
 		self.create_subscription(LaserScan, self.scan_topic, self.scan_callback, 20)
 		self.create_subscription(Odometry, self.odom_topic, self.odom_callback, 20)
@@ -78,6 +79,7 @@ class D2OCNode(Node):
 		self.declare_parameter('algorithm.min_confidence', 0.3)
 
 		self.declare_parameter('sensor.scan_confidence', 0.7)
+		self.declare_parameter('sensor.enable_odom_scan_fallback', False)
 
 		self.declare_parameter('publish.frequency', 1.0)
 		self.declare_parameter('publish.enable_density_map', True)
@@ -99,6 +101,9 @@ class D2OCNode(Node):
 		self.min_confidence = float(self.get_parameter('algorithm.min_confidence').value)
 
 		self.scan_confidence = float(self.get_parameter('sensor.scan_confidence').value)
+		self.enable_odom_scan_fallback = bool(
+			self.get_parameter('sensor.enable_odom_scan_fallback').value
+		)
 
 		self.publish_frequency = float(self.get_parameter('publish.frequency').value)
 		self.enable_density_map = bool(self.get_parameter('publish.enable_density_map').value)
@@ -144,7 +149,8 @@ class D2OCNode(Node):
 				scan_theta = quaternion_to_yaw(q.x, q.y, q.z, q.w)
 			except TransformException:
 				if (
-					self.robot_x is not None
+					self.enable_odom_scan_fallback
+					and self.robot_x is not None
 					and self.robot_y is not None
 					and self.robot_theta is not None
 				):
@@ -161,9 +167,16 @@ class D2OCNode(Node):
 						)
 						self._last_scan_tf_warning_time = now
 				else:
-					self.get_logger().debug(
-						f'TF lookup failed for scan integration and no odometry fallback available: {exc}'
-					)
+					now = self.get_clock().now()
+					if (
+						self._last_scan_drop_warning_time is None
+						or (now - self._last_scan_drop_warning_time).nanoseconds > int(5e9)
+					):
+						self.get_logger().warn(
+							f'Dropping scan: no valid TF {source_frame}->{target_frame} (exact or latest). '
+							'Enable sensor.enable_odom_scan_fallback only if odometry is in map frame.'
+						)
+						self._last_scan_drop_warning_time = now
 					return
 
 		self.density_map.update_from_scan(
