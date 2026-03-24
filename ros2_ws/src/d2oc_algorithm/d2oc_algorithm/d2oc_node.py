@@ -7,6 +7,7 @@ from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import OccupancyGrid, Odometry
 from rclpy.duration import Duration
 from rclpy.node import Node
+from rclpy.time import Time
 from sensor_msgs.msg import LaserScan
 from tf2_ros import Buffer, TransformException, TransformListener
 
@@ -52,6 +53,7 @@ class D2OCNode(Node):
 		self.robot_theta = None
 		self.tf_buffer = Buffer()
 		self.tf_listener = TransformListener(self.tf_buffer, self)
+		self._last_scan_tf_warning_time = None
 
 		self.create_subscription(LaserScan, self.scan_topic, self.scan_callback, 20)
 		self.create_subscription(Odometry, self.odom_topic, self.odom_callback, 20)
@@ -111,6 +113,10 @@ class D2OCNode(Node):
 		target_frame = 'map'
 		source_frame = msg.header.frame_id if msg.header.frame_id else 'base_link'
 
+		scan_x = None
+		scan_y = None
+		scan_theta = None
+
 		try:
 			transform = self.tf_buffer.lookup_transform(
 				target_frame,
@@ -118,15 +124,47 @@ class D2OCNode(Node):
 				msg.header.stamp,
 				timeout=Duration(seconds=0.1),
 			)
+			t = transform.transform.translation
+			q = transform.transform.rotation
+			scan_x = float(t.x)
+			scan_y = float(t.y)
+			scan_theta = quaternion_to_yaw(q.x, q.y, q.z, q.w)
 		except TransformException as exc:
-			self.get_logger().debug(f'TF lookup failed for scan integration: {exc}')
-			return
-
-		t = transform.transform.translation
-		q = transform.transform.rotation
-		scan_x = float(t.x)
-		scan_y = float(t.y)
-		scan_theta = quaternion_to_yaw(q.x, q.y, q.z, q.w)
+			try:
+				latest_transform = self.tf_buffer.lookup_transform(
+					target_frame,
+					source_frame,
+					Time(),
+					timeout=Duration(seconds=0.1),
+				)
+				t = latest_transform.transform.translation
+				q = latest_transform.transform.rotation
+				scan_x = float(t.x)
+				scan_y = float(t.y)
+				scan_theta = quaternion_to_yaw(q.x, q.y, q.z, q.w)
+			except TransformException:
+				if (
+					self.robot_x is not None
+					and self.robot_y is not None
+					and self.robot_theta is not None
+				):
+					scan_x = self.robot_x
+					scan_y = self.robot_y
+					scan_theta = self.robot_theta
+					now = self.get_clock().now()
+					if (
+						self._last_scan_tf_warning_time is None
+						or (now - self._last_scan_tf_warning_time).nanoseconds > int(5e9)
+					):
+						self.get_logger().warn(
+							f'TF lookup failed for scan integration ({exc}); using odometry pose fallback'
+						)
+						self._last_scan_tf_warning_time = now
+				else:
+					self.get_logger().debug(
+						f'TF lookup failed for scan integration and no odometry fallback available: {exc}'
+					)
+					return
 
 		self.density_map.update_from_scan(
 			msg,
