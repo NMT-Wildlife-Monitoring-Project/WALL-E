@@ -48,7 +48,7 @@ class DensityMap:
     Parameters
     width      : total width  of the grid in metres  (default 100 m)
     height     : total height of the grid in metres  (default 100 m)
-    resolution : side length of each cell in metres  (default 0.2 m)
+    resolution : side length of each cell in metres  (default 0.1 m)
     """
 
     # ------------------------------------------------------------------ #
@@ -71,7 +71,7 @@ class DensityMap:
     _CONFIDENCE_MAX_OBSERVATIONS = 50  # observations until confidence = 1.0
 
     def __init__(self, width: float = 100.0, height: float = 100.0,
-                 resolution: float = 0.2):
+                 resolution: float = 0.1):
         """
         Initialise the grid arrays and store configuration.
 

@@ -3,7 +3,7 @@ d2oc_explorer:
     grid:
       width: 100.0
       height: 100.0
-      resolution: 0.2
+      resolution: 0.1
 
     algorithm:
       entropy_threshold: 0.8
@@ -16,8 +16,9 @@ d2oc_explorer:
     sensor:
       lidar_max_range: 12.0
       lidar_min_range: 0.2
-      scan_confidence: 0.7
+      scan_confidence: 0.6
       enable_odom_scan_fallback: false
+      max_tf_fallback_age_sec: 0.05
 
     publish:
       frequency: 1.0

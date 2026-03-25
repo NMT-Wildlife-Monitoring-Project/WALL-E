@@ -23,6 +23,11 @@ def quaternion_to_yaw(x: float, y: float, z: float, w: float) -> float:
 	return math.atan2(siny_cosp, cosy_cosp)
 
 
+def stamp_to_nanoseconds(stamp) -> int:
+	"""Convert ROS builtin time stamp to nanoseconds."""
+	return int(stamp.sec) * 1_000_000_000 + int(stamp.nanosec)
+
+
 class D2OCNode(Node):
 	"""Main node orchestrating D2OC mapping + goal selection."""
 
@@ -74,7 +79,7 @@ class D2OCNode(Node):
 	def _declare_parameters(self):
 		self.declare_parameter('grid.width', 100.0)
 		self.declare_parameter('grid.height', 100.0)
-		self.declare_parameter('grid.resolution', 0.2)
+		self.declare_parameter('grid.resolution', 0.1)
 
 		self.declare_parameter('algorithm.entropy_threshold', 0.8)
 		self.declare_parameter('algorithm.max_goal_distance', 20.0)
@@ -83,8 +88,9 @@ class D2OCNode(Node):
 		self.declare_parameter('algorithm.candidate_stride', 2)
 		self.declare_parameter('algorithm.max_entropy_candidates', 4000)
 
-		self.declare_parameter('sensor.scan_confidence', 0.7)
+		self.declare_parameter('sensor.scan_confidence', 0.6)
 		self.declare_parameter('sensor.enable_odom_scan_fallback', False)
+		self.declare_parameter('sensor.max_tf_fallback_age_sec', 0.05)
 
 		self.declare_parameter('publish.frequency', 1.0)
 		self.declare_parameter('publish.enable_density_map', True)
@@ -113,6 +119,9 @@ class D2OCNode(Node):
 		self.scan_confidence = float(self.get_parameter('sensor.scan_confidence').value)
 		self.enable_odom_scan_fallback = bool(
 			self.get_parameter('sensor.enable_odom_scan_fallback').value
+		)
+		self.max_tf_fallback_age_sec = float(
+			self.get_parameter('sensor.max_tf_fallback_age_sec').value
 		)
 
 		self.publish_frequency = float(self.get_parameter('publish.frequency').value)
@@ -153,11 +162,29 @@ class D2OCNode(Node):
 					Time(),
 					timeout=Duration(seconds=0.1),
 				)
-				t = latest_transform.transform.translation
-				q = latest_transform.transform.rotation
-				scan_x = float(t.x)
-				scan_y = float(t.y)
-				scan_theta = quaternion_to_yaw(q.x, q.y, q.z, q.w)
+				scan_stamp_ns = stamp_to_nanoseconds(msg.header.stamp)
+				tf_stamp_ns = stamp_to_nanoseconds(latest_transform.header.stamp)
+				age_ns = abs(scan_stamp_ns - tf_stamp_ns)
+				max_age_ns = int(max(self.max_tf_fallback_age_sec, 0.0) * 1e9)
+
+				if age_ns <= max_age_ns:
+					t = latest_transform.transform.translation
+					q = latest_transform.transform.rotation
+					scan_x = float(t.x)
+					scan_y = float(t.y)
+					scan_theta = quaternion_to_yaw(q.x, q.y, q.z, q.w)
+				else:
+					now = self.get_clock().now()
+					if (
+						self._last_scan_drop_warning_time is None
+						or (now - self._last_scan_drop_warning_time).nanoseconds > int(5e9)
+					):
+						self.get_logger().warn(
+							f'Dropping scan: latest TF {source_frame}->{target_frame} differs from scan time by '
+							f'{age_ns / 1e9:.3f}s (limit {self.max_tf_fallback_age_sec:.3f}s)'
+						)
+						self._last_scan_drop_warning_time = now
+					return
 			except TransformException:
 				if (
 					self.enable_odom_scan_fallback
