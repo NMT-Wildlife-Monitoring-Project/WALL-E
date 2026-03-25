@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/home/walle/WALL-E/start_gps.sh
+ExecStart=/home/walle/WALL-E/scripts/gps_start.sh
 RemainAfterExit=true
 
 [Install]

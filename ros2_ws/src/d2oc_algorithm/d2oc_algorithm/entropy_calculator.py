@@ -65,6 +65,8 @@ class EntropyCalculator:
 		density_map,
 		threshold: float = 0.8,
 		min_confidence: float = 0.0,
+		stride: int = 1,
+		max_cells: int = 0,
 	) -> List[Tuple[float, float, float]]:
 		"""
 		Find all cells with entropy >= threshold.
@@ -87,19 +89,42 @@ class EntropyCalculator:
 		"""
 		threshold = float(np.clip(threshold, 0.0, 1.0))
 		min_confidence = float(np.clip(min_confidence, 0.0, 1.0))
+		stride = max(1, int(stride))
+		max_cells = max(0, int(max_cells))
 
-		entropy_grid = self.entropy_map(density_map.occupancy)
+		if stride > 1:
+			occupancy_view = density_map.occupancy[::stride, ::stride]
+			confidence_view = density_map.confidence[::stride, ::stride]
+		else:
+			occupancy_view = density_map.occupancy
+			confidence_view = density_map.confidence
+
+		entropy_grid = self.entropy_map(occupancy_view)
 
 		if min_confidence > 0.0:
-			mask = (entropy_grid >= threshold) & (density_map.confidence >= min_confidence)
+			mask = (entropy_grid >= threshold) & (confidence_view >= min_confidence)
 		else:
 			mask = entropy_grid >= threshold
 
 		rows, cols = np.where(mask)
 
+		if rows.size == 0:
+			return []
+
+		if max_cells > 0 and rows.size > max_cells:
+			entropy_values = entropy_grid[rows, cols]
+			selected = np.argpartition(entropy_values, -max_cells)[-max_cells:]
+			rows = rows[selected]
+			cols = cols[selected]
+			order = np.argsort(entropy_values[selected])[::-1]
+			rows = rows[order]
+			cols = cols[order]
+
 		high_entropy_cells: List[Tuple[float, float, float]] = []
 		for row, col in zip(rows, cols):
-			world_x, world_y = density_map.grid_to_world(int(col), int(row))
+			map_row = int(row * stride)
+			map_col = int(col * stride)
+			world_x, world_y = density_map.grid_to_world(map_col, map_row)
 			high_entropy_cells.append((float(world_x), float(world_y), float(entropy_grid[row, col])))
 
 		return high_entropy_cells

@@ -44,6 +44,8 @@ class D2OCNode(Node):
 			max_goal_distance=self.max_goal_distance,
 			distance_weight=self.distance_weight,
 			min_confidence=self.min_confidence,
+			candidate_stride=self.candidate_stride,
+			max_entropy_candidates=self.max_entropy_candidates,
 			goal_frame_id='map',
 		)
 
@@ -55,6 +57,7 @@ class D2OCNode(Node):
 		self.tf_listener = TransformListener(self.tf_buffer, self)
 		self._last_scan_tf_warning_time = None
 		self._last_scan_drop_warning_time = None
+		self._last_density_map_publish_time = None
 
 		self.create_subscription(LaserScan, self.scan_topic, self.scan_callback, 20)
 		self.create_subscription(Odometry, self.odom_topic, self.odom_callback, 20)
@@ -77,12 +80,15 @@ class D2OCNode(Node):
 		self.declare_parameter('algorithm.max_goal_distance', 20.0)
 		self.declare_parameter('algorithm.distance_weight', 0.1)
 		self.declare_parameter('algorithm.min_confidence', 0.3)
+		self.declare_parameter('algorithm.candidate_stride', 2)
+		self.declare_parameter('algorithm.max_entropy_candidates', 4000)
 
 		self.declare_parameter('sensor.scan_confidence', 0.7)
 		self.declare_parameter('sensor.enable_odom_scan_fallback', False)
 
 		self.declare_parameter('publish.frequency', 1.0)
 		self.declare_parameter('publish.enable_density_map', True)
+		self.declare_parameter('publish.density_map_frequency', 0.5)
 
 		self.declare_parameter('topics.scan', '/scan')
 		self.declare_parameter('topics.odometry', '/odometry/filtered')
@@ -99,6 +105,10 @@ class D2OCNode(Node):
 		self.max_goal_distance = float(self.get_parameter('algorithm.max_goal_distance').value)
 		self.distance_weight = float(self.get_parameter('algorithm.distance_weight').value)
 		self.min_confidence = float(self.get_parameter('algorithm.min_confidence').value)
+		self.candidate_stride = int(self.get_parameter('algorithm.candidate_stride').value)
+		self.max_entropy_candidates = int(
+			self.get_parameter('algorithm.max_entropy_candidates').value
+		)
 
 		self.scan_confidence = float(self.get_parameter('sensor.scan_confidence').value)
 		self.enable_odom_scan_fallback = bool(
@@ -107,6 +117,7 @@ class D2OCNode(Node):
 
 		self.publish_frequency = float(self.get_parameter('publish.frequency').value)
 		self.enable_density_map = bool(self.get_parameter('publish.enable_density_map').value)
+		self.density_map_frequency = float(self.get_parameter('publish.density_map_frequency').value)
 
 		self.scan_topic = str(self.get_parameter('topics.scan').value)
 		self.odom_topic = str(self.get_parameter('topics.odometry').value)
@@ -218,12 +229,20 @@ class D2OCNode(Node):
 		else:
 			self.get_logger().warn('No valid exploration goal found this cycle')
 
-		if self.enable_density_map:
+		if self.enable_density_map and self.density_map_frequency > 0.0:
+			now = self.get_clock().now()
+			if self._last_density_map_publish_time is not None:
+				elapsed_ns = (now - self._last_density_map_publish_time).nanoseconds
+				min_interval_ns = int(1e9 / self.density_map_frequency)
+				if elapsed_ns < min_interval_ns:
+					return
+
 			grid_msg = self.density_map.to_occupancy_grid(
-				stamp=self.get_clock().now().to_msg(),
+				stamp=now.to_msg(),
 				frame_id='map',
 			)
 			self.map_publisher.publish(grid_msg)
+			self._last_density_map_publish_time = now
 
 
 def main(args=None):

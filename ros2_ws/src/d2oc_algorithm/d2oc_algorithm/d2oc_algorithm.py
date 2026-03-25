@@ -22,6 +22,8 @@ class D2OCAlgorithm:
 		max_goal_distance: float = 20.0,
 		distance_weight: float = 0.1,
 		min_confidence: float = 0.3,
+		candidate_stride: int = 1,
+		max_entropy_candidates: int = 0,
 		goal_frame_id: str = 'map',
 	):
 		self.entropy_calculator = entropy_calculator
@@ -29,6 +31,8 @@ class D2OCAlgorithm:
 		self.max_goal_distance = float(max_goal_distance)
 		self.distance_weight = float(distance_weight)
 		self.min_confidence = float(min_confidence)
+		self.candidate_stride = max(1, int(candidate_stride))
+		self.max_entropy_candidates = max(0, int(max_entropy_candidates))
 		self.goal_frame_id = goal_frame_id
 
 	def compute_exploration_goal(
@@ -52,6 +56,8 @@ class D2OCAlgorithm:
 			density_map,
 			threshold=self.entropy_threshold,
 			min_confidence=self.min_confidence,
+			stride=self.candidate_stride,
+			max_cells=self.max_entropy_candidates,
 		)
 		if not candidates:
 			return None

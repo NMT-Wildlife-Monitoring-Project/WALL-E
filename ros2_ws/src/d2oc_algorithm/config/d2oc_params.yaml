@@ -10,6 +10,8 @@ d2oc_explorer:
       max_goal_distance: 20.0
       distance_weight: 0.1
       min_confidence: 0.3
+      candidate_stride: 2
+      max_entropy_candidates: 4000
 
     sensor:
       lidar_max_range: 12.0
@@ -20,6 +22,7 @@ d2oc_explorer:
     publish:
       frequency: 1.0
       enable_density_map: true
+      density_map_frequency: 0.5
 
     topics:
       scan: /scan
