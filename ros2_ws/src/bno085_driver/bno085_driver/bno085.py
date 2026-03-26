@@ -145,7 +145,24 @@ class BNO085:
                    2-3 = fully calibrated
         """
         try:
-            return self.bno.calibration_status
+            status = self.bno.calibration_status
+            # Handle different return types from the Adafruit library
+            if isinstance(status, (tuple, list)):
+                if len(status) == 4:
+                    return tuple(status)
+                elif len(status) == 1:
+                    # If only one value, assume it's system calibration
+                    return (status[0], 0, 0, 0)
+                else:
+                    # Unexpected tuple size, return with defaults
+                    return tuple(status) + (0,) * (4 - len(status))
+            elif isinstance(status, int):
+                # If it's a single int, assume it's system calibration
+                return (status, 0, 0, 0)
+            else:
+                # Unknown type, return defaults
+                warnings.warn(f"Unexpected calibration_status type: {type(status)}")
+                return (0, 0, 0, 0)
         except Exception as e:
             warnings.warn(f"Failed to read calibration status: {e}")
             return (0, 0, 0, 0)

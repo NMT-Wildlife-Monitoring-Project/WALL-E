@@ -67,11 +67,18 @@ class BNO085Node(Node):
             except Exception as e:
                 self.get_logger().error(f'External calibration failed: {e}')
         
-        # Log initial calibration status
-        sys_cal, gyro_cal, accel_cal, mag_cal = self.bno.get_calibration_status()
-        self.get_logger().info(
-            f'Calibration status: System={sys_cal}/3, Gyro={gyro_cal}/3, Accel={accel_cal}/3, Mag={mag_cal}/3'
-        )
+        # Log initial calibration status (with defensive unpacking)
+        try:
+            cal_status = self.bno.get_calibration_status()
+            if len(cal_status) == 4:
+                sys_cal, gyro_cal, accel_cal, mag_cal = cal_status
+                self.get_logger().info(
+                    f'Calibration status: System={sys_cal}/3, Gyro={gyro_cal}/3, Accel={accel_cal}/3, Mag={mag_cal}/3'
+                )
+            else:
+                self.get_logger().warn(f'Unexpected calibration status format: {cal_status}')
+        except Exception as e:
+            self.get_logger().error(f'Failed to query calibration status: {e}')
         
     def _validate_frame_id(self):
         """Check that frame_id exists in TF tree (runs once after startup)."""
