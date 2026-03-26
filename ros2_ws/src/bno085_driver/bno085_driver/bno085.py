@@ -118,6 +118,31 @@ class BNO085:
         self.gryo_bias = np.zeros(3)
         self.accel_bias = np.zeros(3)
 
+    def is_stationary(self, threshold=0.05, num_samples=10):
+        """
+        Check if IMU readings are stable (robot is stationary).
+        
+        Args:
+            threshold: Max acceptable gyro magnitude (rad/s) to consider stationary
+            num_samples: Number of samples to average
+            
+        Returns:
+            bool: True if gyro readings are consistently below threshold
+        """
+        gyro_magnitudes = []
+        for _ in range(num_samples):
+            try:
+                gyro = self.bno.gyro if hasattr(self.bno, 'gyro') else self.bno.gyro_tupled
+                mag = (gyro[0]**2 + gyro[1]**2 + gyro[2]**2) ** 0.5
+                gyro_magnitudes.append(mag)
+                time.sleep(0.01)
+            except Exception as e:
+                warnings.warn(f"Failed to read gyro during stationarity check: {e}")
+                return False
+        
+        avg_magnitude = sum(gyro_magnitudes) / len(gyro_magnitudes)
+        return avg_magnitude < threshold
+
     def begin_calibration(self):
         """
         Start the BNO085's built-in calibration sequence.

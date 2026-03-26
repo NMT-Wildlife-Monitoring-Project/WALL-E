@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import rclpy
+import time
 from rclpy.node import Node
 from rclpy.time import Time
 from rclpy.duration import Duration
@@ -25,9 +26,9 @@ class BNO085Node(Node):
         self.declare_parameter('frame_id', 'imu_link')  # Default frame ID; see robot.urdf.xacro
         self.frame_id = self.get_parameter('frame_id').value
         
-        # Declare parameter for external calibration (built-in is preferred)
-        self.declare_parameter('enable_external_calibration', False)
-        self.enable_external_calibration = self.get_parameter('enable_external_calibration').value
+        # Note: enable_external_calibration is deprecated; external calibration is now always used
+        # with smart motion detection. Kept for backwards compatibility.
+        self.declare_parameter('enable_external_calibration', True)
         
         # Publishers
         self.imu_pub = self.create_publisher(Imu, 'imu/data', 10)
@@ -52,22 +53,31 @@ class BNO085Node(Node):
             del self.bno
         self.bno = BNO085(self.i2c_address, self.i2c_bus)
         
-        # Use built-in calibration (continuous, online)
-        if self.bno.begin_calibration():
-            self.get_logger().info('BNO085 built-in calibration started (continuous online calibration)')
-        else:
-            self.get_logger().warn('Failed to start built-in calibration; sensor may be uncalibrated')
+        # Smart calibration: detect stationarity first, then calibrate
+        self.get_logger().info('Waiting for IMU to detect stationary conditions (max 10 seconds)...')
+        start_time = self.get_clock().now()
+        stationary_detected = False
         
-        # Optionally run external calibration (deprecated, blocking, requires stationary robot)
-        if self.enable_external_calibration:
-            self.get_logger().warn('Running external calibration—KEEP ROBOT STATIONARY for 1 second!')
-            try:
-                self.bno.calibrate()
-                self.get_logger().info('External calibration complete')
-            except Exception as e:
-                self.get_logger().error(f'External calibration failed: {e}')
+        while (self.get_clock().now() - start_time).nanoseconds < 10e9:  # 10 second timeout
+            if self.bno.is_stationary(threshold=0.05, num_samples=5):
+                self.get_logger().info('✓ Robot detected as stationary; starting IMU calibration')
+                stationary_detected = True
+                break
+            self.get_logger().warn('Robot still moving; waiting for stationarity...')
+            time.sleep(0.5)
         
-        # Log initial calibration status (with defensive unpacking)
+        if not stationary_detected:
+            self.get_logger().warn('⚠️ Timeout waiting for stationarity; proceeding with calibration anyway')
+        
+        # Run external calibration (only method that works reliably on this hardware)
+        self.get_logger().warn('🔧 Running IMU calibration—DO NOT MOVE ROBOT for 1 second!')
+        try:
+            self.bno.calibrate()
+            self.get_logger().info('✓ External calibration complete')
+        except Exception as e:
+            self.get_logger().error(f'✗ External calibration failed: {e}')
+        
+        # Log final calibration status
         try:
             cal_status = self.bno.get_calibration_status()
             if len(cal_status) == 4:
@@ -75,6 +85,13 @@ class BNO085Node(Node):
                 self.get_logger().info(
                     f'Calibration status: System={sys_cal}/3, Gyro={gyro_cal}/3, Accel={accel_cal}/3, Mag={mag_cal}/3'
                 )
+                
+                # Warn if calibration is poor
+                if gyro_cal < 2 or accel_cal < 2:
+                    self.get_logger().warn(
+                        f'Poor calibration detected (Gyro={gyro_cal}, Accel={accel_cal}). '
+                        f'Map drift may occur. Try restarting with robot stationary.'
+                    )
             else:
                 self.get_logger().warn(f'Unexpected calibration status format: {cal_status}')
         except Exception as e:
