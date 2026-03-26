@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import rclpy
-import time
 from rclpy.node import Node
 from rclpy.time import Time
 from rclpy.duration import Duration
@@ -26,10 +25,6 @@ class BNO085Node(Node):
         self.declare_parameter('frame_id', 'imu_link')  # Default frame ID; see robot.urdf.xacro
         self.frame_id = self.get_parameter('frame_id').value
         
-        # Note: enable_external_calibration is deprecated; external calibration is now always used
-        # with smart motion detection. Kept for backwards compatibility.
-        self.declare_parameter('enable_external_calibration', True)
-        
         # Publishers
         self.imu_pub = self.create_publisher(Imu, 'imu/data', 10)
         self.mag_pub = self.create_publisher(MagneticField, 'imu/mag', 10)
@@ -52,50 +47,7 @@ class BNO085Node(Node):
         if self.bno is not None:
             del self.bno
         self.bno = BNO085(self.i2c_address, self.i2c_bus)
-        
-        # Smart calibration: detect stationarity first, then calibrate
-        self.get_logger().info('Waiting for IMU to detect stationary conditions (max 10 seconds)...')
-        start_time = self.get_clock().now()
-        stationary_detected = False
-        
-        while (self.get_clock().now() - start_time).nanoseconds < 10e9:  # 10 second timeout
-            if self.bno.is_stationary(threshold=0.05, num_samples=5):
-                self.get_logger().info('✓ Robot detected as stationary; starting IMU calibration')
-                stationary_detected = True
-                break
-            self.get_logger().warn('Robot still moving; waiting for stationarity...')
-            time.sleep(0.5)
-        
-        if not stationary_detected:
-            self.get_logger().warn('⚠️ Timeout waiting for stationarity; proceeding with calibration anyway')
-        
-        # Run external calibration (only method that works reliably on this hardware)
-        self.get_logger().warn('🔧 Running IMU calibration—DO NOT MOVE ROBOT for 1 second!')
-        try:
-            self.bno.calibrate()
-            self.get_logger().info('✓ External calibration complete')
-        except Exception as e:
-            self.get_logger().error(f'✗ External calibration failed: {e}')
-        
-        # Log final calibration status
-        try:
-            cal_status = self.bno.get_calibration_status()
-            if len(cal_status) == 4:
-                sys_cal, gyro_cal, accel_cal, mag_cal = cal_status
-                self.get_logger().info(
-                    f'Calibration status: System={sys_cal}/3, Gyro={gyro_cal}/3, Accel={accel_cal}/3, Mag={mag_cal}/3'
-                )
-                
-                # Warn if calibration is poor
-                if gyro_cal < 2 or accel_cal < 2:
-                    self.get_logger().warn(
-                        f'Poor calibration detected (Gyro={gyro_cal}, Accel={accel_cal}). '
-                        f'Map drift may occur. Try restarting with robot stationary.'
-                    )
-            else:
-                self.get_logger().warn(f'Unexpected calibration status format: {cal_status}')
-        except Exception as e:
-            self.get_logger().error(f'Failed to query calibration status: {e}')
+        self.bno.calibrate()
         
     def _validate_frame_id(self):
         """Check that frame_id exists in TF tree (runs once after startup)."""

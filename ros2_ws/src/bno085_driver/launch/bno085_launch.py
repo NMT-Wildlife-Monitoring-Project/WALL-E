@@ -23,17 +23,10 @@ def generate_launch_description():
         description='TF frame ID for IMU (must match URDF definition in robot.urdf.xacro)'
     )
     
-    enable_external_calibration_arg = DeclareLaunchArgument(
-        'enable_external_calibration',
-        default_value='false',
-        description='Enable external calibration at startup (deprecated; use built-in calibration)'
-    )
-    
     return LaunchDescription([
         i2c_address_arg,
         i2c_bus_arg,
         frame_id_arg,
-        enable_external_calibration_arg,
         Node(
             package='bno085_driver',
             executable='bno085_node',
@@ -42,7 +35,6 @@ def generate_launch_description():
                 'i2c_address': LaunchConfiguration('i2c_address'),
                 'i2c_bus': LaunchConfiguration('i2c_bus'),
                 'frame_id': LaunchConfiguration('frame_id'),
-                'enable_external_calibration': LaunchConfiguration('enable_external_calibration'),
             }],
             output='screen'
         )
