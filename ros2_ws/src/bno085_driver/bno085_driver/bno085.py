@@ -118,7 +118,54 @@ class BNO085:
         self.gryo_bias = np.zeros(3)
         self.accel_bias = np.zeros(3)
 
+    def begin_calibration(self):
+        """
+        Start the BNO085's built-in calibration sequence.
+        This enables continuous online calibration during operation.
+        The sensor will self-calibrate whenever it detects stationary periods.
+        
+        Returns:
+            True if calibration started successfully
+        """
+        try:
+            self.bno.begin_calibration()
+            return True
+        except Exception as e:
+            warnings.warn(f"Failed to start BNO085 calibration: {e}")
+            return False
+
+    def get_calibration_status(self):
+        """
+        Get the current calibration status from the BNO085.
+        
+        Returns:
+            tuple: (sys_cal, gyro_cal, accel_cal, mag_cal) where each is 0-3
+                   0 = uncalibrated
+                   1 = some calibration
+                   2-3 = fully calibrated
+        """
+        try:
+            return self.bno.calibration_status
+        except Exception as e:
+            warnings.warn(f"Failed to read calibration status: {e}")
+            return (0, 0, 0, 0)
+
     def calibrate(self, num_samples=100):
+        """
+        DEPRECATED: External bias calibration (blocking, requires stationary robot).
+        Use built-in calibration (begin_calibration) instead for continuous online calibration.
+        
+        This method is kept for backwards compatibility but should not be used on startup.
+        Only run manually if you have a specific reason to estimate biases offline.
+        
+        NOTE: This MUST be called with the robot stationary. If the robot is moving
+        or vibrating, this will capture motion as bias and corrupt all subsequent readings.
+        """
+        warnings.warn(
+            "External calibration is deprecated; use begin_calibration() for online calibration. "
+            "Only call this if robot is guaranteed stationary and you understand the risks."
+        )
+        
         quat_samples = np.zeros((len(self.quat), num_samples))
         rpy_samples = np.zeros((len(self.rpy), num_samples))
         gyro_samples = np.zeros((len(self.gyro), num_samples))
