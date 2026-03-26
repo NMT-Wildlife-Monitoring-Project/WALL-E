@@ -37,6 +37,9 @@ class BNO085Node(Node):
         # Create BNO085 and initialize calibration
         self.bno = None
         self.initialize()
+
+        self._frame_validation_start = self.get_clock().now()
+        self._frame_wait_log_time = None
         
         # Validate frame_id exists in TF tree (async check after brief delay)
         self._frame_validation_timer = self.create_timer(0.5, self._validate_frame_id)
@@ -59,14 +62,32 @@ class BNO085Node(Node):
             # Try to lookup transform from base_link to frame_id
             self._tf_buffer.lookup_transform('base_link', self.frame_id, Time(), timeout=Duration(seconds=0.1))
             self.get_logger().info(f'✓ Frame validation: "{self.frame_id}" is valid and connected to base_link')
+            if self.frame_id != 'imu_link':
+                self.get_logger().warn(
+                    f'IMU frame_id is "{self.frame_id}" (expected "imu_link"). '
+                    'This can cause incorrect orientation fusion and map drift if the frame is not the IMU frame.'
+                )
             # Cancel this timer after successful validation
             if hasattr(self, '_frame_validation_timer'):
                 self._frame_validation_timer.cancel()
         except TransformException as e:
-            self.get_logger().error(
-                f'✗ Frame validation failed: "{self.frame_id}" not found in TF tree. '
-                f'Check URDF definition and robot_state_publisher. Error: {e}'
-            )
+            elapsed = (self.get_clock().now() - self._frame_validation_start).nanoseconds / 1e9
+            if elapsed < 8.0:
+                now = self.get_clock().now()
+                if (
+                    self._frame_wait_log_time is None
+                    or (now - self._frame_wait_log_time).nanoseconds > int(2e9)
+                ):
+                    self.get_logger().warn(
+                        f'Waiting for TF tree to validate IMU frame "{self.frame_id}" '
+                        f'(startup grace period, {elapsed:.1f}s): {e}'
+                    )
+                    self._frame_wait_log_time = now
+            else:
+                self.get_logger().error(
+                    f'✗ Frame validation failed after startup grace period: "{self.frame_id}" not found in TF tree. '
+                    f'Check URDF definition and robot_state_publisher. Error: {e}'
+                )
         
     
     def publish(self):

@@ -55,7 +55,10 @@ def generate_launch_description():
             PythonLaunchDescriptionSource([
                 FindPackageShare('bno085_driver'), '/launch/bno085_launch.py'
             ]),
-            condition=IfCondition(launch_bno085)
+            condition=IfCondition(launch_bno085),
+            launch_arguments={
+                'frame_id': 'imu_link',
+            }.items()
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
