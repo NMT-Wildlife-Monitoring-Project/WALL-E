@@ -32,7 +32,7 @@ class BNO085Node(Node):
         self.get_logger().info(f'Using I2C bus: {self.i2c_bus}, address: 0x{self.i2c_address:02X}, frame: {self.frame_id}')
 
         # Create timer for publishing
-        self.timer = self.create_timer(0.01, self.publish)  # 100Hz
+        self.timer = self.create_timer(0.02, self.publish)  # 50Hz
 
         # Create BNO085 and initialize calibration
         self.bno = None
