@@ -36,7 +36,7 @@ def generate_launch_description():
         DeclareLaunchArgument('launch_gps', default_value='true'),
         DeclareLaunchArgument('launch_urdf', default_value='true'),
         DeclareLaunchArgument('launch_nav', default_value='true'),
-        DeclareLaunchArgument('launch_d2oc', default_value='true'),
+        DeclareLaunchArgument('launch_d2oc', default_value='false'),
         DeclareLaunchArgument('use_rviz', default_value='false'),
         DeclareLaunchArgument('launch_waypoint_follower', default_value='false'),
         DeclareLaunchArgument('rf2o_scan_topic', default_value='/scan'),
