@@ -71,9 +71,12 @@ def generate_launch_description():
         executable='rf2o_laser_odometry_node',
         name='rf2o_laser_odometry',
         output='screen',
+        arguments=['--ros-args', '--log-level', 'warn'],
         parameters=[{
             'laser_scan_topic': rf2o_scan_topic,
             'odom_topic': rf2o_odom_topic,
+            # Lower frequency to fit Jetson compute budget and avoid backlog.
+            'freq': 10.0,
             # Don't block scan processing waiting for an external init pose topic.
             'init_pose_from_topic': '',
             # EKF publishes odom->base_link TF; avoid duplicate TF publishers.
