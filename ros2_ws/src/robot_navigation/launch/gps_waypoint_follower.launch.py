@@ -98,16 +98,6 @@ def generate_launch_description():
         parameters=[twist_mux_yaml]
     )
 
-    # Launch a standalone velocity_smoother that subscribes to /cmd_vel_raw
-    velocity_smoother_cmd = launch_ros.actions.Node(
-        package='nav2_velocity_smoother',
-        executable='velocity_smoother',
-        name='velocity_smoother',
-        output='screen',
-        parameters=[configured_params],
-        remappings=[('cmd_vel', '/cmd_vel_out')]
-    )
-
     # GPS waypoint handler node
     gps_waypoint_handler_cmd = launch_ros.actions.Node(
         package='waypoint_server',
@@ -159,9 +149,6 @@ def generate_launch_description():
 
     # twist_mux
     ld.add_action(twist_mux_cmd)
-
-    # velocity smoother (remapped to accept mux output)
-    ld.add_action(velocity_smoother_cmd)
 
     # GPS waypoint handler
     ld.add_action(gps_waypoint_handler_cmd)
