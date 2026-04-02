@@ -33,7 +33,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('launch_rplidar', default_value='true'),
         DeclareLaunchArgument('launch_bno085', default_value='true'),
-        DeclareLaunchArgument('launch_gps', default_value='true'),
+        DeclareLaunchArgument('launch_gps', default_value='false'),
         DeclareLaunchArgument('launch_urdf', default_value='true'),
         DeclareLaunchArgument('launch_nav', default_value='true'),
         DeclareLaunchArgument('launch_d2oc', default_value='false'),
