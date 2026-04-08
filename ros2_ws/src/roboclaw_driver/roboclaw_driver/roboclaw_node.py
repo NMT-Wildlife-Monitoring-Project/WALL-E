@@ -49,10 +49,10 @@ class RoboclawNode(Node):
         self.declare_parameter('qppr', 6533)  # Quadrature pulses per revolution
         self.declare_parameter('accel', 1.5)    # m/s^2
         self.declare_parameter('max_speed', 0.4) # m/s
-        self.declare_parameter('max_speed_qpps', 10560)  # Max speed in quadrature pulses per second, -1 means use max_speed
-        self.declare_parameter('accel_qpps', -1)      # Max accel in quadrature pulses per second^2, -1 means use accel
-        self.declare_parameter('wheel_separation', 0.24) # meters
-        self.declare_parameter('wheel_diameter', 0.093)    # meters
+        self.declare_parameter('max_speed_qpps', 4224)  # Max speed in quadrature pulses per second (12V nominal)
+        self.declare_parameter('accel_qpps', 10000)      # Max accel in quadrature pulses per second^2
+        self.declare_parameter('wheel_separation', 0.39) # meters
+        self.declare_parameter('wheel_diameter', 0.095)    # meters
         self.declare_parameter('m1_reverse', True)  # Reverse motor 1 direction
         self.declare_parameter('m2_reverse', False)  # Reverse motor 2 direction
         self.declare_parameter('odom_publish_rate', 20)  # Hz
@@ -87,16 +87,19 @@ class RoboclawNode(Node):
         self.accel_qpps_param = self.get_parameter('accel_qpps').get_parameter_value().integer_value
 
         # Calculate max speed qpps
-        if (self.max_speed_qpps_param is not None and self.max_speed_qpps_param >= 0):
+        if (self.max_speed_qpps_param is not None and self.max_speed_qpps_param > 0):
             self.max_speed_qpps = self.max_speed_qpps_param
         else:
             self.max_speed_qpps = self.meters_to_pulses(self.max_speed) if self.max_speed is not None and self.max_speed >= 0 else 0
 
-        # Calculate accel qpps
-        if (self.accel_qpps_param is not None and self.accel_qpps_param >= 0):
+        # Calculate accel qpps (must be positive; never send negative to RoboClaw)
+        if (self.accel_qpps_param is not None and self.accel_qpps_param > 0):
             self.accel_qpps = self.accel_qpps_param
         else:
-            self.accel_qpps = self.meters_to_pulses(self.accel) if self.accel is not None and self.accel >= 0 else 0
+            self.accel_qpps = self.meters_to_pulses(self.accel) if self.accel is not None and self.accel >= 0 else 1000
+        
+        # Ensure accel_qpps is always positive
+        self.accel_qpps = max(1, abs(self.accel_qpps))
 
         self._port_lock = threading.Lock()
         self._reconnecting = False
@@ -149,6 +152,23 @@ class RoboclawNode(Node):
                         self.roboclaw._port.reset_output_buffer()
                     except Exception:
                         pass
+                    
+                    # Initialize encoder modes (1 = quadrature encoders)
+                    try:
+                        self.roboclaw.SetM1EncoderMode(self.address, 1)
+                        self.roboclaw.SetM2EncoderMode(self.address, 1)
+                        self.get_logger().info('Encoder modes initialized to quadrature')
+                    except Exception as e:
+                        self.get_logger().warn(f'Failed to set encoder modes: {e}')
+                    
+                    # Reset encoders to 0
+                    try:
+                        self.roboclaw.ResetEncoders(self.address)
+                        self.get_logger().info('Encoders reset to 0')
+                    except Exception as e:
+                        self.get_logger().warn(f'Failed to reset encoders: {e}')
+                    
+                    time.sleep(0.05)
                     self.connected = True
                     self._reconnecting = False
                     self._reconnect_backoff = 0.2
