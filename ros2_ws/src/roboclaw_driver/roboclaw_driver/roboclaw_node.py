@@ -222,6 +222,8 @@ class RoboclawNode(Node):
         if self.m2_reverse:
             qpps_right = -qpps_right
         self._last_cmd = (qpps_left, qpps_right)
+        # Debug logging
+        self.get_logger().debug(f'cmd_vel: v={v:.3f}, omega={omega:.3f} -> qpps_left={qpps_left}, qpps_right={qpps_right}')
         if not self.connected:
             return
         try:
