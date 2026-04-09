@@ -19,16 +19,16 @@
 roboclaw_node:
   ros__parameters:
     serial_port: /dev/roboclaw
-    baudrate: 9600
+    baudrate: 115200
     address: 128
 
     # Encoder counts per revolution for the wheel encoders
     qppr: 6533
 
-    # Maximum speed the hardware can physically achieve (measured by BasicMicro
-    # auto-tune).  Use the lower of the two motors (M2=25410) so the clamping
-    # in cmd_vel_callback reflects true hardware limits.
-    max_speed_qpps: 25410
+    # Soft clamp applied in cmd_vel_callback.  Set to the QPPS that corresponds
+    # to your desired top speed (0.4 m/s → ~9000 QPPS at qppr=6533, diam=95 mm).
+    # Hardware ceiling measured by BasicMicro auto-tune: M1=26070, M2=25410.
+    max_speed_qpps: 9000
 
     # Acceleration in QPPS² – matches roboclaw on-device default accel
     accel_qpps: 2000
@@ -43,7 +43,7 @@ roboclaw_node:
 
     # Motor direction inversion
     m1_reverse: true
-    m2_reverse: false
+    m2_reverse: true
 
     # Topic / frame names
     cmd_vel_topic: cmd_vel

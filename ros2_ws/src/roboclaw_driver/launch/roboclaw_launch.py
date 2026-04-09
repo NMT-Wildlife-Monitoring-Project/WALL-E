@@ -15,17 +15,17 @@ def generate_launch_description():
     # Declare all arguments
     args = [
         DeclareLaunchArgument('serial_port', default_value='/dev/roboclaw'),
-        DeclareLaunchArgument('baudrate', default_value='9600'),
+        DeclareLaunchArgument('baudrate', default_value='115200'),
         DeclareLaunchArgument('address', default_value='128'),
         DeclareLaunchArgument('qppr', default_value='6533'),
         DeclareLaunchArgument('accel', default_value='1.5'),
         DeclareLaunchArgument('max_speed', default_value='0.4'),
-        DeclareLaunchArgument('max_speed_qpps', default_value='25410'),  # measured by BasicMicro auto-tune (M1=26070, M2=25410)
+        DeclareLaunchArgument('max_speed_qpps', default_value='9000'),   # ~0.4 m/s working max; hardware ceiling is ~25000
         DeclareLaunchArgument('accel_qpps', default_value='2000'),  # matches roboclaw on-device default accel/decel
         DeclareLaunchArgument('wheel_separation', default_value='0.39'),
         DeclareLaunchArgument('wheel_diameter', default_value='0.095'),
         DeclareLaunchArgument('m1_reverse', default_value='True'),
-        DeclareLaunchArgument('m2_reverse', default_value='False'),
+        DeclareLaunchArgument('m2_reverse', default_value='True'),
         DeclareLaunchArgument('odom_publish_rate', default_value='20'),
         DeclareLaunchArgument('status_publish_rate', default_value='5'),
         DeclareLaunchArgument('status_topic', default_value='roboclaw_status'),
