@@ -43,7 +43,7 @@ roboclaw_node:
 
     # Motor direction inversion
     m1_reverse: true
-    m2_reverse: false
+    m2_reverse: true
 
     # Topic / frame names
     cmd_vel_topic: cmd_vel
