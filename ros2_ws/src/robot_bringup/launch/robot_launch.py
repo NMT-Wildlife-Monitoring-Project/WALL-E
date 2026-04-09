@@ -94,16 +94,21 @@ def generate_launch_description():
                 'launch_waypoint_follower': launch_waypoint_follower,
             }.items()
         ),
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([
-                FindPackageShare('scan_matcher'), '/launch/scan_matcher_launch.py'
-            ]),
+        Node(
+            package='rf2o_laser_odometry',
+            executable='rf2o_laser_odometry_node',
+            name='rf2o_laser_odometry',
+            output='screen',
+            parameters=[{
+                'laser_scan_topic': rf2o_scan_topic,
+                'odom_topic': rf2o_odom_topic,
+                'init_pose_from_topic': '',
+                'publish_tf': False,
+                'base_frame_id': 'base_link',
+                'odom_frame_id': 'odom',
+                'freq': 20.0,
+            }],
             condition=IfCondition(launch_nav),
-            launch_arguments={
-                'scan_topic': rf2o_scan_topic,
-                'output_odom_topic': rf2o_odom_topic,
-                'publish_tf': 'false',
-            }.items()
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
