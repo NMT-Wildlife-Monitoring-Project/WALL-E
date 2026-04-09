@@ -4,7 +4,7 @@ After=network-online.target docker.service
 Wants=network-online.target docker.service
 
 [Service]
-ExecStart=/home/walle/WALL-E/docker/start_docker.sh -s -B -q
+ExecStart=/home/walle/WALL-E/docker/start_docker.sh -R -s -q
 WorkingDirectory=/home/walle
 StandardOutput=inherit
 StandardError=inherit

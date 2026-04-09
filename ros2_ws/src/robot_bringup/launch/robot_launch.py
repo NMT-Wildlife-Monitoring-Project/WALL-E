@@ -92,8 +92,17 @@ def generate_launch_description():
             launch_arguments={
                 'use_rviz': use_rviz,
                 'launch_waypoint_follower': launch_waypoint_follower,
-                'rf2o_scan_topic': rf2o_scan_topic,
-                'rf2o_odom_topic': rf2o_odom_topic,
+            }.items()
+        ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([
+                FindPackageShare('scan_matcher'), '/launch/scan_matcher_launch.py'
+            ]),
+            condition=IfCondition(launch_nav),
+            launch_arguments={
+                'scan_topic': rf2o_scan_topic,
+                'output_odom_topic': rf2o_odom_topic,
+                'publish_tf': 'false',
             }.items()
         ),
         IncludeLaunchDescription(
