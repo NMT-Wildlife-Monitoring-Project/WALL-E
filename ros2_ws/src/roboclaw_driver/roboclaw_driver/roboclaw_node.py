@@ -49,7 +49,7 @@ class RoboclawNode(Node):
         self.declare_parameter('qppr', 6533)  # Quadrature pulses per revolution
         self.declare_parameter('accel', 1.5)    # m/s^2
         self.declare_parameter('max_speed', 0.4) # m/s
-        self.declare_parameter('max_speed_qpps', 25410)  # Measured by BasicMicro auto-tune: M1=26070, M2=25410
+        self.declare_parameter('max_speed_qpps', 9000)   # ~0.4 m/s at qppr=6533, wheel_diam=0.095; hardware ceiling is ~25000
         self.declare_parameter('accel_qpps', 2000)        # Matches roboclaw on-device default accel/decel
         self.declare_parameter('wheel_separation', 0.39) # meters
         self.declare_parameter('wheel_diameter', 0.095)    # meters
@@ -153,15 +153,9 @@ class RoboclawNode(Node):
                     except Exception:
                         pass
                     
-                    # Initialize encoder modes (1 = quadrature encoders)
-                    try:
-                        self.roboclaw.SetM1EncoderMode(self.address, 1)
-                        self.roboclaw.SetM2EncoderMode(self.address, 1)
-                        self.get_logger().info('Encoder modes initialized to quadrature')
-                    except Exception as e:
-                        self.get_logger().warn(f'Failed to set encoder modes: {e}')
-                    
                     # Reset encoders to 0
+                    # NOTE: encoder modes are NOT overridden here — they are
+                    # configured and saved on-device via BasicMicro Motion Studio.
                     try:
                         self.roboclaw.ResetEncoders(self.address)
                         self.get_logger().info('Encoders reset to 0')
