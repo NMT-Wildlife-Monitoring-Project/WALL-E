@@ -241,7 +241,11 @@ class RoboclawNode(Node):
         try:
             with self._port_lock:
                 if not self.connected: return
-                self.roboclaw.SpeedAccelM1M2(self.address, self.accel_qpps, 0, 0)
+                # DutyM1M2 cuts PWM to 0 immediately, bypassing the velocity PID.
+                # SpeedAccelM1M2(0) relies on the PID to decelerate, which can
+                # fail if the PID is in a bad state (e.g. encoder direction mismatch
+                # on M2 causes it to fight the stop command).
+                self.roboclaw.DutyM1M2(self.address, 0, 0)
         except (serial.serialutil.SerialException, OSError) as e:
             self.get_logger().warning(f"Serial error in stop_motors: {e}")
 
