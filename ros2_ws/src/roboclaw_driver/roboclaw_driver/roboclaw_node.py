@@ -49,8 +49,8 @@ class RoboclawNode(Node):
         self.declare_parameter('qppr', 6533)  # Quadrature pulses per revolution
         self.declare_parameter('accel', 1.5)    # m/s^2
         self.declare_parameter('max_speed', 0.4) # m/s
-        self.declare_parameter('max_speed_qpps', 4224)  # Max speed in quadrature pulses per second (12V nominal)
-        self.declare_parameter('accel_qpps', 10000)      # Max accel in quadrature pulses per second^2
+        self.declare_parameter('max_speed_qpps', 25410)  # Measured by BasicMicro auto-tune: M1=26070, M2=25410
+        self.declare_parameter('accel_qpps', 2000)        # Matches roboclaw on-device default accel/decel
         self.declare_parameter('wheel_separation', 0.39) # meters
         self.declare_parameter('wheel_diameter', 0.095)    # meters
         self.declare_parameter('m1_reverse', True)  # Reverse motor 1 direction

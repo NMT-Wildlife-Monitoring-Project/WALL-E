@@ -1,9 +1,17 @@
+import os
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 
 def generate_launch_description():
+    config = os.path.join(
+        get_package_share_directory('roboclaw_driver'),
+        'config',
+        'roboclaw_params.yaml'
+    )
+
     # Declare all arguments
     args = [
         DeclareLaunchArgument('serial_port', default_value='/dev/roboclaw'),
@@ -12,8 +20,8 @@ def generate_launch_description():
         DeclareLaunchArgument('qppr', default_value='6533'),
         DeclareLaunchArgument('accel', default_value='1.5'),
         DeclareLaunchArgument('max_speed', default_value='0.4'),
-        DeclareLaunchArgument('max_speed_qpps', default_value='3285'),  # 0.15 m/s at 12V (prev 4224=0.19m/s, 10560=30V)
-        DeclareLaunchArgument('accel_qpps', default_value='2000'),  # ~0.30 m/s² smooth accel (prev 10000 was jerky)
+        DeclareLaunchArgument('max_speed_qpps', default_value='25410'),  # measured by BasicMicro auto-tune (M1=26070, M2=25410)
+        DeclareLaunchArgument('accel_qpps', default_value='2000'),  # matches roboclaw on-device default accel/decel
         DeclareLaunchArgument('wheel_separation', default_value='0.39'),
         DeclareLaunchArgument('wheel_diameter', default_value='0.095'),
         DeclareLaunchArgument('m1_reverse', default_value='True'),
@@ -59,7 +67,7 @@ def generate_launch_description():
                 executable='roboclaw_node',
                 name='roboclaw_node',
                 output='screen',
-                parameters=node_params,
+                parameters=[config] + node_params,  # config file provides defaults; args override
                 remappings=[('cmd_vel', '/cmd_vel_out')],
             )
         ]

@@ -1,0 +1,58 @@
+# Roboclaw driver ROS2 parameters
+# Hardware-tuned settings sourced from walleroboclawsettings.cfg (BasicMicro Motion Studio)
+#
+# ── Hardware PID (stored on-device, configured via BasicMicro) ──────────────
+# Velocity PID  M1: P=3.08918  I=0.23169  D=0    QPPS=26070
+# Velocity PID  M2: P=2.63543  I=0.18177  D=0    QPPS=25410
+# Position PID  M1: P=40.67662 I=0        D=0
+# Position PID  M2: P=49.52638 I=0        D=0
+# Default speed:  100 (both motors)
+# Default accel:  2000 QPPS²
+# Default decel:  2000 QPPS²
+# Current limits: -30 A / +30 A (both motors)
+# Auto-timeout:   10 × 100 ms = 1 s
+# Main voltage:   min 5.9 V  max 27.9 V
+# Logic voltage:  min 5.4 V  max 34.5 V
+# Address:        128
+# ────────────────────────────────────────────────────────────────────────────
+
+roboclaw_node:
+  ros__parameters:
+    serial_port: /dev/roboclaw
+    baudrate: 9600
+    address: 128
+
+    # Encoder counts per revolution for the wheel encoders
+    qppr: 6533
+
+    # Maximum speed the hardware can physically achieve (measured by BasicMicro
+    # auto-tune).  Use the lower of the two motors (M2=25410) so the clamping
+    # in cmd_vel_callback reflects true hardware limits.
+    max_speed_qpps: 25410
+
+    # Acceleration in QPPS² – matches roboclaw on-device default accel
+    accel_qpps: 2000
+
+    # Software speed / accel caps exposed to the planner (m/s and m/s²)
+    max_speed: 0.4
+    accel: 1.5
+
+    # Physical robot dimensions
+    wheel_separation: 0.39   # metres, track width
+    wheel_diameter: 0.095    # metres
+
+    # Motor direction inversion
+    m1_reverse: true
+    m2_reverse: false
+
+    # Topic / frame names
+    cmd_vel_topic: cmd_vel
+    odom_topic: odom
+    status_topic: roboclaw_status
+    odom_frame_id: odom
+    base_frame_id: base_link
+
+    # Publish rates and timeouts
+    odom_publish_rate: 20    # Hz
+    status_publish_rate: 5   # Hz
+    cmd_vel_timeout: 1.0     # seconds – matches roboclaw auto-timeout (10×100 ms)
