@@ -12,8 +12,8 @@ def generate_launch_description():
         DeclareLaunchArgument('qppr', default_value='6533'),
         DeclareLaunchArgument('accel', default_value='1.5'),
         DeclareLaunchArgument('max_speed', default_value='0.4'),
-        DeclareLaunchArgument('max_speed_qpps', default_value='4224'),#previously 10560, 30v -> 4224 for about 12v
-        DeclareLaunchArgument('accel_qpps', default_value='10000'),
+        DeclareLaunchArgument('max_speed_qpps', default_value='3285'),  # 0.15 m/s at 12V (prev 4224=0.19m/s, 10560=30V)
+        DeclareLaunchArgument('accel_qpps', default_value='2000'),  # ~0.30 m/s² smooth accel (prev 10000 was jerky)
         DeclareLaunchArgument('wheel_separation', default_value='0.39'),
         DeclareLaunchArgument('wheel_diameter', default_value='0.095'),
         DeclareLaunchArgument('m1_reverse', default_value='True'),

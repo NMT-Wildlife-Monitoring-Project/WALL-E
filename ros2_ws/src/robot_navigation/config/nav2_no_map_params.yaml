@@ -73,7 +73,7 @@ controller_server:
       vx_max: 0.15
       vx_min: -0.10
       vy_max: 0.0
-      wz_max: 1.0
+      wz_max: 0.6
       iteration_count: 1
       prune_distance: 1.7
       transform_tolerance: 0.1
@@ -311,8 +311,8 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.15, 0.0, 1.0]
-    min_velocity: [-0.10, 0.0, -1.0]
+    max_velocity: [0.15, 0.0, 0.6]
+    min_velocity: [-0.10, 0.0, -0.6]
     max_accel: [1.0, 0.0, 1.5]
     max_decel: [-1.0, 0.0, -1.5]
     odom_topic: "/odometry/local"
