@@ -15,7 +15,7 @@ def generate_launch_description():
     # Declare all arguments
     args = [
         DeclareLaunchArgument('serial_port', default_value='/dev/roboclaw'),
-        DeclareLaunchArgument('baudrate', default_value='9600'),
+        DeclareLaunchArgument('baudrate', default_value='115200'),
         DeclareLaunchArgument('address', default_value='128'),
         DeclareLaunchArgument('qppr', default_value='6533'),
         DeclareLaunchArgument('accel', default_value='1.5'),

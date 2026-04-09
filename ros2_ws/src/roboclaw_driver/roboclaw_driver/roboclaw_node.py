@@ -44,7 +44,7 @@ class RoboclawNode(Node):
         super().__init__('roboclaw_node')
         # Declare parameters
         self.declare_parameter('serial_port', '/dev/roboclaw')
-        self.declare_parameter('baudrate', 9600)
+        self.declare_parameter('baudrate', 115200)
         self.declare_parameter('address', 128)
         self.declare_parameter('qppr', 6533)  # Quadrature pulses per revolution
         self.declare_parameter('accel', 1.5)    # m/s^2
