@@ -257,6 +257,13 @@ class RoboclawNode(Node):
     def _heartbeat(self):
         if not self.connected:
             return
+        # Only re-send last command if within the cmd_vel timeout window.
+        # If the timeout has expired, stop_motors() already zeroed the motors
+        # and we must not override that by replaying a stale last command.
+        now = self.get_clock().now()
+        dt = (now - self.last_cmd_vel_time).nanoseconds / 1e9
+        if dt > self.cmd_vel_timeout:
+            return
         try:
             ql, qr = self._last_cmd
             with self._port_lock:
