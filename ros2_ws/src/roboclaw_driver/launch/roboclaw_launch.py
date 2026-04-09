@@ -60,6 +60,7 @@ def generate_launch_description():
                 name='roboclaw_node',
                 output='screen',
                 parameters=node_params,
+                remappings=[('cmd_vel', '/cmd_vel_out')],
             )
         ]
     )
