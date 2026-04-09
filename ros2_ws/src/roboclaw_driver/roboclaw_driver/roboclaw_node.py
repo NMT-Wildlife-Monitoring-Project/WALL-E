@@ -9,7 +9,7 @@ import math
 from .roboclaw_3 import Roboclaw
 from robot_messages.msg import RoboclawStatus
 import serial
-import os, glob, time, threading
+import os, glob, time, threading, signal
 import errno
 
 class RoboclawNode(Node):
@@ -412,6 +412,15 @@ class RoboclawNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = RoboclawNode()
+
+    # Handle SIGTERM (Docker stop) the same as SIGINT (Ctrl+C).
+    # Without this, Docker's SIGTERM exits Python immediately, leaving
+    # motors running at the last commanded speed.
+    def _shutdown(signum, frame):
+        raise KeyboardInterrupt
+
+    signal.signal(signal.SIGTERM, _shutdown)
+
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
