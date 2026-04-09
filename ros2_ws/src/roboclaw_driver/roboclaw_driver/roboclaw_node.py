@@ -55,6 +55,16 @@ class RoboclawNode(Node):
         self.declare_parameter('wheel_diameter', 0.095)    # meters
         self.declare_parameter('m1_reverse', True)  # Reverse motor 1 direction
         self.declare_parameter('m2_reverse', True)   # Reverse motor 2 direction
+        # Velocity PID gains (from BasicMicro auto-tune in walleroboclawsettings.cfg)
+        # Programming these on connect() ensures they are active even if not saved to EEPROM
+        self.declare_parameter('m1_pid_p', 3.08918)
+        self.declare_parameter('m1_pid_i', 0.23169)
+        self.declare_parameter('m1_pid_d', 0.0)
+        self.declare_parameter('m1_pid_qpps', 26070)  # max QPPS measured during auto-tune
+        self.declare_parameter('m2_pid_p', 2.63543)
+        self.declare_parameter('m2_pid_i', 0.18177)
+        self.declare_parameter('m2_pid_d', 0.0)
+        self.declare_parameter('m2_pid_qpps', 25410)  # max QPPS measured during auto-tune
         self.declare_parameter('odom_publish_rate', 20)  # Hz
         self.declare_parameter('status_publish_rate', 5)
         self.declare_parameter('status_topic', 'roboclaw_status')
@@ -75,6 +85,14 @@ class RoboclawNode(Node):
         self.wheel_diameter = self.get_parameter('wheel_diameter').get_parameter_value().double_value
         self.m1_reverse = self.get_parameter('m1_reverse').get_parameter_value().bool_value
         self.m2_reverse = self.get_parameter('m2_reverse').get_parameter_value().bool_value
+        self.m1_pid_p = self.get_parameter('m1_pid_p').get_parameter_value().double_value
+        self.m1_pid_i = self.get_parameter('m1_pid_i').get_parameter_value().double_value
+        self.m1_pid_d = self.get_parameter('m1_pid_d').get_parameter_value().double_value
+        self.m1_pid_qpps = self.get_parameter('m1_pid_qpps').get_parameter_value().integer_value
+        self.m2_pid_p = self.get_parameter('m2_pid_p').get_parameter_value().double_value
+        self.m2_pid_i = self.get_parameter('m2_pid_i').get_parameter_value().double_value
+        self.m2_pid_d = self.get_parameter('m2_pid_d').get_parameter_value().double_value
+        self.m2_pid_qpps = self.get_parameter('m2_pid_qpps').get_parameter_value().integer_value
         self.odom_publish_rate = self.get_parameter('odom_publish_rate').get_parameter_value().integer_value
         self.status_publish_rate = self.get_parameter('status_publish_rate').get_parameter_value().integer_value
         self.status_topic = self.get_parameter('status_topic').get_parameter_value().string_value
@@ -153,6 +171,21 @@ class RoboclawNode(Node):
                     except Exception:
                         pass
                     
+                    # Program velocity PID gains onto the device.
+                    # This ensures the correct gains are always active, regardless
+                    # of whether they were saved to EEPROM in BasicMicro Motion Studio.
+                    # Without this, SpeedAccelM1M2 has no PID feedback and the motor
+                    # runs at full duty cycle toward the target direction.
+                    try:
+                        self.roboclaw.SetM1VelocityPID(self.address, self.m1_pid_p, self.m1_pid_i, self.m1_pid_d, self.m1_pid_qpps)
+                        self.roboclaw.SetM2VelocityPID(self.address, self.m2_pid_p, self.m2_pid_i, self.m2_pid_d, self.m2_pid_qpps)
+                        self.get_logger().info(
+                            f'Velocity PID set: M1(P={self.m1_pid_p} I={self.m1_pid_i} D={self.m1_pid_d} QPPS={self.m1_pid_qpps}) '
+                            f'M2(P={self.m2_pid_p} I={self.m2_pid_i} D={self.m2_pid_d} QPPS={self.m2_pid_qpps})'
+                        )
+                    except Exception as e:
+                        self.get_logger().error(f'Failed to set velocity PID: {e}')
+
                     # Reset encoders to 0
                     # NOTE: encoder modes are NOT overridden here — they are
                     # configured and saved on-device via BasicMicro Motion Studio.

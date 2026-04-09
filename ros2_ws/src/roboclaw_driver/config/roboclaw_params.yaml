@@ -45,6 +45,18 @@ roboclaw_node:
     m1_reverse: true
     m2_reverse: true
 
+    # Velocity PID gains from BasicMicro auto-tune (walleroboclawsettings.cfg)
+    # Programmed onto the device at every connect() so SpeedAccelM1M2 has
+    # proper closed-loop feedback regardless of EEPROM state.
+    m1_pid_p: 3.08918
+    m1_pid_i: 0.23169
+    m1_pid_d: 0.0
+    m1_pid_qpps: 26070   # max QPPS measured during M1 auto-tune
+    m2_pid_p: 2.63543
+    m2_pid_i: 0.18177
+    m2_pid_d: 0.0
+    m2_pid_qpps: 25410   # max QPPS measured during M2 auto-tune
+
     # Topic / frame names
     cmd_vel_topic: cmd_vel
     odom_topic: odom
