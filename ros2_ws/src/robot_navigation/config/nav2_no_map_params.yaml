@@ -54,8 +54,8 @@ controller_server:
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.25
-      yaw_goal_tolerance: 0.25
+      xy_goal_tolerance: 0.10
+      yaw_goal_tolerance: 0.10
     # DWB parameters
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
@@ -68,10 +68,10 @@ controller_server:
       ay_min: -999.0
       az_max: 999.0
       vx_std: 0.05
-      vy_std: 0.05
+      vy_std: 0.0
       wz_std: 0.2
-      vx_max: 0.15
-      vx_min: -0.10
+      vx_max: 0.40
+      vx_min: -0.20
       vy_max: 0.0
       wz_max: 0.6
       iteration_count: 1
@@ -311,8 +311,8 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.15, 0.0, 0.6]
-    min_velocity: [-0.10, 0.0, -0.6]
+    max_velocity: [0.40, 0.0, 0.6]
+    min_velocity: [-0.20, 0.0, -0.6]
     max_accel: [999.0, 0.0, 999.0]
     max_decel: [-999.0, 0.0, -999.0]
     odom_topic: "/odometry/local"
