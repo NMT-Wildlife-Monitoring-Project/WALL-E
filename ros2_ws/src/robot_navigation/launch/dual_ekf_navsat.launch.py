@@ -42,16 +42,29 @@ def generate_launch_description():
                 remappings=[("odometry/filtered", "odometry/local")],
             ),
 
-            # With GPS: run map-frame EKF + navsat_transform
+            # Always run map-frame EKF, but only publish TF when GPS provides
+            # an absolute reference.  Without GPS the map->odom transform comes
+            # from the static publisher below so the map frame stays stable.
             launch_ros.actions.Node(
                 package="robot_localization",
                 executable="ekf_node",
                 name="ekf_filter_node_map",
                 output="screen",
-                parameters=[rl_params_file],
+                parameters=[rl_params_file, {'publish_tf': True}],
                 remappings=[("odometry/filtered", "odometry/global")],
                 condition=IfCondition(use_gps),
             ),
+            launch_ros.actions.Node(
+                package="robot_localization",
+                executable="ekf_node",
+                name="ekf_filter_node_map",
+                output="screen",
+                parameters=[rl_params_file, {'publish_tf': False}],
+                remappings=[("odometry/filtered", "odometry/global")],
+                condition=UnlessCondition(use_gps),
+            ),
+
+            # navsat_transform only needed with GPS
             launch_ros.actions.Node(
                 package="robot_localization",
                 executable="navsat_transform_node",
