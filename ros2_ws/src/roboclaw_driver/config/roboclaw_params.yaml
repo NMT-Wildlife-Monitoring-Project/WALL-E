@@ -42,8 +42,8 @@ roboclaw_node:
     wheel_diameter: 0.095    # metres
 
     # Motor direction inversion
-    m1_reverse: true
-    m2_reverse: true
+    m1_reverse: false
+    m2_reverse: false
 
     # Velocity PID gains from BasicMicro auto-tune (walleroboclawsettings.cfg)
     # Programmed onto the device at every connect() so SpeedAccelM1M2 has

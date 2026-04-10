@@ -53,8 +53,8 @@ class RoboclawNode(Node):
         self.declare_parameter('accel_qpps', 2000)        # Matches roboclaw on-device default accel/decel
         self.declare_parameter('wheel_separation', 0.39) # meters
         self.declare_parameter('wheel_diameter', 0.095)    # meters
-        self.declare_parameter('m1_reverse', True)  # Reverse motor 1 direction
-        self.declare_parameter('m2_reverse', True)   # Reverse motor 2 direction
+        self.declare_parameter('m1_reverse', False)  # Reverse motor 1 direction
+        self.declare_parameter('m2_reverse', False)   # Reverse motor 2 direction
         # Velocity PID gains (from BasicMicro auto-tune in walleroboclawsettings.cfg)
         # Programming these on connect() ensures they are active even if not saved to EEPROM
         self.declare_parameter('m1_pid_p', 3.08918)

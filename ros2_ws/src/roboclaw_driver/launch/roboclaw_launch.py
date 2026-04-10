@@ -24,8 +24,8 @@ def generate_launch_description():
         DeclareLaunchArgument('accel_qpps', default_value='2000'),  # matches roboclaw on-device default accel/decel
         DeclareLaunchArgument('wheel_separation', default_value='0.39'),
         DeclareLaunchArgument('wheel_diameter', default_value='0.095'),
-        DeclareLaunchArgument('m1_reverse', default_value='True'),
-        DeclareLaunchArgument('m2_reverse', default_value='True'),
+        DeclareLaunchArgument('m1_reverse', default_value='False'),
+        DeclareLaunchArgument('m2_reverse', default_value='False'),
         DeclareLaunchArgument('m1_pid_p', default_value='3.08918'),
         DeclareLaunchArgument('m1_pid_i', default_value='0.23169'),
         DeclareLaunchArgument('m1_pid_d', default_value='0.0'),
