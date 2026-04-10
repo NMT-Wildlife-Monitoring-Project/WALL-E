@@ -64,7 +64,7 @@ ekf_filter_node_map:
     two_d_mode: true  # Recommended to use 2d mode for nav2 in mostly planar environments
     print_diagnostics: true
     debug: false
-    publish_tf: true
+    publish_tf: false  # Only publish map->odom TF when GPS is active (overridden in launch)
 
     map_frame: map
     odom_frame: odom

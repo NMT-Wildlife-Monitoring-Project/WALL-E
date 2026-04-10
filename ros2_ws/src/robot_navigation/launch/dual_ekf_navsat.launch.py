@@ -42,9 +42,7 @@ def generate_launch_description():
                 remappings=[("odometry/filtered", "odometry/local")],
             ),
 
-            # Always run map-frame EKF, but only publish TF when GPS provides
-            # an absolute reference.  Without GPS the map->odom transform comes
-            # from the static publisher below so the map frame stays stable.
+            # With GPS: map EKF publishes map->odom TF using GPS corrections
             launch_ros.actions.Node(
                 package="robot_localization",
                 executable="ekf_node",
@@ -54,12 +52,15 @@ def generate_launch_description():
                 remappings=[("odometry/filtered", "odometry/global")],
                 condition=IfCondition(use_gps),
             ),
+
+            # Without GPS: map EKF still runs (publishes odometry/global)
+            # but does NOT publish map->odom TF (static transform does that)
             launch_ros.actions.Node(
                 package="robot_localization",
                 executable="ekf_node",
                 name="ekf_filter_node_map",
                 output="screen",
-                parameters=[rl_params_file, {'publish_tf': False}],
+                parameters=[rl_params_file],
                 remappings=[("odometry/filtered", "odometry/global")],
                 condition=UnlessCondition(use_gps),
             ),
@@ -81,7 +82,7 @@ def generate_launch_description():
                 condition=IfCondition(use_gps),
             ),
 
-            # Without GPS: publish static identity map -> odom transform
+            # Without GPS: static identity map->odom so the map frame is stable
             launch_ros.actions.Node(
                 package="tf2_ros",
                 executable="static_transform_publisher",
