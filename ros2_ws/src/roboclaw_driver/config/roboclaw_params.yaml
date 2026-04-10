@@ -31,7 +31,7 @@ roboclaw_node:
     max_speed_qpps: 9000
 
     # Acceleration in QPPS² – matches roboclaw on-device default accel
-    accel_qpps: 2000
+    accel_qpps: 65535
 
     # Software speed / accel caps exposed to the planner (m/s and m/s²)
     max_speed: 0.4

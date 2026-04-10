@@ -50,7 +50,7 @@ class RoboclawNode(Node):
         self.declare_parameter('accel', 1.5)    # m/s^2
         self.declare_parameter('max_speed', 0.4) # m/s
         self.declare_parameter('max_speed_qpps', 9000)   # ~0.4 m/s at qppr=6533, wheel_diam=0.095; hardware ceiling is ~25000
-        self.declare_parameter('accel_qpps', 2000)        # Matches roboclaw on-device default accel/decel
+        self.declare_parameter('accel_qpps', 65535)        # Near-instant acceleration (no ramp)
         self.declare_parameter('wheel_separation', 0.39) # meters
         self.declare_parameter('wheel_diameter', 0.095)    # meters
         self.declare_parameter('m1_reverse', False)  # Reverse motor 1 direction
