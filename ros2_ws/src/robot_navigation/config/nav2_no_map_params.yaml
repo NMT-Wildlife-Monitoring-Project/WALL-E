@@ -184,7 +184,7 @@ local_costmap:
           raytrace_max_range: 10.0
           raytrace_min_range: 0.0
           obstacle_max_range: 8.0
-          obstacle_min_range: 0.22
+          obstacle_min_range: 0.30
           # outdoors there will probably be more inf points
           inf_is_valid: true
       inflation_layer:
@@ -227,7 +227,7 @@ global_costmap:
           raytrace_max_range: 25.0
           raytrace_min_range: 0.0
           obstacle_max_range: 20.0
-          obstacle_min_range: 0.22
+          obstacle_min_range: 0.30
           # outdoors there will probably be more inf points
           inf_is_valid: true
       inflation_layer:
