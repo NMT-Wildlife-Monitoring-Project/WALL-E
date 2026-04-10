@@ -41,6 +41,7 @@ def generate_launch_description():
     use_rviz = LaunchConfiguration('use_rviz')
     use_mapviz = LaunchConfiguration('use_mapviz')
     launch_waypoint_follower = LaunchConfiguration('launch_waypoint_follower')
+    use_gps = LaunchConfiguration('use_gps')
 
     declare_use_rviz_cmd = DeclareLaunchArgument(
         'use_rviz',
@@ -56,9 +57,15 @@ def generate_launch_description():
         default_value='False',
         description='Whether to auto-start GPS waypoint following')
 
+    declare_use_gps_cmd = DeclareLaunchArgument(
+        'use_gps',
+        default_value='false',
+        description='Use GPS and map-frame EKF')
+
     robot_localization_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(launch_dir, 'dual_ekf_navsat.launch.py'))
+            os.path.join(launch_dir, 'dual_ekf_navsat.launch.py')),
+        launch_arguments={'use_gps': use_gps}.items()
     )
 
     # Add twist_mux node before navigation to arbitrate teleop vs nav
@@ -132,5 +139,6 @@ def generate_launch_description():
     ld.add_action(declare_use_mapviz_cmd)
     ld.add_action(mapviz_cmd)
     ld.add_action(declare_launch_waypoint_follower_cmd)
+    ld.add_action(declare_use_gps_cmd)
 
     return ld

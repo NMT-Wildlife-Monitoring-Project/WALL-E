@@ -62,11 +62,11 @@ controller_server:
       time_steps: 56
       model_dt: 0.05
       batch_size: 2000
-      ax_max: 1.0
-      ax_min: -1.0
-      ay_max: 1.0
-      ay_min: -1.0
-      az_max: 1.5
+      ax_max: 999.0
+      ax_min: -999.0
+      ay_max: 999.0
+      ay_min: -999.0
+      az_max: 999.0
       vx_std: 0.05
       vy_std: 0.05
       wz_std: 0.2
@@ -313,8 +313,8 @@ velocity_smoother:
     feedback: "OPEN_LOOP"
     max_velocity: [0.15, 0.0, 0.6]
     min_velocity: [-0.10, 0.0, -0.6]
-    max_accel: [1.0, 0.0, 1.5]
-    max_decel: [-1.0, 0.0, -1.5]
+    max_accel: [999.0, 0.0, 999.0]
+    max_decel: [-999.0, 0.0, -999.0]
     odom_topic: "/odometry/local"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
@@ -324,6 +324,8 @@ collision_monitor:
   ros__parameters:
     base_frame_id: "base_link"
     odom_frame_id: "odom"
+    cmd_vel_in_topic: "/cmd_vel_out"
+    cmd_vel_out_topic: "/cmd_vel_safe"
     state_topic: "collision_monitor_state"
     transform_tolerance: 0.2
     source_timeout: 1.0

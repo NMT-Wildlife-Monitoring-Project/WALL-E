@@ -13,21 +13,26 @@
 
 from launch import LaunchDescription
 from ament_index_python.packages import get_package_share_directory
-from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition, UnlessCondition
+from launch.substitutions import LaunchConfiguration
 import launch_ros.actions
 import os
-import launch.actions
 
 
 def generate_launch_description():
-    gps_wpf_dir = get_package_share_directory(
-        "robot_navigation")
+    gps_wpf_dir = get_package_share_directory("robot_navigation")
     rl_params_file = os.path.join(
         gps_wpf_dir, "config", "dual_ekf_navsat_params.yaml")
 
+    use_gps = LaunchConfiguration('use_gps')
+
     return LaunchDescription(
         [
+            DeclareLaunchArgument('use_gps', default_value='false',
+                                 description='Use GPS and map-frame EKF'),
+
+            # Always run the odom-frame EKF
             launch_ros.actions.Node(
                 package="robot_localization",
                 executable="ekf_node",
@@ -36,6 +41,8 @@ def generate_launch_description():
                 parameters=[rl_params_file],
                 remappings=[("odometry/filtered", "odometry/local")],
             ),
+
+            # With GPS: run map-frame EKF + navsat_transform
             launch_ros.actions.Node(
                 package="robot_localization",
                 executable="ekf_node",
@@ -43,6 +50,7 @@ def generate_launch_description():
                 output="screen",
                 parameters=[rl_params_file],
                 remappings=[("odometry/filtered", "odometry/global")],
+                condition=IfCondition(use_gps),
             ),
             launch_ros.actions.Node(
                 package="robot_localization",
@@ -57,6 +65,17 @@ def generate_launch_description():
                     ("odometry/gps", "odometry/gps"),
                     ("odometry/filtered", "odometry/global"),
                 ],
+                condition=IfCondition(use_gps),
+            ),
+
+            # Without GPS: publish static identity map -> odom transform
+            launch_ros.actions.Node(
+                package="tf2_ros",
+                executable="static_transform_publisher",
+                name="map_to_odom_static",
+                output="screen",
+                arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
+                condition=UnlessCondition(use_gps),
             ),
         ]
     )

@@ -92,6 +92,7 @@ def generate_launch_description():
             launch_arguments={
                 'use_rviz': use_rviz,
                 'launch_waypoint_follower': launch_waypoint_follower,
+                'use_gps': launch_gps,
             }.items()
         ),
         Node(
