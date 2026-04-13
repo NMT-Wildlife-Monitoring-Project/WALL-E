@@ -173,7 +173,7 @@ local_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         observation_sources: scan
-        observation_persistence: 2.0
+        observation_persistence: 0.0
         footprint_clearing_enabled: True
         scan:
           topic: /scan
@@ -216,7 +216,7 @@ global_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         observation_sources: scan
-        observation_persistence: 2.0
+        observation_persistence: 0.0
         footprint_clearing_enabled: True
         scan:
           topic: /scan

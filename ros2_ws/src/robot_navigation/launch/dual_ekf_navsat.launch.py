@@ -53,17 +53,8 @@ def generate_launch_description():
                 condition=IfCondition(use_gps),
             ),
 
-            # Without GPS: map EKF still runs (publishes odometry/global)
-            # but does NOT publish map->odom TF (static transform does that)
-            launch_ros.actions.Node(
-                package="robot_localization",
-                executable="ekf_node",
-                name="ekf_filter_node_map",
-                output="screen",
-                parameters=[rl_params_file],
-                remappings=[("odometry/filtered", "odometry/global")],
-                condition=UnlessCondition(use_gps),
-            ),
+            # Without GPS: no map EKF needed — nothing uses odometry/global
+            # and running it risks TF conflicts with the static map->odom publisher
 
             # navsat_transform only needed with GPS
             launch_ros.actions.Node(
