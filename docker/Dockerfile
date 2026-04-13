@@ -159,6 +159,9 @@ WORKDIR /home/$USER/ros2_ws
 # Copy rviz config into the container
 COPY --chown=$USER:$USER rviz2 /home/$USER/.rviz2
 
+# Cache-bust: forces Docker to re-COPY and rebuild the workspace every time
+ARG CACHE_BUST=0
+
 # Copy the workspace into the container
 COPY --chown=$USER:$USER ros2_ws /home/$USER/ros2_ws/
 

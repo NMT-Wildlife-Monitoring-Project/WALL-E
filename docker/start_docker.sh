@@ -214,7 +214,7 @@ if [[ "$BUILD_CONTAINER" = true ]]; then
     echo "Building the Docker container..."
     # Change to parent directory to access ros2_ws and ros2_roboclaw_driver
     cd ..
-    docker build --no-cache -t $IMAGE_NAME -f docker/Dockerfile .
+    docker build --build-arg CACHE_BUST="$(date +%s)" -t $IMAGE_NAME -f docker/Dockerfile .
     cd docker
 fi
 
