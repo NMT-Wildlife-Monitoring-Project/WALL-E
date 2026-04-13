@@ -40,6 +40,8 @@ Nav2 MPPI controller ───────────────────�
 
 **Key detail:** twist_mux publishes to `/cmd_vel_out` by default (regardless of its yaml `cmd_vel_out` setting). RoboClaw subscribes via remapping: `('cmd_vel', '/cmd_vel_out')` in `roboclaw_launch.py`.
 
+A collision_monitor node is configured in `nav2_no_map_params.yaml` (subscribes `/cmd_vel_out`, publishes `/cmd_vel_safe`). It is currently **bypassed** — RoboClaw remaps directly to `/cmd_vel_out`. To re-enable, change the remapping in `roboclaw_launch.py` back to `/cmd_vel_safe`.
+
 Teleop has priority 20, Nav2 has priority 10. Teleop wins when both are active.
 
 ### Localization (Dual EKF)
@@ -83,8 +85,8 @@ All motor parameters are in `roboclaw_driver/config/roboclaw_params.yaml`. Key v
 - Wheel separation: 0.39m, wheel diameter: 0.095m
 - Encoder: 6533 QPPR (quadrature pulses per revolution)
 - Max hardware speed: 25410 QPPS (from BasicMicro, uses lower of M1/M2)
-- M1 is reversed (`m1_reverse: true`), M2 is not
-- Serial: `/dev/roboclaw` at 9600 baud, address 128
+- Both motors: `m1_reverse: false`, `m2_reverse: false` (M2 encoder A/B wires were physically swapped)
+- Serial: `/dev/roboclaw` at 115200 baud, address 128
 
 Parameters load from YAML first, then launch arguments can override. When changing motor parameters, update the YAML config file -- launch arg defaults and node defaults should stay in sync.
 
@@ -98,7 +100,8 @@ Parameters load from YAML first, then launch arguments can override. When changi
 
 ## Known Issues
 
-- Motor speed oscillation during Nav2 navigation (likely encoder noise or RoboClaw PID tuning)
+- Collision monitor currently bypassed (RoboClaw on `/cmd_vel_out` instead of `/cmd_vel_safe`); needs re-enabling with min_range filter
+- Map appears to rotate with robot in RViz (may be cosmetic fixed-frame setting)
 - GPS datum hardcoded to New Mexico
 - `gps_waypoint_handler_node` uses blocking `spin_until_future_complete` in constructor
 
