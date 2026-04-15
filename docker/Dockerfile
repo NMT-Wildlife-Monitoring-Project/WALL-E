@@ -67,13 +67,8 @@ RUN apt-get install -y \
     ros-$ROS_DISTRO-nav2-bringup
 
 # Install ROS SLAM packages
-# apt-get update first so slam-toolbox and its fastcdr/fastrtps deps resolve
-# to matching versions (stale indexes caused a libfastcdr/libfastrtps ABI
-# mismatch that crashed every node with an undefined symbol error).
-RUN apt-get update && apt-get install -y \
-    ros-$ROS_DISTRO-slam-toolbox \
-    ros-$ROS_DISTRO-rmw-fastrtps-cpp && \
-    apt-get install -y --only-upgrade 'libfastcdr*' 'libfastrtps*'
+RUN apt-get install -y \
+    ros-$ROS_DISTRO-slam-toolbox
 ARG RF2O_GIT_REF=jazzy-devel
 RUN mkdir -p /home/$USER/ros2_ws/src && \
     (git clone --branch ${RF2O_GIT_REF} https://github.com/Adlink-ROS/rf2o_laser_odometry.git /home/$USER/ros2_ws/src/rf2o_laser_odometry || \
