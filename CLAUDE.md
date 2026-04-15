@@ -156,16 +156,15 @@ runtime regardless of the `output_topic` setting in
 in `roboclaw_launch.py:87` (`('cmd_vel', '/cmd_vel_out')`). Do not
 "fix" the yaml — the current remapping is load-bearing.
 
-**Collision monitor:** nav2_bringup's upstream `navigation_launch.py`
-(Jazzy) **already launches** `collision_monitor` and includes it in
-the `lifecycle_manager_navigation` node list by default. Our
-`nav2_no_map_params.yaml` provides its config (scan source,
-FootprintApproach polygon). To put it inline in the command path,
-the only required change is flipping the RoboClaw remap in
-`roboclaw_launch.py:87` from `/cmd_vel_out` → `/cmd_vel_safe`.
-Do NOT launch a second `collision_monitor` node or a sidecar
-lifecycle_manager — that causes a name collision and dual-manager
-thrash that killed nav last time (reverted commit `6b613f5d`).
+**Collision monitor:** ENABLED as of commit `a2c735a2`. Upstream
+nav2_bringup `navigation_launch.py` (Jazzy) already launches
+`collision_monitor` and manages it in `lifecycle_manager_navigation`.
+Our `nav2_no_map_params.yaml` supplies its config (scan source,
+FootprintApproach polygon, `time_before_collision: 2.0 s`).
+RoboClaw subscribes to `/cmd_vel_safe` via `roboclaw_launch.py:87`.
+Do NOT launch a second collision_monitor or a sidecar
+lifecycle_manager — node-name collision will kill nav (see reverted
+commit `6b613f5d`).
 
 Twist_mux priorities: teleop 20, nav 10 (teleop wins).
 
@@ -309,10 +308,9 @@ Install on host with:
 
 ## Known issues
 
-- Collision monitor bypassed (see velocity-flow section). Re-enabling
-  takes more than a one-line change and previously broke nav.
-- Map appears to rotate with robot in RViz — may be just RViz Fixed
-  Frame setting, or may need scan matching. Unresolved.
+- Map drifts over time without GPS/SLAM — dead-reckoning error in
+  odom accumulates, so goals set in `map` slide relative to the
+  real world. Expected behavior, not a bug. SLAM will fix it.
 - GPS datum hardcoded to New Mexico.
 - `gps_waypoint_handler_node` uses blocking
   `spin_until_future_complete` in constructor.

@@ -72,21 +72,23 @@ the new intermediate topic.
 
 ---
 
-## Rule 5: Collision monitor re-enable is NOT a one-line change
+## Rule 5: Upstream nav2_bringup already launches collision_monitor (Jazzy)
 
-**Why:** The `collision_monitor:` YAML section in
-`nav2_no_map_params.yaml` is config for a node that is **not
-launched anywhere**. Flipping only the RoboClaw remap to
-`/cmd_vel_safe` leaves a dead topic and the motors never get
-commands. A prior attempt (commit `6b613f5d`, reverted) wired up
-the node plus a lifecycle_manager and **still** broke RViz/nav —
-reason not fully diagnosed.
+**Why:** In Jazzy, `/opt/ros/jazzy/share/nav2_bringup/launch/navigation_launch.py`
+already instantiates the `collision_monitor` Node and includes it
+in `lifecycle_manager_navigation`'s `node_names` list. Our
+`nav2_no_map_params.yaml` supplies its config. The previous failed
+attempt (`6b613f5d`, reverted) launched a **second** collision_monitor
+with a **sidecar** `lifecycle_manager`, causing node-name collision
+and dual-manager thrash that killed nav. The real fix for putting
+the monitor inline in the cmd_vel chain was a one-line remap of
+RoboClaw `/cmd_vel_out` → `/cmd_vel_safe` (commit `a2c735a2`,
+verified working 2026-04-15).
 
-**Apply:** Don't attempt again without first understanding why the
-previous launch broke the map and nav. Check if
-`lifecycle_manager_collision_monitor` conflicts with nav2's own
-lifecycle manager, or if `nav2_collision_monitor` needs to be in
-nav2's `nav2_bringup` lifecycle list instead of a sidecar manager.
+**Apply:** Before inventing a launch-level enablement for any
+nav2-adjacent node, grep `/opt/ros/jazzy/share/nav2_bringup/launch/`
+for it. Upstream usually already wires the node; check before
+duplicating.
 
 ---
 
