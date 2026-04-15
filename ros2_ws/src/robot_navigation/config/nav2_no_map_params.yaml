@@ -69,9 +69,9 @@ controller_server:
       az_max: 3.2
       vx_std: 0.2
       vy_std: 0.0
-      wz_std: 0.3
+      wz_std: 0.4
       vx_max: 0.30
-      vx_min: -0.15
+      vx_min: 0.0
       vy_max: 0.0
       wz_max: 0.8
       iteration_count: 1
@@ -113,7 +113,7 @@ controller_server:
         cost_weight: 3.0
         threshold_to_consider: 0.5
       PreferForwardCritic:
-        enabled: true
+        enabled: false
         cost_power: 1
         cost_weight: 5.0
         threshold_to_consider: 0.5
