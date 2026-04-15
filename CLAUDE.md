@@ -57,22 +57,10 @@ Two `robot_localization` EKF nodes run in parallel (`dual_ekf_navsat.launch.py`)
 - `launch_rplidar` (default: true) → sllidar_ros2
 - `launch_bno085` (default: true) → BNO085 IMU driver
 - `launch_gps` (default: false) → NMEA GPS driver
-- `launch_slam` (default: false) → slam_toolbox (indoor SLAM). **Mutually exclusive with `launch_gps`.**
-- `launch_nav` (default: true) → `gps_waypoint_follower.launch.py` which starts: dual EKF, twist_mux, Nav2, slam_toolbox (if enabled), and optionally RViz/mapviz/waypoint follower
+- `launch_nav` (default: true) → `gps_waypoint_follower.launch.py` which starts: dual EKF, twist_mux, Nav2, and optionally RViz/mapviz/waypoint follower
 - `launch_d2oc` (default: false) → D2OC exploration algorithm
 - RoboClaw driver always launches (no toggle)
 - RF2O laser odometry launches when nav is enabled
-
-### `map → odom` publisher selection
-
-Only one node may publish `map → odom`. Selection is automatic based on flags:
-
-| `launch_gps` | `launch_slam` | Publisher |
-|---|---|---|
-| false | false | Static identity TF (dead-reckoning only, `map` nailed to `odom`) |
-| false | true | `slam_toolbox` (indoor SLAM with loop closure) |
-| true | false | `navsat_transform` + map EKF (outdoor GPS) |
-| true | true | **Launch fails** with RuntimeError |
 
 ### ROS 2 Packages (ros2_ws/src/)
 
