@@ -84,7 +84,7 @@ def generate_launch_description():
                 name='roboclaw_node',
                 output='screen',
                 parameters=[config] + node_params,  # config file provides defaults; args override
-                remappings=[('cmd_vel', '/cmd_vel_safe')],
+                remappings=[('cmd_vel', '/cmd_vel_out')],
             )
         ]
     )
