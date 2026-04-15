@@ -18,8 +18,16 @@ import launch_ros.actions
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch.substitutions import (
+    AndSubstitution,
+    LaunchConfiguration,
+    NotSubstitution,
+)
+from launch.actions import (
+    DeclareLaunchArgument,
+    IncludeLaunchDescription,
+    OpaqueFunction,
+)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import IfCondition
 from nav2_common.launch import RewrittenYaml
@@ -42,6 +50,8 @@ def generate_launch_description():
     use_mapviz = LaunchConfiguration('use_mapviz')
     launch_waypoint_follower = LaunchConfiguration('launch_waypoint_follower')
     use_gps = LaunchConfiguration('use_gps')
+    launch_slam = LaunchConfiguration('launch_slam')
+    slam_params_file = os.path.join(params_dir, 'slam_toolbox_params.yaml')
 
     declare_use_rviz_cmd = DeclareLaunchArgument(
         'use_rviz',
@@ -62,10 +72,48 @@ def generate_launch_description():
         default_value='false',
         description='Use GPS and map-frame EKF')
 
+    declare_launch_slam_cmd = DeclareLaunchArgument(
+        'launch_slam',
+        default_value='false',
+        description='Launch slam_toolbox for online 2D SLAM. '
+                    'Mutually exclusive with use_gps.')
+
+    # Fail fast if both GPS and SLAM are enabled — both would fight to publish
+    # map->odom, causing TF conflicts and unpredictable localization.
+    def _validate_localization_mode(context):
+        gps = context.perform_substitution(use_gps).lower() in ('true', '1')
+        slam = context.perform_substitution(launch_slam).lower() in ('true', '1')
+        if gps and slam:
+            raise RuntimeError(
+                'launch_slam and use_gps cannot both be true: '
+                'they would both publish map->odom. Pick one.'
+            )
+        return []
+
+    validate_mode_cmd = OpaqueFunction(function=_validate_localization_mode)
+
+    # Static map->odom identity is only needed when neither GPS nor SLAM owns it.
+    publish_static_map_tf = AndSubstitution(
+        NotSubstitution(use_gps),
+        NotSubstitution(launch_slam),
+    )
+
     robot_localization_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(launch_dir, 'dual_ekf_navsat.launch.py')),
-        launch_arguments={'use_gps': use_gps}.items()
+        launch_arguments={
+            'use_gps': use_gps,
+            'publish_map_to_odom_static': publish_static_map_tf,
+        }.items()
+    )
+
+    slam_toolbox_cmd = launch_ros.actions.Node(
+        package='slam_toolbox',
+        executable='async_slam_toolbox_node',
+        name='slam_toolbox',
+        output='screen',
+        parameters=[slam_params_file],
+        condition=IfCondition(launch_slam),
     )
 
     # Add twist_mux node before navigation to arbitrate teleop vs nav
@@ -121,8 +169,14 @@ def generate_launch_description():
     # Create the launch description and populate
     ld = LaunchDescription()
 
+    # Validate that localization modes aren't conflicting
+    ld.add_action(validate_mode_cmd)
+
     # robot localization launch
     ld.add_action(robot_localization_cmd)
+
+    # slam_toolbox (conditional)
+    ld.add_action(slam_toolbox_cmd)
 
     # twist_mux
     ld.add_action(twist_mux_cmd)
@@ -140,5 +194,6 @@ def generate_launch_description():
     ld.add_action(mapviz_cmd)
     ld.add_action(declare_launch_waypoint_follower_cmd)
     ld.add_action(declare_use_gps_cmd)
+    ld.add_action(declare_launch_slam_cmd)
 
     return ld

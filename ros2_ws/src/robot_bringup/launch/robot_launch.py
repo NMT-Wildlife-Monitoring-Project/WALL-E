@@ -11,6 +11,7 @@ def generate_launch_description():
     launch_rplidar = LaunchConfiguration('launch_rplidar')
     launch_bno085 = LaunchConfiguration('launch_bno085')
     launch_gps = LaunchConfiguration('launch_gps')
+    launch_slam = LaunchConfiguration('launch_slam')
     launch_urdf = LaunchConfiguration('launch_urdf')
     launch_nav = LaunchConfiguration('launch_nav')
     launch_d2oc = LaunchConfiguration('launch_d2oc')
@@ -34,6 +35,7 @@ def generate_launch_description():
         DeclareLaunchArgument('launch_rplidar', default_value='true'),
         DeclareLaunchArgument('launch_bno085', default_value='true'),
         DeclareLaunchArgument('launch_gps', default_value='false'),
+        DeclareLaunchArgument('launch_slam', default_value='false'),
         DeclareLaunchArgument('launch_urdf', default_value='true'),
         DeclareLaunchArgument('launch_nav', default_value='true'),
         DeclareLaunchArgument('launch_d2oc', default_value='false'),
@@ -93,6 +95,7 @@ def generate_launch_description():
                 'use_rviz': use_rviz,
                 'launch_waypoint_follower': launch_waypoint_follower,
                 'use_gps': launch_gps,
+                'launch_slam': launch_slam,
             }.items()
         ),
         Node(

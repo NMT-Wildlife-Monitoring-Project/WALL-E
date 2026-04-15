@@ -14,8 +14,8 @@
 from launch import LaunchDescription
 from ament_index_python.packages import get_package_share_directory
 from launch.actions import DeclareLaunchArgument
-from launch.conditions import IfCondition, UnlessCondition
-from launch.substitutions import LaunchConfiguration
+from launch.conditions import IfCondition
+from launch.substitutions import AndSubstitution, LaunchConfiguration, NotSubstitution
 import launch_ros.actions
 import os
 
@@ -26,11 +26,16 @@ def generate_launch_description():
         gps_wpf_dir, "config", "dual_ekf_navsat_params.yaml")
 
     use_gps = LaunchConfiguration('use_gps')
+    publish_map_to_odom_static = LaunchConfiguration('publish_map_to_odom_static')
 
     return LaunchDescription(
         [
             DeclareLaunchArgument('use_gps', default_value='false',
                                  description='Use GPS and map-frame EKF'),
+            DeclareLaunchArgument(
+                'publish_map_to_odom_static',
+                default_value='true',
+                description='Publish a static identity map->odom TF. Disable when another node (e.g. slam_toolbox) owns map->odom.'),
 
             # Always run the odom-frame EKF
             launch_ros.actions.Node(
@@ -73,14 +78,20 @@ def generate_launch_description():
                 condition=IfCondition(use_gps),
             ),
 
-            # Without GPS: static identity map->odom so the map frame is stable
+            # Static identity map->odom so the map frame is stable when no other
+            # node (GPS map EKF or SLAM) is publishing map->odom.
             launch_ros.actions.Node(
                 package="tf2_ros",
                 executable="static_transform_publisher",
                 name="map_to_odom_static",
                 output="screen",
                 arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
-                condition=UnlessCondition(use_gps),
+                condition=IfCondition(
+                    AndSubstitution(
+                        NotSubstitution(use_gps),
+                        publish_map_to_odom_static,
+                    )
+                ),
             ),
         ]
     )
