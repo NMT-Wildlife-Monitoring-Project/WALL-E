@@ -75,7 +75,9 @@ RUN mkdir -p /home/$USER/ros2_ws/src && \
     (rm -rf /home/$USER/ros2_ws/src/rf2o_laser_odometry && git clone https://github.com/Adlink-ROS/rf2o_laser_odometry.git /home/$USER/ros2_ws/src/rf2o_laser_odometry))
 
 # Install ROS teleop packages
-RUN apt-get install -y \
+# Refresh apt indexes first: ROS debs are frequently republished with new
+# build timestamps, so stale cached indexes cause 404s on older filenames.
+RUN apt-get update && apt-get install -y \
     ros-$ROS_DISTRO-teleop-twist-keyboard \
     ros-$ROS_DISTRO-teleop-twist-joy \
     ros-$ROS_DISTRO-joy \
