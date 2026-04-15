@@ -58,6 +58,31 @@ suggest editing `/etc/hosts` or hard-coding IPs.
 
 ---
 
+## Dev workflow: edit on host, build on Jetson
+
+The canonical workflow for every code change:
+
+1. **Host terminal (where Claude runs):** edit files, `git add`,
+   `git commit`, `git push`. Never build on the host — the host is
+   not where the robot runs.
+2. **Jetson terminal (SSH):** `git pull` and rebuild the Docker
+   image (or just colcon-build the workspace inside the running
+   container for quick Python changes). Claude does this via
+   `ssh walle@jetson "cd ~/WALL-E && git pull && cd docker && ./start_docker.sh -b"`
+   — one-shot SSH commands, not a persistent session.
+3. **User tests** — starts the robot on the Jetson, reports behavior.
+
+Claude is responsible for **both** sides: pushing from host AND
+pulling + building on the Jetson. Don't leave the Jetson out of
+sync. If you're unsure whether the Jetson pulled your latest push,
+`ssh walle@jetson "cd ~/WALL-E && git log -1 --oneline"` to check.
+
+For small Python-only tweaks, a faster loop is
+`ssh walle@jetson "docker exec <container> bash -c 'cd /home/walle/ros2_ws && colcon build --symlink-install --packages-select <pkg>'"`
+— avoids a full image rebuild.
+
+---
+
 ## Testing workflow (when you want to actually run the robot)
 
 1. User says they're testing → SSH to Jetson (`ssh walle@jetson`).
@@ -131,14 +156,16 @@ runtime regardless of the `output_topic` setting in
 in `roboclaw_launch.py:87` (`('cmd_vel', '/cmd_vel_out')`). Do not
 "fix" the yaml — the current remapping is load-bearing.
 
-**Collision monitor:** Configured in `nav2_no_map_params.yaml`
-(subscribes `/cmd_vel_out`, publishes `/cmd_vel_safe`), but **not
-launched anywhere** and **bypassed** — RoboClaw reads `/cmd_vel_out`
-directly. To enable it, a `nav2_collision_monitor` node plus its own
-`lifecycle_manager` must be added to `gps_waypoint_follower.launch.py`
-AND the RoboClaw remap flipped to `/cmd_vel_safe`. A previous attempt
-broke RViz map display and nav (see memory: revert of
-`6b613f5d`) — do not retry without a plan.
+**Collision monitor:** nav2_bringup's upstream `navigation_launch.py`
+(Jazzy) **already launches** `collision_monitor` and includes it in
+the `lifecycle_manager_navigation` node list by default. Our
+`nav2_no_map_params.yaml` provides its config (scan source,
+FootprintApproach polygon). To put it inline in the command path,
+the only required change is flipping the RoboClaw remap in
+`roboclaw_launch.py:87` from `/cmd_vel_out` → `/cmd_vel_safe`.
+Do NOT launch a second `collision_monitor` node or a sidecar
+lifecycle_manager — that causes a name collision and dual-manager
+thrash that killed nav last time (reverted commit `6b613f5d`).
 
 Twist_mux priorities: teleop 20, nav 10 (teleop wins).
 
