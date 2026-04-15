@@ -103,6 +103,30 @@ def generate_launch_description():
         }.items(),
     )
 
+    # Collision monitor: subscribes /cmd_vel_out, publishes /cmd_vel_safe.
+    # Runs as a standalone lifecycle node with its own lifecycle_manager so
+    # it stays independent of nav2's bringup node list. Config for the
+    # node itself lives in nav2_no_map_params.yaml under `collision_monitor:`.
+    collision_monitor_cmd = launch_ros.actions.Node(
+        package='nav2_collision_monitor',
+        executable='collision_monitor',
+        name='collision_monitor',
+        output='screen',
+        parameters=[configured_params],
+    )
+
+    collision_monitor_lifecycle_cmd = launch_ros.actions.Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_collision_monitor',
+        output='screen',
+        parameters=[{
+            'autostart': True,
+            'node_names': ['collision_monitor'],
+            'bond_timeout': 0.0,
+        }],
+    )
+
     rviz_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(bringup_dir, "launch", 'rviz_launch.py')),
@@ -132,6 +156,10 @@ def generate_launch_description():
 
     # navigation2 launch
     ld.add_action(navigation2_cmd)
+
+    # collision monitor + its lifecycle manager
+    ld.add_action(collision_monitor_cmd)
+    ld.add_action(collision_monitor_lifecycle_cmd)
 
     # viz launch
     ld.add_action(declare_use_rviz_cmd)
