@@ -33,7 +33,7 @@ declare -a ACTION_FLAGS=(
 )
 
 declare -a ACTION_CMDS=(
-    "ros2 launch robot_bringup robot_launch.py"
+    "ros2 launch robot_bringup robot_launch.py launch_slam:=true"
     "ros2 launch robot_teleop robot_teleop_launch.py"
     "echo 'TODO: implement roslaunch control usb_cam.launch'"
     "echo 'TODO: implement roslaunch control view_camera.launch'"
