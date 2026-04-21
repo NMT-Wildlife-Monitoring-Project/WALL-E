@@ -60,15 +60,13 @@ RUN apt-get install -y \
     gpsd-clients \
     gpsd-tools
 
-# Install ROS navigation packages
-RUN apt-get install -y \
+# Install ROS navigation + SLAM packages (single transaction so apt picks
+# a coherent libfastcdr/libfastrtps set — see project_slam_fastcdr.md)
+RUN apt-get update && apt-get install -y \
     ros-$ROS_DISTRO-rviz2 \
     ros-$ROS_DISTRO-navigation2 \
-    ros-$ROS_DISTRO-nav2-bringup
-
-# Install ROS SLAM packages
-#RUN apt-get install -y \
-#    ros-$ROS_DISTRO-slam-toolbox
+    ros-$ROS_DISTRO-nav2-bringup \
+    ros-$ROS_DISTRO-slam-toolbox
 ARG RF2O_GIT_REF=jazzy-devel
 RUN mkdir -p /home/$USER/ros2_ws/src && \
     (git clone --branch ${RF2O_GIT_REF} https://github.com/Adlink-ROS/rf2o_laser_odometry.git /home/$USER/ros2_ws/src/rf2o_laser_odometry || \
