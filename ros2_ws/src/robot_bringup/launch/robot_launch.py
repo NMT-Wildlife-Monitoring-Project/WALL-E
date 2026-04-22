@@ -13,6 +13,7 @@ def generate_launch_description():
     launch_gps = LaunchConfiguration('launch_gps')
     launch_urdf = LaunchConfiguration('launch_urdf')
     launch_nav = LaunchConfiguration('launch_nav')
+    launch_slam = LaunchConfiguration('launch_slam')
     launch_d2oc = LaunchConfiguration('launch_d2oc')
     use_rviz = LaunchConfiguration('use_rviz')
     launch_waypoint_follower = LaunchConfiguration('launch_waypoint_follower')
@@ -36,6 +37,7 @@ def generate_launch_description():
         DeclareLaunchArgument('launch_gps', default_value='false'),
         DeclareLaunchArgument('launch_urdf', default_value='true'),
         DeclareLaunchArgument('launch_nav', default_value='true'),
+        DeclareLaunchArgument('launch_slam', default_value='true'),
         DeclareLaunchArgument('launch_d2oc', default_value='false'),
         DeclareLaunchArgument('use_rviz', default_value='false'),
         DeclareLaunchArgument('launch_waypoint_follower', default_value='false'),
@@ -93,6 +95,7 @@ def generate_launch_description():
                 'use_rviz': use_rviz,
                 'launch_waypoint_follower': launch_waypoint_follower,
                 'use_gps': launch_gps,
+                'use_slam': launch_slam,
             }.items()
         ),
         Node(
