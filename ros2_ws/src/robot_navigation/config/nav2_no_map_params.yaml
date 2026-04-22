@@ -62,23 +62,18 @@ controller_server:
       time_steps: 56
       model_dt: 0.05
       batch_size: 2000
-      # Envelope matches hardware ceiling (9000 QPPS → 0.41 m/s per wheel,
-      # so 0.40 m/s linear or ~2.1 rad/s pure rotation are physically
-      # achievable). wz_max 1.5 leaves a 30% margin; wz_std 0.7 lets the
-      # 2000-sample MPPI batch actually explore aggressive pivots so the
-      # controller can track tight path headings instead of under-turning.
-      ax_max: 1.5
-      ax_min: -1.5
+      ax_max: 1.0
+      ax_min: -1.0
       ay_max: 999.0
       ay_min: -999.0
       az_max: 3.2
-      vx_std: 0.25
+      vx_std: 0.2
       vy_std: 0.0
-      wz_std: 0.7
-      vx_max: 0.40
+      wz_std: 0.4
+      vx_max: 0.30
       vx_min: 0.0
       vy_max: 0.0
-      wz_max: 1.5
+      wz_max: 0.8
       iteration_count: 1
       prune_distance: 1.7
       transform_tolerance: 0.2
