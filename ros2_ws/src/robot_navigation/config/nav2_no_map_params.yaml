@@ -328,8 +328,14 @@ collision_monitor:
     cmd_vel_out_topic: "/cmd_vel_safe"
     state_topic: "collision_monitor_state"
     transform_tolerance: 0.2
-    source_timeout: 1.0
-    base_shift_correction: True
+    # source_timeout 1.0 + base_shift_correction True was chopping /cmd_vel_safe
+    # with "invalid source" STOPs at 0.4 m/s while SLAM shared the scan callback.
+    # 2.0 s absorbs the SLAM-induced /scan jitter (observed std-dev 0.056 s, max
+    # gap 0.337 s on a 10 Hz stream). base_shift_correction False drops the
+    # per-scan time-travel TF lookup — at 10 Hz × 0.4 m/s the robot moves 4 cm
+    # between scans, which is negligible vs the 0.185 m footprint half-width.
+    source_timeout: 2.0
+    base_shift_correction: False
     stop_pub_timeout: 2.0
     # Polygons represent zone around the robot for "stop", "slowdown" and "limit" action types,
     # and robot footprint for "approach" action type.
@@ -338,9 +344,12 @@ collision_monitor:
       type: "polygon"
       action_type: "approach"
       footprint_topic: "/local_costmap/published_footprint"
-      time_before_collision: 2.0
+      # 1.0 s lookahead projects the footprint 0.4 m at top speed instead of
+      # 0.8 m, and min_points 10 demands a denser return cluster — both reduce
+      # phantom-obstacle APPROACH triggers that were scaling velocity.
+      time_before_collision: 1.0
       simulation_time_step: 0.1
-      min_points: 6
+      min_points: 10
       visualize: False
       enabled: True
     observation_sources: ["scan"]
