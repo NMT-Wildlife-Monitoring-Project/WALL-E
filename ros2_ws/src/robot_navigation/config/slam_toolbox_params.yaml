@@ -1,0 +1,35 @@
+# slam_toolbox parameters tuned for WALL-E
+# Phase 1: indoor mapping mode, stable map frame, throwaway maps.
+# Only deliberately-tuned parameters are set here; everything else
+# stays at slam_toolbox's built-in defaults.
+# See docs/superpowers/specs/2026-04-20-slam-design.md §4.3 for rationale.
+slam_toolbox:
+  ros__parameters:
+    # --- Frames & topics (must match rest of the stack) ---
+    odom_frame: odom
+    map_frame: map
+    base_frame: base_link
+    scan_topic: /scan
+    mode: mapping
+
+    # --- Lidar (RPLiDAR S3 at 0.21 m above base_link) ---
+    max_laser_range: 25.0
+    min_laser_range: 0.05
+    resolution: 0.05
+
+    # --- Scan matching / motion gating ---
+    minimum_travel_distance: 0.5
+    minimum_travel_heading: 0.5
+    minimum_time_interval: 0.5
+    use_scan_matching: true
+    use_scan_barycenter: true
+
+    # --- TF timing (matches Nav2's transform_tolerance = 0.2) ---
+    transform_publish_period: 0.02
+    transform_timeout: 0.2
+    map_update_interval: 5.0
+
+    # --- Loop closure (building-scale) ---
+    do_loop_closing: true
+    loop_search_space_dimension: 20.0
+    loop_match_minimum_response_fine: 0.45
