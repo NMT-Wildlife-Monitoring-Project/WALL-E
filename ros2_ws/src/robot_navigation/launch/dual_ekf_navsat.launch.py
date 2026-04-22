@@ -14,8 +14,8 @@
 from launch import LaunchDescription
 from ament_index_python.packages import get_package_share_directory
 from launch.actions import DeclareLaunchArgument
-from launch.conditions import IfCondition, UnlessCondition
-from launch.substitutions import LaunchConfiguration
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration, PythonExpression
 import launch_ros.actions
 import os
 
@@ -26,11 +26,14 @@ def generate_launch_description():
         gps_wpf_dir, "config", "dual_ekf_navsat_params.yaml")
 
     use_gps = LaunchConfiguration('use_gps')
+    use_slam = LaunchConfiguration('use_slam')
 
     return LaunchDescription(
         [
             DeclareLaunchArgument('use_gps', default_value='false',
                                  description='Use GPS and map-frame EKF'),
+            DeclareLaunchArgument('use_slam', default_value='false',
+                                 description='slam_toolbox owns map->odom when true'),
 
             # Always run the odom-frame EKF
             launch_ros.actions.Node(
@@ -42,7 +45,8 @@ def generate_launch_description():
                 remappings=[("odometry/filtered", "odometry/local")],
             ),
 
-            # With GPS: map EKF publishes map->odom TF using GPS corrections
+            # With GPS and NOT SLAM: map EKF publishes map->odom TF.
+            # SLAM always wins — when use_slam=true, slam_toolbox owns map->odom.
             launch_ros.actions.Node(
                 package="robot_localization",
                 executable="ekf_node",
@@ -50,13 +54,16 @@ def generate_launch_description():
                 output="screen",
                 parameters=[rl_params_file, {'publish_tf': True}],
                 remappings=[("odometry/filtered", "odometry/global")],
-                condition=IfCondition(use_gps),
+                condition=IfCondition(PythonExpression([
+                    "'", use_gps, "' == 'true' and '", use_slam, "' != 'true'"
+                ])),
             ),
 
             # Without GPS: no map EKF needed — nothing uses odometry/global
             # and running it risks TF conflicts with the static map->odom publisher
 
-            # navsat_transform only needed with GPS
+            # navsat_transform only needed with GPS AND not SLAM.
+            # In SLAM+GPS mode, no georeference into the map frame (Phase 1 scope).
             launch_ros.actions.Node(
                 package="robot_localization",
                 executable="navsat_transform_node",
@@ -70,17 +77,22 @@ def generate_launch_description():
                     ("odometry/gps", "odometry/gps"),
                     ("odometry/filtered", "odometry/global"),
                 ],
-                condition=IfCondition(use_gps),
+                condition=IfCondition(PythonExpression([
+                    "'", use_gps, "' == 'true' and '", use_slam, "' != 'true'"
+                ])),
             ),
 
-            # Without GPS: static identity map->odom so the map frame is stable
+            # No GPS and no SLAM: static identity map->odom so the map frame is stable
+            # (dead-reckoning mode). SLAM and GPS map-EKF each take precedence if on.
             launch_ros.actions.Node(
                 package="tf2_ros",
                 executable="static_transform_publisher",
                 name="map_to_odom_static",
                 output="screen",
                 arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
-                condition=UnlessCondition(use_gps),
+                condition=IfCondition(PythonExpression([
+                    "'", use_gps, "' != 'true' and '", use_slam, "' != 'true'"
+                ])),
             ),
         ]
     )
