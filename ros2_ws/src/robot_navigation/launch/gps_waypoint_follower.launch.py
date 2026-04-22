@@ -42,6 +42,7 @@ def generate_launch_description():
     use_mapviz = LaunchConfiguration('use_mapviz')
     launch_waypoint_follower = LaunchConfiguration('launch_waypoint_follower')
     use_gps = LaunchConfiguration('use_gps')
+    use_slam = LaunchConfiguration('use_slam')
 
     declare_use_rviz_cmd = DeclareLaunchArgument(
         'use_rviz',
@@ -62,10 +63,15 @@ def generate_launch_description():
         default_value='false',
         description='Use GPS and map-frame EKF')
 
+    declare_use_slam_cmd = DeclareLaunchArgument(
+        'use_slam',
+        default_value='false',
+        description='Enable slam_toolbox (becomes map->odom owner)')
+
     robot_localization_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(launch_dir, 'dual_ekf_navsat.launch.py')),
-        launch_arguments={'use_gps': use_gps}.items()
+        launch_arguments={'use_gps': use_gps, 'use_slam': use_slam}.items()
     )
 
     # Add twist_mux node before navigation to arbitrate teleop vs nav
@@ -118,6 +124,12 @@ def generate_launch_description():
         condition=IfCondition(use_mapviz)
     )
 
+    slam_toolbox_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(launch_dir, 'slam_toolbox.launch.py')),
+        condition=IfCondition(use_slam)
+    )
+
     # Create the launch description and populate
     ld = LaunchDescription()
 
@@ -140,5 +152,7 @@ def generate_launch_description():
     ld.add_action(mapviz_cmd)
     ld.add_action(declare_launch_waypoint_follower_cmd)
     ld.add_action(declare_use_gps_cmd)
+    ld.add_action(declare_use_slam_cmd)
+    ld.add_action(slam_toolbox_cmd)
 
     return ld
