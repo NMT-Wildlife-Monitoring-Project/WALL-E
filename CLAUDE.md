@@ -176,8 +176,10 @@ Two `robot_localization` EKF nodes run in parallel
 - **ekf_filter_node_odom** — fuses RF2O laser odometry + BNO085 IMU →
   publishes `/odometry/local` and `odom → base_link` TF. Always on.
 - **ekf_filter_node_map** — fuses the above + GPS → publishes
-  `/odometry/global` and `map → odom` TF. **Only when `launch_gps=true`.**
+  `/odometry/global` and `map → odom` TF. **Only when `launch_gps=true`
+  AND `launch_slam=false`** (see TF-selection table below).
 - **navsat_transform** — converts GPS fixes into the `map` frame.
+  Gated the same way as the map EKF.
 
 Wheel odometry from the RoboClaw is **not** currently fused into
 either EKF (was tried and reverted — see `d52ba681`).
