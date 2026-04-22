@@ -320,9 +320,36 @@ Install on host with:
 
 ## Known issues
 
+- **RPLiDAR S3 shuts off mid-session (BLOCKING, under diagnosis
+  as of 2026-04-22).** The lidar physically powers off
+  (head stops, LED dark) after some minutes of operation. Cascade:
+  `/scan` dries up → rf2o prints `Waiting for laser_scans...` →
+  slam_toolbox stops updating `map→odom` → controller_server
+  throws `Lookup would require extrapolation into the future`
+  (the map→odom "latest data" stamp falls behind the request
+  monotonically) → bt_navigator aborts → motors zero.
+  **The cascade IS the fingerprint** — if you see rf2o waiting
+  for scans plus a monotonically-growing map→odom extrapolation
+  gap, the lidar has died upstream; do not chase TF/EKF/Nav2
+  fixes. MPPI velocity-envelope widening (commit `81b573f7`) was
+  hypothesised to cause a brownout but has been reverted
+  (`3f05d8b8`) and the dropout still reproduces, so the current
+  envelope is NOT the root cause. Open hypotheses: USB cable,
+  Jetson 5 V rail brownout independent of MPPI, EMI, thermal,
+  S3 firmware, USB hub topology. Diagnostic plan lives in memory
+  file `project_lidar_dropout.md` — follow it step by step;
+  the order is chosen to narrow hypothesis space cheaply.
+- `slam_toolbox_params.yaml: max_laser_range = 25.0` exceeds the
+  RPLiDAR S3's 16.0 m spec. slam_toolbox clamps silently. Cosmetic.
+- `roboclaw_node` logs `Failed to set velocity PID: unsupported
+  operand type(s) for >>: 'float' and 'int'` at startup — a
+  bit-shift on a float somewhere in `roboclaw_driver`. Driver
+  continues with default PID. Non-blocking but a real bug.
+- `ekf_node` occasionally misses its update rate under SLAM load
+  (`Took 0.26 s`). Yellow flag for CPU headroom, not a blocker.
 - Map drifts over time without GPS/SLAM — dead-reckoning error in
-  odom accumulates, so goals set in `map` slide relative to the
-  real world. Expected behavior, not a bug. SLAM will fix it.
+  odom accumulates. Expected with `launch_slam=false launch_gps=false`;
+  SLAM fixes it when the lidar is up.
 - GPS datum hardcoded to New Mexico.
 - `gps_waypoint_handler_node` uses blocking
   `spin_until_future_complete` in constructor.

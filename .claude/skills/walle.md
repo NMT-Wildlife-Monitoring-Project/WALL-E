@@ -126,3 +126,39 @@ the code.
 **Apply:** For every non-trivial task: read the relevant files,
 quote file:line, state the blast radius of the change in one
 sentence, then propose. Do not skip steps.
+
+---
+
+## Rule 9: `rf2o waiting for laser_scans` + growing map→odom extrapolation gap = lidar died upstream
+
+**Why:** On 2026-04-22, two test sessions produced this exact log
+cascade and the robot stopped moving. The first session the
+hypothesis was an MPPI-envelope-induced brownout (commit
+`81b573f7` widened vx/wz/ax). The widening was reverted in
+`3f05d8b8` and the failure STILL reproduced — proving that the
+same log signature can appear without any MPPI change. The common
+thread across both failures was that the RPLiDAR S3 **physically
+powered off** (head stopped spinning, LED dark). Every symptom
+downstream — rf2o starvation, controller_server `Lookup would
+require extrapolation into the future` on `[map] → [odom]`,
+bt_navigator aborting the goal, roboclaw zeroing — is a
+consequence of `/scan` dying, not a cause.
+
+**Apply:** Whenever you see
+  - rf2o printing `Waiting for laser_scans....` repeatedly, AND
+  - the `[map] → [odom]` extrapolation gap in controller_server
+    logs growing monotonically (1 s/s),
+then the diagnosis is **the lidar stopped publishing**. Do NOT
+start chasing TF tolerances, EKF tuning, costmap persistence,
+MPPI gains, or slam_toolbox params. Verify the lidar with
+`ros2 topic hz /scan` and, if the user is at the robot, ask
+whether the S3's head is spinning and the LED is lit. The fix
+is upstream (USB/power/cable/firmware), not in any yaml.
+
+A *bounded* extrapolation gap (delta oscillates around a small
+steady-state value) is backpressure and is a different problem —
+usually a tolerance/timing fix. An *unbounded* gap is a dead
+producer.
+
+See memory: `project_lidar_dropout.md` for the seven-step
+hardware-diagnostic plan.
