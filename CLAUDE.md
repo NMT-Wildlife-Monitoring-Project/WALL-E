@@ -186,15 +186,24 @@ either EKF (was tried and reverted — see `d52ba681`).
 
 Only one node may publish `map → odom`. Selection is automatic:
 
-| `launch_gps` | Publisher |
-|---|---|
-| false (default) | Static identity TF (dead-reckoning — map nailed to odom) |
-| true            | `ekf_filter_node_map` (fuses GPS) |
+| `launch_slam` | `launch_gps` | Publisher |
+|---|---|---|
+| true | any | `slam_toolbox` (async online mapping) |
+| false | false | Static identity TF (dead-reckoning — map nailed to odom) |
+| false | true | `ekf_filter_node_map` (fuses GPS) |
 
-SLAM is **not currently integrated**. A prior attempt to add
-`slam_toolbox` caused a fastcdr/fastrtps ABI break that crashed
-every ROS node. See memory: `project_slam_fastcdr.md` for the
-symptom and three fix strategies to try next time.
+**SLAM is enabled by default** in `robot_launch.py` (Phase 1: indoor
+mapping, stable `map` frame, throwaway maps). When `launch_slam=true`
+and `launch_gps=true`, the GPS driver still publishes `/fix` but
+`navsat_transform` and the map EKF are gated off — no GPS fusion into
+the SLAM pose graph in Phase 1. To run without SLAM (e.g. outdoor
+GPS test):
+
+    ./start_docker.sh -c "ros2 launch robot_bringup robot_launch.py launch_slam:=false launch_gps:=true"
+
+slam_toolbox parameters live in
+`ros2_ws/src/robot_navigation/config/slam_toolbox_params.yaml`
+(tuned for RPLiDAR S3 + indoor/building-scale).
 
 ### Launch hierarchy
 
@@ -207,6 +216,7 @@ symptom and three fix strategies to try next time.
 | `launch_gps`     | false | NMEA GPS driver + map EKF path |
 | `launch_urdf`    | true | robot_state_publisher from xacro |
 | `launch_nav`     | true | `gps_waypoint_follower.launch.py` → dual EKF, twist_mux, Nav2, RF2O |
+| `launch_slam`    | true | `slam_toolbox.launch.py` (async online mapping); owns `map→odom` when on |
 | `launch_d2oc`    | false | D2OC exploration |
 | `use_rviz`       | false | RViz (we usually open it on host instead) |
 | `launch_waypoint_follower` | false | Auto-start GPS waypoint following |
