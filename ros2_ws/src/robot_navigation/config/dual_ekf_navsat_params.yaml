@@ -89,7 +89,8 @@ ekf_filter_node_map:
                   false, false, false]
     odom1_queue_size: 10
     odom1_differential: false
-    odom1_relative: false
+    # SET TO TRUE: Rejects initial GPS jumps by making the first reading the 0,0 relative origin
+    odom1_relative: true
 
     imu0: imu/data
     imu0_config: [false, false, false,
