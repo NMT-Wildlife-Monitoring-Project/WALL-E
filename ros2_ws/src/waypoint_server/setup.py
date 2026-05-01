@@ -10,8 +10,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/launch', ['launch/launch_waypoint_system.launch.py']),
-        ('share/' + package_name + '/config', ['config/waypoints.yaml']),
+        ('share/' + package_name + '/launch', ['launch/launch_waypoint_system.launch.py', 'launch/gps_waypoint.launch.py']),
+        ('share/' + package_name + '/config', ['config/waypoints.yaml', 'config/route.yaml']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -23,6 +23,7 @@ setup(
         'console_scripts': [
             'waypoint_follower_node = waypoint_server.waypoint_follower_node:main',
             'gps_waypoint_handler_node = waypoint_server.gps_waypoint_handler_node:main',
+            'gps_waypoint_manager = waypoint_server.gps_waypoint_manager:main',
         ],
     },
 )
