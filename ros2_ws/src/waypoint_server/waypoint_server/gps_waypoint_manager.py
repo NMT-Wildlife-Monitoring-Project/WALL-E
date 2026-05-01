@@ -60,22 +60,11 @@ def main(args=None):
             pose = PoseStamped()
             pose.header.frame_id = 'map'
             pose.header.stamp = manager.get_clock().now().to_msg()
-            
-            # --- TEMPORARY INDOOR WHEEL TEST OVERRIDE ---
-            real_x = future.result().map_point.x
-            real_y = future.result().map_point.y
-            manager.get_logger().info(f"WP {index+1}: Converted [{wp['lat']}, {wp['lon']}] to X:{real_x:.2f}, Y:{real_y:.2f}")
-            
-            # Override to a safe local coordinate (e.g. going 2m forward, then 4m, etc.)
-            pose.pose.position.x = 2.0 * (index + 1)
-            pose.pose.position.y = 0.0
-            pose.pose.position.z = 0.0
-            # ---------------------------------------------
-            
+            pose.pose.position = future.result().map_point
             # Default orientation
             pose.pose.orientation.w = 1.0 
             pose_goals.append(pose)
-            manager.get_logger().info(f"WP {index+1}: OVERRIDING goal to X:{pose.pose.position.x:.2f}, Y:{pose.pose.position.y:.2f} for indoor wheel test.")
+            manager.get_logger().info(f"WP {index+1}: Converted [{wp['lat']}, {wp['lon']}] to X:{pose.pose.position.x:.2f}, Y:{pose.pose.position.y:.2f}")
         else:
             manager.get_logger().error(f"Failed to convert waypoint {index+1}")
 
