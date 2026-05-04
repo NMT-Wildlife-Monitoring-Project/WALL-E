@@ -320,25 +320,82 @@ Install on host with:
 
 ## Known issues
 
-- **RPLiDAR S3 shuts off mid-session (BLOCKING, under diagnosis
-  as of 2026-04-22).** The lidar physically powers off
-  (head stops, LED dark) after some minutes of operation. Cascade:
-  `/scan` dries up → rf2o prints `Waiting for laser_scans...` →
-  slam_toolbox stops updating `map→odom` → controller_server
-  throws `Lookup would require extrapolation into the future`
-  (the map→odom "latest data" stamp falls behind the request
-  monotonically) → bt_navigator aborts → motors zero.
-  **The cascade IS the fingerprint** — if you see rf2o waiting
-  for scans plus a monotonically-growing map→odom extrapolation
-  gap, the lidar has died upstream; do not chase TF/EKF/Nav2
-  fixes. MPPI velocity-envelope widening (commit `81b573f7`) was
-  hypothesised to cause a brownout but has been reverted
-  (`3f05d8b8`) and the dropout still reproduces, so the current
-  envelope is NOT the root cause. Open hypotheses: USB cable,
-  Jetson 5 V rail brownout independent of MPPI, EMI, thermal,
-  S3 firmware, USB hub topology. Diagnostic plan lives in memory
-  file `project_lidar_dropout.md` — follow it step by step;
-  the order is chosen to narrow hypothesis space cheaply.
+### Lidar — multiple failure modes (one resolved, one open)
+
+- **Hard power-off / ground-loop dropout (RESOLVED 2026-04-28).**
+  Lidar physically powered off (head stops, LED dark) mid-session.
+  Root cause: ground loop between the Jetson and motor-power
+  domains — the DC buck converter and RoboClaw shared a spliced
+  ground rather than each running its own dedicated wire to the
+  battery negative. Star-grounding fix applied; no longer recurs.
+  See `project_lidar_dropout.md` in memory.
+
+- **Motor halt without USB disconnect (OPEN, intermittent).**
+  Discovered 2026-04-30. Distinct from the above. Symptom: lidar
+  head stops spinning, but the connector LED stays lit,
+  `/dev/ttyUSB0` remains enumerated, `dmesg` shows no USB events,
+  and `sllidar_node` stays alive. `/scan` goes silent. Same
+  downstream cascade as a hard dropout. Recovery without
+  container restart:
+  `ros2 service call /start_motor std_srvs/srv/Empty`. Trigger
+  is unknown — possibly a brief 5 V dip too small to drop USB
+  enumeration, firmware glitch, or thermal. Try this first
+  whenever `/scan` goes silent unexpectedly; check the lidar
+  power physically only if it doesn't recover.
+
+### Cascade fingerprint (for diagnosing any `/scan`-loss event)
+
+When `/scan` stops, this exact downstream cascade appears:
+`/scan` dries up → rf2o prints `Waiting for laser_scans...` →
+slam_toolbox stops updating `map→odom` → controller_server throws
+`Lookup would require extrapolation into the future` (the
+map→odom "latest data" stamp falls behind the request
+monotonically) → bt_navigator aborts → motors zero. **The
+cascade IS the fingerprint** — if you see this chain, the lidar
+upstream is the cause; do not chase TF/EKF/Nav2 fixes.
+
+### Other open failure modes (observed 2026-04-30, unconfirmed reproduction)
+
+- **`slam_toolbox` SIGSEGV after long uptime.** `async_slam_toolbox_node`
+  died with exit code -11 at ~51 min uptime in one session, no
+  traceback in `~/.ros/log/latest/launch.log`. Cause unknown
+  (possibly malformed scan input, upstream Jazzy bug, or memory
+  corruption). Recovery: container restart. Untested on retry —
+  battery died at +20 min on the verification attempt. See
+  `project_slam_diagnosis_2026_04_28.md`.
+
+- **`bno085_node` clean exit (exit 0).** Observed at ~15 min uptime
+  in one session, no error logged. EKF then runs without IMU data
+  → degraded dead-reckoning. Did NOT reproduce in the next session
+  (alive past +15 min before unrelated battery death). Sample size
+  2: not strictly time-deterministic. Cause unknown.
+
+### Cosmetic non-issues (do NOT chase)
+
+- **`/rf2o_laser_odometry` appears as 2 nodes in `ros2 node list`,
+  and `topic info /tf -v` lists rf2o as a `/tf` publisher even with
+  `publish_tf: false`.** Both are artifacts of rf2o's source code
+  (`CLaserOdometry2DNode.h:77`): the `tf2_ros::TransformBroadcaster`
+  is instantiated unconditionally in the constructor, registering
+  a `/tf` publisher with rclcpp regardless of the flag. The
+  `publish_tf` flag only gates whether `sendTransform()` is
+  *called*. No actual TF messages flow when false. Confirmed by
+  process count: only one rf2o process exists. Don't try to "fix"
+  this — it's an upstream quirk.
+
+### DDS hygiene reminder
+
+The Jetson container uses `--net=host` and `ROS_DOMAIN_ID=62`,
+which the user's laptop also shares. Stale ROS processes anywhere
+on the LAN at that domain pollute the Jetson's node graph. **Before
+debugging any visual ROS symptom (jitter, rotation, missing
+obstacles, duplicate nodes), run `ros2 node list | sort | uniq -c`
+from inside the Jetson container** and look for unexpected `×N`
+counts. We hit this hard 2026-04-28: a 6-day-old laptop docker
+container running zombie teleop launches caused symptoms that
+looked like a SLAM tuning problem. The fix was
+`docker stop <laptop-container>`, not parameter tuning. See
+`feedback_dds_hygiene.md` in memory.
 - `slam_toolbox_params.yaml: max_laser_range = 25.0` exceeds the
   RPLiDAR S3's 16.0 m spec. slam_toolbox clamps silently. Cosmetic.
 - `roboclaw_node` logs `Failed to set velocity PID: unsupported
@@ -350,9 +407,11 @@ Install on host with:
 - Map drifts over time without GPS/SLAM — dead-reckoning error in
   odom accumulates. Expected with `launch_slam=false launch_gps=false`;
   SLAM fixes it when the lidar is up.
-- GPS datum hardcoded to New Mexico.
-- `gps_waypoint_handler_node` uses blocking
-  `spin_until_future_complete` in constructor.
+- GPS datum / waypoint stack: under active iteration 2026-04-30 →
+  2026-05-04 (commits `f5ba7687` … `c20f03ff`). Status of older
+  GPS-related issues (datum hardcoded, blocking
+  `spin_until_future_complete` in `gps_waypoint_handler_node`) is
+  not current — read recent commits before acting.
 - Phantom obstacles on costmap.
 
 ---
