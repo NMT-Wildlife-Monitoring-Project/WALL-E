@@ -10,6 +10,7 @@ Pipeline (mirrors d2oc-speedup.py):
      random pick among the nearest `nw_candidates`, optionally costmap-gated.
   5) Return NW as a PoseStamped goal in the map frame.
 """
+import math
 import numpy as np
 from geometry_msgs.msg import PoseStamped
 
@@ -22,6 +23,7 @@ class D2OCAlgorithm:
         candidate_occ_min=0.4,
         free_occ_max=0.5,
         free_occ_min=0.0,
+        obstacle_occ_min=0.65,
         top_k=10,
         nw_candidates=5,
         gamma=0.1,
@@ -34,6 +36,7 @@ class D2OCAlgorithm:
         self.candidate_occ_min = float(candidate_occ_min)
         self.free_occ_max = float(free_occ_max)
         self.free_occ_min = float(free_occ_min)
+        self.obstacle_occ_min = float(obstacle_occ_min)
         self.top_k = int(top_k)
         self.nw_candidates = int(nw_candidates)
         self.gamma = float(gamma)
@@ -53,17 +56,26 @@ class D2OCAlgorithm:
         if nw is None:
             return None
         nw_x, nw_y = density_map.grid_to_world(nw[0], nw[1])
-        return self._to_pose_stamped(nw_x, nw_y, stamp=stamp)
+        return self._to_pose_stamped(nw_x, nw_y, from_x=robot_x, from_y=robot_y, stamp=stamp)
 
     def _update_barycenter(self, density_map, robot_x, robot_y, visit_map):
         occ = density_map.occupancy
-        rows, cols = np.where(occ > self.candidate_occ_min)
+
+        # Known-free and unknown masks (unknown excludes clear obstacles).
+        free = (occ > self.free_occ_min) & (occ < self.free_occ_max)
+        unknown = (occ >= self.free_occ_max) & (occ < self.obstacle_occ_min)
+
+        # Frontier = unknown cells with at least one known-free 4-neighbour.
+        free_adj = np.zeros_like(free)
+        free_adj[1:, :] |= free[:-1, :]
+        free_adj[:-1, :] |= free[1:, :]
+        free_adj[:, 1:] |= free[:, :-1]
+        free_adj[:, :-1] |= free[:, 1:]
+        frontier = unknown & free_adj
+
+        rows, cols = np.where(frontier)
         if rows.size == 0:
             return None
-
-        if rows.size > self.max_candidates:
-            sel = self.rng.choice(rows.size, self.max_candidates, replace=False)
-            rows, cols = rows[sel], cols[sel]
 
         world_x = density_map.origin_x + (cols + 0.5) * density_map.resolution
         world_y = density_map.origin_y + (rows + 0.5) * density_map.resolution
@@ -129,7 +141,7 @@ class D2OCAlgorithm:
             return True
         return value < 65
 
-    def _to_pose_stamped(self, x, y, stamp=None):
+    def _to_pose_stamped(self, x, y, from_x=None, from_y=None, stamp=None):
         msg = PoseStamped()
         msg.header.frame_id = self.goal_frame_id
         if stamp is not None:
@@ -137,5 +149,10 @@ class D2OCAlgorithm:
         msg.pose.position.x = float(x)
         msg.pose.position.y = float(y)
         msg.pose.position.z = 0.0
-        msg.pose.orientation.w = 1.0
+        if from_x is not None and from_y is not None and (x != from_x or y != from_y):
+            yaw = math.atan2(y - from_y, x - from_x)
+            msg.pose.orientation.z = math.sin(yaw / 2.0)
+            msg.pose.orientation.w = math.cos(yaw / 2.0)
+        else:
+            msg.pose.orientation.w = 1.0
         return msg
