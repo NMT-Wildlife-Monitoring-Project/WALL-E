@@ -5,17 +5,26 @@ d2oc_explorer:
       height: 100.0
       resolution: 0.1
 
-    algorithm:
-      entropy_threshold: 0.8
-      max_goal_distance: 20.0
-      distance_weight: 0.1
-      min_confidence: 0.3
-      candidate_stride: 2
-      max_entropy_candidates: 4000
+    policy:
+      candidate_occ_min: 0.4
+      free_occ_max: 0.5
+      free_occ_min: 0.0
+      top_k: 10
+      nw_candidates: 5
+      gamma: 0.1
+      cost_offset: 1.5
+      max_candidates: 500
+      bary_smoothing: 0.3
+
+    visit:
+      kernel_radius: 1
+      decay: 0.0
+
+    frames:
+      map: map
+      base_link: base_link
 
     sensor:
-      lidar_max_range: 12.0
-      lidar_min_range: 0.2
       scan_confidence: 0.6
       enable_odom_scan_fallback: false
       max_tf_fallback_age_sec: 0.05
@@ -27,7 +36,7 @@ d2oc_explorer:
 
     topics:
       scan: /scan
-      odometry: /odometry/global
+      odometry: /odometry/local
       costmap: /local_costmap/costmap
       exploration_goal: /exploration/goal
       density_map: /d2oc/density_map
