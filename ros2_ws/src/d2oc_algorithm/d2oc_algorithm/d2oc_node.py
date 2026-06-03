@@ -13,7 +13,6 @@ from tf2_ros import Buffer, TransformException, TransformListener
 
 from .d2oc_algorithm import D2OCAlgorithm
 from .density_map import DensityMap
-from .entropy_calculator import EntropyCalculator
 
 
 def quaternion_to_yaw(x: float, y: float, z: float, w: float) -> float:
@@ -42,16 +41,24 @@ class D2OCNode(Node):
 			height=self.grid_height,
 			resolution=self.grid_resolution,
 		)
-		self.entropy_calculator = EntropyCalculator()
+		from .visit_map import VisitMap
+		self.visit_map = VisitMap(
+			rows=self.density_map.rows,
+			cols=self.density_map.cols,
+			kernel_radius=self.visit_kernel_radius,
+			decay=self.visit_decay,
+		)
 		self.algorithm = D2OCAlgorithm(
-			entropy_calculator=self.entropy_calculator,
-			entropy_threshold=self.entropy_threshold,
-			max_goal_distance=self.max_goal_distance,
-			distance_weight=self.distance_weight,
-			min_confidence=self.min_confidence,
-			candidate_stride=self.candidate_stride,
-			max_entropy_candidates=self.max_entropy_candidates,
-			goal_frame_id='map',
+			candidate_occ_min=self.candidate_occ_min,
+			free_occ_max=self.free_occ_max,
+			free_occ_min=self.free_occ_min,
+			top_k=self.top_k,
+			nw_candidates=self.nw_candidates,
+			gamma=self.gamma,
+			cost_offset=self.cost_offset,
+			max_candidates=self.max_candidates,
+			bary_smoothing=self.bary_smoothing,
+			goal_frame_id=self.map_frame,
 		)
 
 		self.latest_costmap = None
@@ -81,12 +88,22 @@ class D2OCNode(Node):
 		self.declare_parameter('grid.height', 100.0)
 		self.declare_parameter('grid.resolution', 0.1)
 
-		self.declare_parameter('algorithm.entropy_threshold', 0.8)
-		self.declare_parameter('algorithm.max_goal_distance', 20.0)
-		self.declare_parameter('algorithm.distance_weight', 0.1)
-		self.declare_parameter('algorithm.min_confidence', 0.3)
-		self.declare_parameter('algorithm.candidate_stride', 2)
-		self.declare_parameter('algorithm.max_entropy_candidates', 4000)
+		# --- policy (sim-brain) ---
+		self.declare_parameter('policy.candidate_occ_min', 0.4)
+		self.declare_parameter('policy.free_occ_max', 0.5)
+		self.declare_parameter('policy.free_occ_min', 0.0)
+		self.declare_parameter('policy.top_k', 10)
+		self.declare_parameter('policy.nw_candidates', 5)
+		self.declare_parameter('policy.gamma', 0.1)
+		self.declare_parameter('policy.cost_offset', 1.5)
+		self.declare_parameter('policy.max_candidates', 500)
+		self.declare_parameter('policy.bary_smoothing', 0.3)
+		# --- visit map ---
+		self.declare_parameter('visit.kernel_radius', 1)
+		self.declare_parameter('visit.decay', 0.0)
+		# --- robot pose frame ---
+		self.declare_parameter('frames.map', 'map')
+		self.declare_parameter('frames.base_link', 'base_link')
 
 		self.declare_parameter('sensor.scan_confidence', 0.6)
 		self.declare_parameter('sensor.enable_odom_scan_fallback', False)
@@ -107,14 +124,19 @@ class D2OCNode(Node):
 		self.grid_height = float(self.get_parameter('grid.height').value)
 		self.grid_resolution = float(self.get_parameter('grid.resolution').value)
 
-		self.entropy_threshold = float(self.get_parameter('algorithm.entropy_threshold').value)
-		self.max_goal_distance = float(self.get_parameter('algorithm.max_goal_distance').value)
-		self.distance_weight = float(self.get_parameter('algorithm.distance_weight').value)
-		self.min_confidence = float(self.get_parameter('algorithm.min_confidence').value)
-		self.candidate_stride = int(self.get_parameter('algorithm.candidate_stride').value)
-		self.max_entropy_candidates = int(
-			self.get_parameter('algorithm.max_entropy_candidates').value
-		)
+		self.candidate_occ_min = float(self.get_parameter('policy.candidate_occ_min').value)
+		self.free_occ_max = float(self.get_parameter('policy.free_occ_max').value)
+		self.free_occ_min = float(self.get_parameter('policy.free_occ_min').value)
+		self.top_k = int(self.get_parameter('policy.top_k').value)
+		self.nw_candidates = int(self.get_parameter('policy.nw_candidates').value)
+		self.gamma = float(self.get_parameter('policy.gamma').value)
+		self.cost_offset = float(self.get_parameter('policy.cost_offset').value)
+		self.max_candidates = int(self.get_parameter('policy.max_candidates').value)
+		self.bary_smoothing = float(self.get_parameter('policy.bary_smoothing').value)
+		self.visit_kernel_radius = int(self.get_parameter('visit.kernel_radius').value)
+		self.visit_decay = float(self.get_parameter('visit.decay').value)
+		self.map_frame = str(self.get_parameter('frames.map').value)
+		self.base_link_frame = str(self.get_parameter('frames.base_link').value)
 
 		self.scan_confidence = float(self.get_parameter('sensor.scan_confidence').value)
 		self.enable_odom_scan_fallback = bool(
@@ -133,6 +155,18 @@ class D2OCNode(Node):
 		self.costmap_topic = str(self.get_parameter('topics.costmap').value)
 		self.exploration_goal_topic = str(self.get_parameter('topics.exploration_goal').value)
 		self.density_map_topic = str(self.get_parameter('topics.density_map').value)
+
+	def _lookup_robot_pose(self):
+		"""Return (x, y, yaw) of base_link in the map frame via TF, or None."""
+		try:
+			tf = self.tf_buffer.lookup_transform(
+				self.map_frame, self.base_link_frame, Time(),
+				timeout=Duration(seconds=0.1))
+		except TransformException:
+			return None
+		t = tf.transform.translation
+		q = tf.transform.rotation
+		return float(t.x), float(t.y), quaternion_to_yaw(q.x, q.y, q.z, q.w)
 
 	def scan_callback(self, msg: LaserScan):
 		target_frame = 'map'
@@ -236,14 +270,22 @@ class D2OCNode(Node):
 		self.latest_costmap = msg
 
 	def timer_callback(self):
-		if self.robot_x is None or self.robot_y is None:
-			self.get_logger().debug('Waiting for odometry before computing goals')
+		pose = self._lookup_robot_pose()
+		if pose is None:
+			self.get_logger().debug(
+				f'Waiting for {self.map_frame}->{self.base_link_frame} TF before computing goals')
 			return
+		self.robot_x, self.robot_y, self.robot_theta = pose
+
+		cell = self.density_map.world_to_grid(self.robot_x, self.robot_y)
+		if cell is not None:
+			self.visit_map.register(col=cell[0], row=cell[1])
 
 		goal = self.algorithm.compute_exploration_goal(
 			density_map=self.density_map,
 			robot_x=self.robot_x,
 			robot_y=self.robot_y,
+			visit_map=self.visit_map,
 			costmap=self.latest_costmap,
 			stamp=self.get_clock().now().to_msg(),
 		)
@@ -251,25 +293,24 @@ class D2OCNode(Node):
 		if goal is not None:
 			self.goal_publisher.publish(goal)
 			self.get_logger().info(
-				f'Published exploration goal: x={goal.pose.position.x:.2f}, y={goal.pose.position.y:.2f}'
-			)
+				f'Published exploration goal: x={goal.pose.position.x:.2f}, '
+				f'y={goal.pose.position.y:.2f}')
 		else:
 			self.get_logger().warn('No valid exploration goal found this cycle')
 
-		if self.enable_density_map and self.density_map_frequency > 0.0:
-			now = self.get_clock().now()
-			if self._last_density_map_publish_time is not None:
-				elapsed_ns = (now - self._last_density_map_publish_time).nanoseconds
-				min_interval_ns = int(1e9 / self.density_map_frequency)
-				if elapsed_ns < min_interval_ns:
-					return
+		self._maybe_publish_density_map()
 
-			grid_msg = self.density_map.to_occupancy_grid(
-				stamp=now.to_msg(),
-				frame_id='map',
-			)
-			self.map_publisher.publish(grid_msg)
-			self._last_density_map_publish_time = now
+	def _maybe_publish_density_map(self):
+		if not (self.enable_density_map and self.density_map_frequency > 0.0):
+			return
+		now = self.get_clock().now()
+		if self._last_density_map_publish_time is not None:
+			elapsed_ns = (now - self._last_density_map_publish_time).nanoseconds
+			if elapsed_ns < int(1e9 / self.density_map_frequency):
+				return
+		grid_msg = self.density_map.to_occupancy_grid(stamp=now.to_msg(), frame_id=self.map_frame)
+		self.map_publisher.publish(grid_msg)
+		self._last_density_map_publish_time = now
 
 
 def main(args=None):
