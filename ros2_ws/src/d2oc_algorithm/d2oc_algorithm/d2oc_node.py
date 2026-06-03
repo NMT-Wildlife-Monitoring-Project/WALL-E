@@ -169,7 +169,7 @@ class D2OCNode(Node):
 		return float(t.x), float(t.y), quaternion_to_yaw(q.x, q.y, q.z, q.w)
 
 	def scan_callback(self, msg: LaserScan):
-		target_frame = 'map'
+		target_frame = self.map_frame
 		source_frame = msg.header.frame_id if msg.header.frame_id else 'base_link'
 
 		scan_x = None

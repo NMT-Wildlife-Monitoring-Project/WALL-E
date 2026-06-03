@@ -104,7 +104,7 @@ class D2OCAlgorithm:
         order = np.argsort(d2)
 
         n = min(self.nw_candidates, order.size)
-        nearest = order[:n]
+        nearest = order[:n].copy()
         self.rng.shuffle(nearest)
         for idx in nearest:
             c, r = int(cols[idx]), int(rows[idx])

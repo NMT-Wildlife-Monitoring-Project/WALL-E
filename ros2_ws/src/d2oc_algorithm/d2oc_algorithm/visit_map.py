@@ -45,7 +45,9 @@ class VisitMap:
         self.total += 1.0
 
     def frequency(self, rows_idx, cols_idx):
-        """Visit frequency at the given (row, col) index arrays."""
+        """Normalized visit frequency at the given (row, col) index arrays."""
         rows_idx = np.asarray(rows_idx, dtype=np.intp)
         cols_idx = np.asarray(cols_idx, dtype=np.intp)
-        return self.counts[rows_idx, cols_idx].astype(np.float64)
+        if self.total <= 0.0:
+            return np.zeros(rows_idx.shape, dtype=np.float64)
+        return self.counts[rows_idx, cols_idx] / self.total

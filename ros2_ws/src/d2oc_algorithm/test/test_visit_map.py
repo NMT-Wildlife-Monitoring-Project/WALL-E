@@ -19,13 +19,20 @@ def test_register_increments_total_and_local_counts():
     assert far == 0.0
 
 
-def test_repeated_visits_raise_frequency():
+def test_visited_cell_has_positive_bounded_frequency():
     vm = VisitMap(rows=20, cols=20, kernel_radius=1)
     vm.register(10, 10)
-    once = vm.frequency(np.array([10]), np.array([10]))[0]
-    vm.register(10, 10)
-    twice = vm.frequency(np.array([10]), np.array([10]))[0]
-    assert twice > once
+    f = vm.frequency(np.array([10]), np.array([10]))[0]
+    assert 0.0 < f <= 1.0
+
+
+def test_frequency_stays_bounded_under_repeated_same_cell_visits():
+    vm = VisitMap(rows=20, cols=20, kernel_radius=1)
+    for _ in range(50):
+        vm.register(10, 10)
+    f = vm.frequency(np.array([10]), np.array([10]))[0]
+    assert f <= 1.0          # normalized: never blows past 1
+    assert f > 0.0
 
 
 def test_register_near_edge_does_not_crash():
