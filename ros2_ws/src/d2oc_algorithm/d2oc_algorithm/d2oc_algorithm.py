@@ -1,14 +1,15 @@
-"""Core D2OC decision logic — sim-brain re-architecture (Phase 1).
+"""Core D2OC decision logic — reachable local-frontier exploration (Phase 1).
 
-Pipeline (mirrors d2oc-speedup.py):
-  1) Candidate cells = uncertain cells (occupancy > candidate_occ_min),
-     excluding confident-free cells and known obstacles.
-  2) Score each: information_score(occupancy, visit_freq, distance).
-  3) Barycenter = score-weighted centroid of the top-K cells (grid space),
-     exponentially smoothed across calls.
-  4) NW = nearest KNOWN-FREE cell (0 < occ < free_occ_max) to the barycenter,
-     random pick among the nearest `nw_candidates`, optionally costmap-gated.
-  5) Return NW as a PoseStamped goal in the map frame.
+Pipeline:
+  1) Local window of radius max_goal_distance around the robot.
+  2) Flood-fill from the robot through known-free cells -> reachable free.
+  3) Frontier = unknown cells adjacent to REACHABLE free.
+  4) Score frontiers (info/cost), weighted barycenter of top-K.
+  5) Goal = nearest reachable free cell to the barycenter (deterministic).
+  6) Hysteresis: hold the current goal until reached or no longer a valid
+     reachable frontier, so the goal is stable yet advances as the robot drives.
+
+Observation-only: nothing consumes the goal; Nav2 is not wired.
 """
 import math
 import numpy as np
@@ -30,6 +31,8 @@ class D2OCAlgorithm:
         cost_offset=1.5,
         max_candidates=500,
         bary_smoothing=0.3,
+        max_goal_distance=4.0,
+        goal_reached_radius=0.5,
         goal_frame_id='map',
         rng=None,
     ):
@@ -43,48 +46,64 @@ class D2OCAlgorithm:
         self.cost_offset = float(cost_offset)
         self.max_candidates = int(max_candidates)
         self.bary_smoothing = float(bary_smoothing)
+        self.max_goal_distance = float(max_goal_distance)
+        self.goal_reached_radius = float(goal_reached_radius)
         self.goal_frame_id = goal_frame_id
         self.rng = rng if rng is not None else np.random.default_rng()
-        self.bary = None  # running barycenter in grid indices: np.array([col, row])
+        self.current_goal = None  # committed goal as (world_x, world_y) or None
 
     def compute_exploration_goal(self, density_map, robot_x, robot_y, visit_map,
                                  costmap=None, stamp=None):
-        bary = self._update_barycenter(density_map, robot_x, robot_y, visit_map)
-        if bary is None:
-            return None
-        nw = self._select_next_waypoint(density_map, bary, costmap)
-        if nw is None:
-            return None
-        nw_x, nw_y = density_map.grid_to_world(nw[0], nw[1])
-        return self._to_pose_stamped(nw_x, nw_y, from_x=robot_x, from_y=robot_y, stamp=stamp)
+        # Hysteresis: keep the committed goal until reached or invalid.
+        if self.current_goal is not None:
+            gx, gy = self.current_goal
+            reached = math.hypot(gx - robot_x, gy - robot_y) <= self.goal_reached_radius
+            if not reached and self._goal_still_valid(density_map, gx, gy):
+                return self._to_pose_stamped(gx, gy, from_x=robot_x, from_y=robot_y, stamp=stamp)
 
-    def _update_barycenter(self, density_map, robot_x, robot_y, visit_map):
+        goal = self._select_new_goal(density_map, robot_x, robot_y, visit_map)
+        self.current_goal = goal
+        if goal is None:
+            return None
+        return self._to_pose_stamped(goal[0], goal[1], from_x=robot_x, from_y=robot_y, stamp=stamp)
+
+    def _select_new_goal(self, density_map, robot_x, robot_y, visit_map):
         occ = density_map.occupancy
+        rc = density_map.world_to_grid(robot_x, robot_y)
+        if rc is None:
+            return None
+        rcol, rrow = rc
 
-        # Known-free and unknown masks (unknown excludes clear obstacles).
-        free = (occ > self.free_occ_min) & (occ < self.free_occ_max)
-        unknown = (occ >= self.free_occ_max) & (occ < self.obstacle_occ_min)
+        win = max(1, int(self.max_goal_distance / density_map.resolution))
+        r0 = max(0, rrow - win); r1 = min(density_map.rows, rrow + win + 1)
+        c0 = max(0, rcol - win); c1 = min(density_map.cols, rcol + win + 1)
+        sub = occ[r0:r1, c0:c1]
 
-        # Frontier = unknown cells with at least one known-free 4-neighbour.
-        free_adj = np.zeros_like(free)
-        free_adj[1:, :] |= free[:-1, :]
-        free_adj[:-1, :] |= free[1:, :]
-        free_adj[:, 1:] |= free[:, :-1]
-        free_adj[:, :-1] |= free[:, 1:]
-        frontier = unknown & free_adj
+        free = (sub > self.free_occ_min) & (sub < self.free_occ_max)
+        unknown = (sub >= self.free_occ_max) & (sub < self.obstacle_occ_min)
 
-        rows, cols = np.where(frontier)
-        if rows.size == 0:
+        reachable = self._flood_fill_free(free, rrow - r0, rcol - c0)
+        if not reachable.any():
             return None
 
-        world_x = density_map.origin_x + (cols + 0.5) * density_map.resolution
-        world_y = density_map.origin_y + (rows + 0.5) * density_map.resolution
+        radj = np.zeros_like(reachable)
+        radj[1:, :] |= reachable[:-1, :]
+        radj[:-1, :] |= reachable[1:, :]
+        radj[:, 1:] |= reachable[:, :-1]
+        radj[:, :-1] |= reachable[:, 1:]
+        frontier = unknown & radj
+
+        fr, fc = np.where(frontier)
+        if fr.size == 0:
+            return None
+
+        world_x = density_map.origin_x + (fc + c0 + 0.5) * density_map.resolution
+        world_y = density_map.origin_y + (fr + r0 + 0.5) * density_map.resolution
         distance = np.hypot(world_x - robot_x, world_y - robot_y)
 
-        freq = visit_map.frequency(rows, cols)
-        score = information_score(occ[rows, cols], freq, distance,
+        freq = visit_map.frequency(fr + r0, fc + c0)
+        score = information_score(sub[fr, fc], freq, distance,
                                   gamma=self.gamma, offset=self.cost_offset)
-
         if not np.any(score > 0.0):
             score = 1.0 / (distance + 1e-6)
 
@@ -93,53 +112,54 @@ class D2OCAlgorithm:
         weights = score[top]
         if weights.sum() <= 0.0:
             weights = np.ones_like(weights)
+        bcol = float(np.average(fc[top] + c0, weights=weights))
+        brow = float(np.average(fr[top] + r0, weights=weights))
 
-        bary_col = float(np.average(cols[top], weights=weights))
-        bary_row = float(np.average(rows[top], weights=weights))
-        raw = np.array([bary_col, bary_row], dtype=float)
+        # Goal = nearest REACHABLE free cell to the barycenter (deterministic).
+        rr, rcc = np.where(reachable)
+        d2 = (rcc + c0 - bcol) ** 2 + (rr + r0 - brow) ** 2
+        best = int(np.argmin(d2))
+        nw_col = int(rcc[best] + c0)
+        nw_row = int(rr[best] + r0)
+        return density_map.grid_to_world(nw_col, nw_row)
 
-        if self.bary is None:
-            self.bary = raw
-        else:
-            a = self.bary_smoothing
-            self.bary = (1.0 - a) * self.bary + a * raw
-        return self.bary
+    def _flood_fill_free(self, free, start_row, start_col):
+        reachable = np.zeros_like(free)
+        rows, cols = free.shape
+        if rows == 0 or cols == 0:
+            return reachable
+        sr, sc = start_row, start_col
+        if not (0 <= sr < rows and 0 <= sc < cols and free[sr, sc]):
+            fr, fc = np.where(free)
+            if fr.size == 0:
+                return reachable
+            i = int(np.argmin((fr - start_row) ** 2 + (fc - start_col) ** 2))
+            sr, sc = int(fr[i]), int(fc[i])
+        stack = [(sr, sc)]
+        reachable[sr, sc] = True
+        while stack:
+            r, c = stack.pop()
+            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < rows and 0 <= nc < cols and free[nr, nc] and not reachable[nr, nc]:
+                    reachable[nr, nc] = True
+                    stack.append((nr, nc))
+        return reachable
 
-    def _select_next_waypoint(self, density_map, bary, costmap):
-        occ = density_map.occupancy
-        free_mask = (occ > self.free_occ_min) & (occ < self.free_occ_max)
-        rows, cols = np.where(free_mask)
-        if rows.size == 0:
-            return None
-
-        d2 = (cols - bary[0]) ** 2 + (rows - bary[1]) ** 2
-        order = np.argsort(d2)
-
-        n = min(self.nw_candidates, order.size)
-        nearest = order[:n].copy()
-        self.rng.shuffle(nearest)
-        for idx in nearest:
-            c, r = int(cols[idx]), int(rows[idx])
-            if self._is_accessible(density_map, costmap, c, r):
-                return (c, r)
-        c, r = int(cols[order[0]]), int(rows[order[0]])
-        return (c, r)
-
-    def _is_accessible(self, density_map, costmap, col, row):
-        if costmap is None:
-            return True
-        world_x, world_y = density_map.grid_to_world(col, row)
-        res = costmap.info.resolution
-        if res <= 0.0:
-            return True
-        c = int((world_x - costmap.info.origin.position.x) / res)
-        r = int((world_y - costmap.info.origin.position.y) / res)
-        if c < 0 or r < 0 or c >= costmap.info.width or r >= costmap.info.height:
+    def _goal_still_valid(self, density_map, gx, gy):
+        cell = density_map.world_to_grid(gx, gy)
+        if cell is None:
             return False
-        value = int(costmap.data[r * costmap.info.width + c])
-        if value < 0:
-            return True
-        return value < 65
+        gcol, grow = cell
+        occ = density_map.occupancy
+        if not (self.free_occ_min < occ[grow, gcol] < self.free_occ_max):
+            return False
+        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nr, nc = grow + dr, gcol + dc
+            if 0 <= nr < density_map.rows and 0 <= nc < density_map.cols:
+                if self.free_occ_max <= occ[nr, nc] < self.obstacle_occ_min:
+                    return True
+        return False
 
     def _to_pose_stamped(self, x, y, from_x=None, from_y=None, stamp=None):
         msg = PoseStamped()
