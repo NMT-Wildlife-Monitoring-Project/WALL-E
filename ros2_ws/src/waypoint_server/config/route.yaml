@@ -1,8 +1,8 @@
 waypoints:
   # Base testing coordinates (New Mexico)
-  - lat: 34.068130
-    lon: -106.901847
-  - lat: 34.068200
-    lon: -106.901900
+  - lat: 34.063394
+    lon: -106.904379
+  - lat: 34.064523
+    lon: -106.904339
   - lat: 34.068350
     lon: -106.902100
