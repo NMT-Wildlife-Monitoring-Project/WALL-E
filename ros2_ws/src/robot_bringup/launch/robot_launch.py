@@ -31,6 +31,12 @@ def generate_launch_description():
         'robot.urdf.xacro'
     ])
 
+    laser_filter_config = PathJoinSubstitution([
+        FindPackageShare('robot_navigation'),
+        'config',
+        'laser_filters.yaml'
+    ])
+
     return LaunchDescription([
         DeclareLaunchArgument('launch_rplidar', default_value='true'),
         DeclareLaunchArgument('launch_bno085', default_value='true'),
@@ -52,6 +58,18 @@ def generate_launch_description():
                 FindPackageShare('sllidar_ros2'), '/launch/sllidar_s3_launch.py'
             ]),
             condition=IfCondition(launch_rplidar),
+        ),
+        Node(
+            package='laser_filters',
+            executable='scan_to_scan_filter_chain',
+            name='scan_filter_node',
+            parameters=[laser_filter_config],
+            remappings=[
+                ('scan', 'scan_raw'),
+                ('scan_filtered', 'scan')
+            ],
+            condition=IfCondition(launch_rplidar),
+            output='screen',
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([

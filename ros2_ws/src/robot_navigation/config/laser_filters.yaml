@@ -1,0 +1,13 @@
+scan_filter_node:
+  ros__parameters:
+    scan_filter_chain:
+      - name: arm_mask_left
+        type: laser_filters/LaserScanAngularBoundsFilterInPlace
+        params:
+          lower_angle: 0.5   # Placeholder: starting angle in radians (left arm)
+          upper_angle: 1.0   # Placeholder: ending angle in radians
+      - name: arm_mask_right
+        type: laser_filters/LaserScanAngularBoundsFilterInPlace
+        params:
+          lower_angle: -1.0  # Placeholder: starting angle in radians (right arm)
+          upper_angle: -0.5  # Placeholder: ending angle in radians
