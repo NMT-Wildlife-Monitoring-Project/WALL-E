@@ -65,8 +65,10 @@ def generate_launch_description():
             name='scan_filter_node',
             parameters=[laser_filter_config],
             remappings=[
-                ('scan_in', 'scan_raw'),
-                ('scan_out', 'scan')
+                # scan_to_scan_filter_chain subscribes to 'scan' and publishes 'scan_filtered'.
+                # sllidar now publishes 'scan_raw', so: input scan<-scan_raw, output scan_filtered->scan.
+                ('scan', 'scan_raw'),
+                ('scan_filtered', 'scan')
             ],
             condition=IfCondition(launch_rplidar),
             output='screen',

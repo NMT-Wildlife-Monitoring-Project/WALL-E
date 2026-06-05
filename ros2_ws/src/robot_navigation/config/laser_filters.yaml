@@ -1,13 +1,23 @@
 scan_filter_node:
   ros__parameters:
-    scan_filter_chain:
-      - name: arm_mask_left
-        type: laser_filters/LaserScanAngularBoundsFilterInPlace
-        params:
-          lower_angle: 1.30   # Matches 9cm left, with padding
-          upper_angle: 1.84   # Matches 9cm left, with padding
-      - name: arm_mask_right
-        type: laser_filters/LaserScanAngularBoundsFilterInPlace
-        params:
-          lower_angle: -1.84  # Matches 9cm right, with padding
-          upper_angle: -1.30  # Matches 9cm right, with padding
+    # ROS 2 laser_filters chain: each filter is an indexed MAP entry (filter1, filter2),
+    # NOT a YAML list. A YAML list fails to parse in ROS 2 ("Sequence should be of same type")
+    # which crashes the node on startup -> no /scan -> no map.
+    # LaserScanAngularBoundsFilterInPlace masks (removes) returns BETWEEN lower_angle and
+    # upper_angle, in the lidar_link frame (scan: -pi..pi, CCW).
+    filter1:
+      name: arm_mask_left
+      type: laser_filters/LaserScanAngularBoundsFilterInPlace
+      params:
+        # Left solar-panel leg measured in /scan_raw: 1.325..1.923 rad
+        # (75.9..110.2 deg), ~34 deg wide, ~0.11 m away. +~3 deg margin.
+        lower_angle: 1.28
+        upper_angle: 1.97
+    filter2:
+      name: arm_mask_right
+      type: laser_filters/LaserScanAngularBoundsFilterInPlace
+      params:
+        # Right solar-panel leg measured: -1.933..-1.339 rad
+        # (-110.8..-76.7 deg), ~34 deg wide, ~0.08 m away. +~3 deg margin.
+        lower_angle: -2.00
+        upper_angle: -1.29
