@@ -4,10 +4,10 @@ scan_filter_node:
       - name: arm_mask_left
         type: laser_filters/LaserScanAngularBoundsFilterInPlace
         params:
-          lower_angle: 0.5   # Placeholder: starting angle in radians (left arm)
-          upper_angle: 1.0   # Placeholder: ending angle in radians
+          lower_angle: 1.30   # Matches 9cm left, with padding
+          upper_angle: 1.84   # Matches 9cm left, with padding
       - name: arm_mask_right
         type: laser_filters/LaserScanAngularBoundsFilterInPlace
         params:
-          lower_angle: -1.0  # Placeholder: starting angle in radians (right arm)
-          upper_angle: -0.5  # Placeholder: ending angle in radians
+          lower_angle: -1.84  # Matches 9cm right, with padding
+          upper_angle: -1.30  # Matches 9cm right, with padding
