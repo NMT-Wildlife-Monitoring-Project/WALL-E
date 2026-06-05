@@ -46,9 +46,16 @@ def generate_launch_description():
         mask_lidar,
         '".lower() == "true" else "[[0.199,0.185],[0.199,-0.185],[-0.199,-0.185],[-0.199,0.185]]"'
     ])
+    # The outdoor footprint's circumscribed radius (~0.375 m) exceeds the indoor
+    # inflation_radius (0.30), which disables Nav2's fast collision checking and slows
+    # planning. Bump inflation_radius to 0.45 outdoors; keep 0.30 indoors.
+    robot_inflation = PythonExpression([
+        '"0.45" if "', mask_lidar, '".lower() == "true" else "0.30"'
+    ])
     configured_params = RewrittenYaml(
         source_file=nav2_params, root_key="",
-        param_rewrites={'footprint': robot_footprint}, convert_types=True
+        param_rewrites={'footprint': robot_footprint, 'inflation_radius': robot_inflation},
+        convert_types=True
     )
 
     use_rviz = LaunchConfiguration('use_rviz')
