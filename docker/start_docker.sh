@@ -62,6 +62,7 @@ usage() {
     echo "  --ros-domain-id (-i) <id>   Set the ROS domain ID (default: $ROS_DOMAIN_ID)"
     echo "  --copy (-C) <from> <to>     Copy files from the container to the host"
     echo "  --display (-d)              Enable display support (forward X11 display)"
+    echo "  --outdoor (-o)             Outdoor mode: mask the solar-panel legs from the lidar (mask_lidar:=true). Combine with -s."
     echo "  --build (-b)                Build the Docker container (will stop the running container if any)"
     echo "  --stop (-x)                 Stop the running Docker container"
     echo "  --restart (-R)              Restart the Docker container if it is running"
@@ -84,6 +85,7 @@ STOP_CONTAINER=false
 RESTART_CONTAINER=false
 QUIET_MODE=false
 CLEAN_DOCKER=false
+OUTDOOR_MODE=false
 
 COPY_TO=""
 COPY_FROM=""
@@ -92,6 +94,7 @@ COPY_FROM=""
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
         --start|-s) RUN_ROBOT_LAUNCH=true; shift ;;
+        --outdoor|-o) OUTDOOR_MODE=true; shift ;;
         --teleop|-t) RUN_TELEOP_LAUNCH=true; shift ;;
         --usb-cam|-u) RUN_USB_CAM_NODE=true; shift ;;
         --video-stream|-v) RUN_VIEW_CAMERA_LAUNCH=true; DISPLAY_ENABLED=true; shift ;;
@@ -127,6 +130,12 @@ fi
 
 # Build a list of selected commands
 SELECTED_CMDS=()
+
+# Outdoor mode: enable the lidar leg-masking filter via robot_launch's mask_lidar arg.
+# (ACTION_CMDS[0] is the robot_launch command; mask_lidar defaults false so indoor -s is unaffected.)
+if [ "$OUTDOOR_MODE" = true ]; then
+    ACTION_CMDS[0]="${ACTION_CMDS[0]} mask_lidar:=true"
+fi
 
 if [ -n "$COMMAND_TO_RUN" ]; then
     ACTION_FLAGS+=("CUSTOM_COMMAND")

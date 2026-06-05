@@ -18,6 +18,7 @@ def generate_launch_description():
     inverted = LaunchConfiguration('inverted', default='false')
     angle_compensate = LaunchConfiguration('angle_compensate', default='true')
     scan_mode = LaunchConfiguration('scan_mode', default='Standard')
+    scan_topic = LaunchConfiguration('scan_topic', default='scan')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -55,6 +56,11 @@ def generate_launch_description():
             default_value=scan_mode,
             description='Specifying scan mode of lidar'),
 
+        DeclareLaunchArgument(
+            'scan_topic',
+            default_value=scan_topic,
+            description="Output topic for the scan ('scan' normally; 'scan_raw' when leg-masking is on)"),
+
         Node(
             package='sllidar_ros2',
             executable='sllidar_node',
@@ -66,7 +72,7 @@ def generate_launch_description():
                          'inverted': inverted, 
                          'angle_compensate': angle_compensate, 
                          'scan_mode': scan_mode}],
-            remappings=[('scan', 'scan_raw')],
+            remappings=[('scan', scan_topic)],
             output='screen'),
     ])
 

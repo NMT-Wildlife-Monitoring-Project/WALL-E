@@ -1,7 +1,7 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution, PythonExpression
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
 import os
@@ -17,6 +17,7 @@ def generate_launch_description():
     launch_d2oc = LaunchConfiguration('launch_d2oc')
     use_rviz = LaunchConfiguration('use_rviz')
     launch_waypoint_follower = LaunchConfiguration('launch_waypoint_follower')
+    mask_lidar = LaunchConfiguration('mask_lidar')
     rf2o_scan_topic = LaunchConfiguration('rf2o_scan_topic')
     rf2o_odom_topic = LaunchConfiguration('rf2o_odom_topic')
     d2oc_scan_topic = LaunchConfiguration('d2oc_scan_topic')
@@ -37,6 +38,12 @@ def generate_launch_description():
         'laser_filters.yaml'
     ])
 
+    # mask_lidar=true (outdoor, solar panel attached): sllidar publishes 'scan_raw',
+    # the laser_filters node masks the legs and republishes to 'scan'.
+    # mask_lidar=false (indoor, default): sllidar publishes straight to 'scan', no filter.
+    sllidar_scan_topic = PythonExpression(
+        ["'scan_raw' if '", mask_lidar, "'.lower() == 'true' else 'scan'"])
+
     return LaunchDescription([
         DeclareLaunchArgument('launch_rplidar', default_value='true'),
         DeclareLaunchArgument('launch_bno085', default_value='true'),
@@ -47,6 +54,7 @@ def generate_launch_description():
         DeclareLaunchArgument('launch_d2oc', default_value='false'),
         DeclareLaunchArgument('use_rviz', default_value='false'),
         DeclareLaunchArgument('launch_waypoint_follower', default_value='false'),
+        DeclareLaunchArgument('mask_lidar', default_value='false'),
         DeclareLaunchArgument('rf2o_scan_topic', default_value='/scan'),
         DeclareLaunchArgument('rf2o_odom_topic', default_value='odom_rf2o'),
         DeclareLaunchArgument('d2oc_scan_topic', default_value='/scan'),
@@ -58,6 +66,7 @@ def generate_launch_description():
                 FindPackageShare('sllidar_ros2'), '/launch/sllidar_s3_launch.py'
             ]),
             condition=IfCondition(launch_rplidar),
+            launch_arguments={'scan_topic': sllidar_scan_topic}.items(),
         ),
         Node(
             package='laser_filters',
@@ -66,11 +75,13 @@ def generate_launch_description():
             parameters=[laser_filter_config],
             remappings=[
                 # scan_to_scan_filter_chain subscribes to 'scan' and publishes 'scan_filtered'.
-                # sllidar now publishes 'scan_raw', so: input scan<-scan_raw, output scan_filtered->scan.
+                # With mask_lidar on, sllidar publishes 'scan_raw': input scan<-scan_raw, output scan_filtered->scan.
                 ('scan', 'scan_raw'),
                 ('scan_filtered', 'scan')
             ],
-            condition=IfCondition(launch_rplidar),
+            # Only run the leg-masking filter outdoors (mask_lidar=true) AND when the lidar is up.
+            condition=IfCondition(PythonExpression(
+                ["'", launch_rplidar, "'.lower() == 'true' and '", mask_lidar, "'.lower() == 'true'"])),
             output='screen',
         ),
         IncludeLaunchDescription(
