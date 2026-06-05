@@ -127,6 +127,7 @@ def generate_launch_description():
                 'launch_waypoint_follower': launch_waypoint_follower,
                 'use_gps': launch_gps,
                 'use_slam': launch_slam,
+                'mask_lidar': mask_lidar,
             }.items()
         ),
         Node(

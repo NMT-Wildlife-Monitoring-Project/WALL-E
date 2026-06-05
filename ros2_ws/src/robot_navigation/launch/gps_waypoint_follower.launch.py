@@ -18,7 +18,7 @@ import launch_ros.actions
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import IfCondition
@@ -34,8 +34,21 @@ def generate_launch_description():
     params_dir = os.path.join(package_dir, "config")
     nav2_params = os.path.join(params_dir, "nav2_no_map_params.yaml")
     rviz_config = os.path.join(params_dir, 'walle_default.rviz')
+
+    # Footprint: outdoors the solar panel overhangs the base, so use a larger
+    # 0.62 x 0.37 m footprint when mask_lidar is true; the original base footprint
+    # (0.398 x 0.37 m) indoors. RewrittenYaml substitutes the 'footprint' key for BOTH
+    # local_costmap and global_costmap; collision_monitor and MPPI read the footprint from
+    # the published costmap footprint topic, so they follow automatically.
+    mask_lidar = LaunchConfiguration('mask_lidar')
+    robot_footprint = PythonExpression([
+        '"[[0.31,0.185],[0.31,-0.185],[-0.31,-0.185],[-0.31,0.185]]" if "',
+        mask_lidar,
+        '".lower() == "true" else "[[0.199,0.185],[0.199,-0.185],[-0.199,-0.185],[-0.199,0.185]]"'
+    ])
     configured_params = RewrittenYaml(
-        source_file=nav2_params, root_key="", param_rewrites="", convert_types=True
+        source_file=nav2_params, root_key="",
+        param_rewrites={'footprint': robot_footprint}, convert_types=True
     )
 
     use_rviz = LaunchConfiguration('use_rviz')
@@ -67,6 +80,11 @@ def generate_launch_description():
         'use_slam',
         default_value='false',
         description='Enable slam_toolbox (becomes map->odom owner)')
+
+    declare_mask_lidar_cmd = DeclareLaunchArgument(
+        'mask_lidar',
+        default_value='false',
+        description='Outdoor mode: use the larger solar-panel footprint (0.62 x 0.37 m)')
 
     robot_localization_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -153,6 +171,7 @@ def generate_launch_description():
     ld.add_action(declare_launch_waypoint_follower_cmd)
     ld.add_action(declare_use_gps_cmd)
     ld.add_action(declare_use_slam_cmd)
+    ld.add_action(declare_mask_lidar_cmd)
     ld.add_action(slam_toolbox_cmd)
 
     return ld

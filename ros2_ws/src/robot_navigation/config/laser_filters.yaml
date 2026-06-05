@@ -10,14 +10,16 @@ scan_filter_node:
       type: laser_filters/LaserScanAngularBoundsFilterInPlace
       params:
         # Left solar-panel leg measured in /scan_raw: 1.325..1.923 rad
-        # (75.9..110.2 deg), ~34 deg wide, ~0.11 m away. +~3 deg margin.
-        lower_angle: 1.28
-        upper_angle: 1.97
+        # (75.9..110.2 deg), ~34 deg wide, ~0.11 m away. Widened margin (~+10 deg each
+        # side) so leg edges don't clip the mask and trigger phantom obstacles while driving.
+        lower_angle: 1.13
+        upper_angle: 2.10
     filter2:
       name: arm_mask_right
       type: laser_filters/LaserScanAngularBoundsFilterInPlace
       params:
         # Right solar-panel leg measured: -1.933..-1.339 rad
-        # (-110.8..-76.7 deg), ~34 deg wide, ~0.08 m away. +~3 deg margin.
-        lower_angle: -2.00
-        upper_angle: -1.29
+        # (-110.8..-76.7 deg), ~34 deg wide, ~0.08 m away. Widened margin (~+10 deg each
+        # side) so leg edges don't clip the mask and trigger phantom obstacles while driving.
+        lower_angle: -2.10
+        upper_angle: -1.13
