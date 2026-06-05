@@ -65,8 +65,8 @@ def generate_launch_description():
             name='scan_filter_node',
             parameters=[laser_filter_config],
             remappings=[
-                ('scan', 'scan_raw'),
-                ('scan_filtered', 'scan')
+                ('scan_in', 'scan_raw'),
+                ('scan_out', 'scan')
             ],
             condition=IfCondition(launch_rplidar),
             output='screen',
