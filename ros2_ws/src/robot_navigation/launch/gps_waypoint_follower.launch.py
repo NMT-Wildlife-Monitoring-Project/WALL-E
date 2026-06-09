@@ -74,6 +74,23 @@ def generate_launch_description():
         launch_arguments={'use_gps': use_gps, 'use_slam': use_slam}.items()
     )
 
+    # Scan range filter: drop laser returns inside the footprint (e.g. the cable
+    # ~3.5 cm behind the lidar) before they reach collision_monitor. Without this,
+    # those permanent in-footprint self-returns flicker across collision_monitor's
+    # min_points threshold and intermittently zero /cmd_vel_safe -> jittery motion.
+    # Only collision_monitor reads /scan_collision; slam/rf2o/costmap keep raw /scan.
+    scan_range_filter_cmd = launch_ros.actions.Node(
+        package='robot_navigation',
+        executable='scan_range_filter',
+        name='scan_range_filter',
+        output='screen',
+        parameters=[{
+            'min_range': 0.18,
+            'input_topic': 'scan',
+            'output_topic': 'scan_collision',
+        }]
+    )
+
     # Add twist_mux node before navigation to arbitrate teleop vs nav
     twist_mux_yaml = os.path.join(params_dir, 'twist_mux.yaml')
     twist_mux_cmd = launch_ros.actions.Node(
@@ -135,6 +152,9 @@ def generate_launch_description():
 
     # robot localization launch
     ld.add_action(robot_localization_cmd)
+
+    # scan range filter (feeds collision_monitor a self-return-free scan)
+    ld.add_action(scan_range_filter_cmd)
 
     # twist_mux
     ld.add_action(twist_mux_cmd)

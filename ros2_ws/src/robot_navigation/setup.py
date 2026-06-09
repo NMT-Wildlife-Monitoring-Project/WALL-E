@@ -25,6 +25,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'scan_range_filter = robot_navigation.scan_range_filter_node:main',
         ],
     },
 )

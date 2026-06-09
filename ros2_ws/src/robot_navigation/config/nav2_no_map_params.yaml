@@ -355,7 +355,10 @@ collision_monitor:
     observation_sources: ["scan"]
     scan:
       type: "scan"
-      topic: "scan"
+      # Use the range-filtered scan (robot_navigation/scan_range_filter): drops
+      # returns inside the footprint (e.g. the ~3.5 cm rear cable self-return)
+      # that otherwise flicker across min_points and stutter /cmd_vel_safe.
+      topic: "scan_collision"
       min_height: 0.15
       max_height: 2.0
       enabled: True
