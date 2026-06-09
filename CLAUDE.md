@@ -160,11 +160,23 @@ in `roboclaw_launch.py:87` (`('cmd_vel', '/cmd_vel_out')`). Do not
 nav2_bringup `navigation_launch.py` (Jazzy) already launches
 `collision_monitor` and manages it in `lifecycle_manager_navigation`.
 Our `nav2_no_map_params.yaml` supplies its config (scan source,
-FootprintApproach polygon, `time_before_collision: 2.0 s`).
+FootprintApproach polygon, `time_before_collision: 1.0 s`,
+`min_points: 10`).
 RoboClaw subscribes to `/cmd_vel_safe` via `roboclaw_launch.py:87`.
 Do NOT launch a second collision_monitor or a sidecar
 lifecycle_manager — node-name collision will kill nav (see reverted
 commit `6b613f5d`).
+
+Its scan source is **`/scan_collision`**, NOT raw `/scan` (commit
+`d8f68a28`). A `scan_range_filter` node (`robot_navigation`,
+launched from `gps_waypoint_follower.launch.py`) republishes `/scan`
+→ `/scan_collision` with returns < 0.18 m dropped to `inf`, removing
+a cable/mount self-return ~3.5 cm behind the lidar that sat inside
+the footprint and flickered across `min_points`, stuttering motion.
+slam_toolbox/rf2o/costmap still use raw `/scan` (localization
+unaffected). If `scan_range_filter` dies, collision_monitor loses
+its source and stops the robot. See memory
+`project_collision_monitor_self_return.md`.
 
 Twist_mux priorities: teleop 20, nav 10 (teleop wins).
 
